@@ -3,10 +3,20 @@ import { type NextRequest, NextResponse } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-
 export async function updateSession(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  // If env vars are missing in this deploy, don't crash the edge function.
+  // Pass the request through and let the page render — server components will
+  // surface a clearer error than a generic MIDDLEWARE_INVOCATION_FAILED 500.
+  if (!supabaseUrl || !supabaseKey) {
+    console.error(
+      "[middleware] Supabase env vars missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in Vercel → Project Settings → Environment Variables, then redeploy."
+    );
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
   let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
