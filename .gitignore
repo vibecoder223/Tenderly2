@@ -1,0 +1,11 @@
+node_modules
+.next
+.env*.local
+.env
+.DS_Store
+*.log
+.vercel
+
+# Local Claude state (contains command logs that may include secrets)
+.claude/settings.local.json
+.claude/launch.json
