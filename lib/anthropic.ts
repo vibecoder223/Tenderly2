@@ -11,6 +11,7 @@ export function getAnthropic() {
 }
 
 export const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+export const HAIKU_MODEL = process.env.ANTHROPIC_HAIKU_MODEL || "claude-haiku-4-5";
 
 // Pricing per 1M tokens (Sonnet 4.6 list). Used for cost telemetry.
 const INPUT_PRICE_PER_MTOK = 3;
@@ -71,9 +72,24 @@ export async function callClaudeText(opts: {
   user: string;
   maxTokens?: number;
 }): Promise<{ text: string; usage: Usage }> {
+  return callClaudeTextWithModel(MODEL, opts);
+}
+
+export async function callClaudeHaikuText(opts: {
+  system: string;
+  user: string;
+  maxTokens?: number;
+}): Promise<{ text: string; usage: Usage }> {
+  return callClaudeTextWithModel(HAIKU_MODEL, opts);
+}
+
+async function callClaudeTextWithModel(
+  model: string,
+  opts: { system: string; user: string; maxTokens?: number }
+): Promise<{ text: string; usage: Usage }> {
   const client = getAnthropic();
   const resp = await client.messages.create({
-    model: MODEL,
+    model,
     max_tokens: opts.maxTokens ?? 1500,
     system: opts.system,
     messages: [{ role: "user", content: opts.user }],

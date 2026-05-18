@@ -24,11 +24,32 @@ const items: { href: string; label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
-    href: "/library",
-    label: "Response library",
+    href: "/knowledge",
+    label: "Knowledge base",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/library",
+    label: "Reusable answers",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/templates",
+    label: "Templates",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="9" y1="21" x2="9" y2="9" />
       </svg>
     ),
   },
@@ -107,35 +128,21 @@ export default function Sidebar({
         Workspace
       </div>
       <nav className="flex flex-col gap-px px-2">
-        {items.map((it) => {
-          const active = path === it.href || path.startsWith(it.href + "/");
-          return (
-            <Link
-              key={it.href}
-              href={it.href}
-              className={`nav-item ${active ? "is-active" : ""}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 12px",
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                background: active ? "var(--accent-tint)" : "transparent",
-                color: active ? "var(--accent-2)" : "var(--fg-3)",
-              }}
-            >
-              <span
-                style={{ width: 16, height: 16, display: "inline-flex", color: active ? "var(--accent)" : "var(--fg-4)" }}
-                aria-hidden
-              >
-                {it.icon}
-              </span>
-              {it.label}
-            </Link>
-          );
-        })}
+        {items.slice(0, 2).map((it) => renderItem(it, path))}
+      </nav>
+
+      <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] px-3 pt-[14px] pb-1.5" style={{ color: "var(--fg-5)" }}>
+        Intelligence
+      </div>
+      <nav className="flex flex-col gap-px px-2">
+        {items.slice(2, 5).map((it) => renderItem(it, path))}
+      </nav>
+
+      <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] px-3 pt-[14px] pb-1.5" style={{ color: "var(--fg-5)" }}>
+        Insights
+      </div>
+      <nav className="flex flex-col gap-px px-2">
+        {items.slice(5).map((it) => renderItem(it, path))}
       </nav>
 
       <div
@@ -172,5 +179,37 @@ export default function Sidebar({
         </form>
       </div>
     </aside>
+  );
+}
+
+function renderItem(it: { href: string; label: string; icon: React.ReactNode }, path: string) {
+  const active =
+    it.href === "/dashboard"
+      ? path === "/dashboard"
+      : path === it.href || path.startsWith(it.href + "/");
+  return (
+    <Link
+      key={it.href}
+      href={it.href}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "8px 12px",
+        borderRadius: 6,
+        fontSize: 13,
+        fontWeight: 500,
+        background: active ? "var(--accent-tint)" : "transparent",
+        color: active ? "var(--accent-2)" : "var(--fg-3)",
+      }}
+    >
+      <span
+        style={{ width: 16, height: 16, display: "inline-flex", color: active ? "var(--accent)" : "var(--fg-4)" }}
+        aria-hidden
+      >
+        {it.icon}
+      </span>
+      {it.label}
+    </Link>
   );
 }

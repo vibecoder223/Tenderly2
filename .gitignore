@@ -9,3 +9,9 @@ node_modules
 # Local Claude state (contains command logs that may include secrets)
 .claude/settings.local.json
 .claude/launch.json
+
+# Build artifacts + stray files
+tsconfig.tsbuildinfo
+"Landing page for Tenderly - Claude.html"
+
+.claude/worktrees/

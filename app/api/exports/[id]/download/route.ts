@@ -13,7 +13,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const { data: row } = await supabase
     .from("exports")
-    .select("file_path, deal_id")
+    .select("file_path, deal_id, format")
     .eq("id", id)
     .maybeSingle();
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -24,10 +24,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: error?.message || "Download failed" }, { status: 500 });
 
   const buf = Buffer.from(await data.arrayBuffer());
-  const filename = row.file_path.split("/").pop() || "export.pdf";
+  const filename = row.file_path.split("/").pop() || `export.${row.format ?? "pdf"}`;
+  const contentType =
+    row.format === "docx"
+      ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      : "application/pdf";
   return new NextResponse(buf, {
     headers: {
-      "content-type": "application/pdf",
+      "content-type": contentType,
       "content-disposition": `attachment; filename="${filename}"`,
     },
   });

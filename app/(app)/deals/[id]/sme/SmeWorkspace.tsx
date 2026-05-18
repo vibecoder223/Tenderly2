@@ -3,6 +3,13 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
+import {
+  ConfidenceBar,
+  GapBadge,
+  NoSourceBanner,
+  CitationList,
+  type CitationItem,
+} from "@/components/CitationChips";
 
 type Question = {
   id: string;
@@ -19,6 +26,10 @@ type Question = {
     final_text: string | null;
     status: string;
     tone: string;
+    confidence: number | null;
+    gap_flag: string | null;
+    answer_text_with_markers: string | null;
+    citations: CitationItem[];
   }[];
 };
 
@@ -172,7 +183,13 @@ export default function SmeWorkspace({
               <h2 className="text-[16px] font-semibold whitespace-pre-wrap" style={{ color: "var(--fg)" }}>
                 {selected.question_text}
               </h2>
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                <GapBadge flag={selected.responses[0]?.gap_flag ?? null} />
+                <ConfidenceBar value={selected.responses[0]?.confidence ?? null} />
+              </div>
             </header>
+
+            <NoSourceBanner flag={selected.responses[0]?.gap_flag ?? null} />
 
             <div className="card p-5 space-y-3">
               <div className="flex items-center gap-3">
@@ -216,6 +233,8 @@ export default function SmeWorkspace({
                   onChange={(e) => setDraft(e.target.value)}
                 />
               </div>
+
+              <CitationList citations={selected.responses[0]?.citations ?? []} />
 
               {info && <div className="text-[12px]" style={{ color: info.startsWith("Error") ? "var(--err)" : "var(--ok)" }}>{info}</div>}
 

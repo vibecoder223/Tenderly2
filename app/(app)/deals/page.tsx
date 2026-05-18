@@ -1,15 +1,64 @@
 import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
-import StatusBadge, { dealStatusLabels } from "@/components/StatusBadge";
+import DealsBoard from "./DealsBoard";
 
-export default async function DealsPage() {
+export default async function DealsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const { view } = await searchParams;
   const { supabase, member } = await requireMembership();
+
   const { data: deals } = await supabase
     .from("deals")
-    .select("id, name, client_name, status, value, due_date, created_at")
+    .select("id, name, client_name, status, value, due_date, owner_id, updated_at")
     .eq("org_id", member.org_id)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
+
+  // Per-deal completion: count approved questions vs total via two RPC-like joins.
+  const dealIds = (deals ?? []).map((d) => d.id);
+  let totals: Record<string, { total: number; approved: number }> = {};
+  if (dealIds.length > 0) {
+    const { data: docRows } = await supabase
+      .from("documents")
+      .select("id, deal_id")
+      .in("deal_id", dealIds);
+    const docByDeal = new Map<string, string[]>();
+    for (const r of docRows ?? []) {
+      const arr = docByDeal.get(r.deal_id) ?? [];
+      arr.push(r.id);
+      docByDeal.set(r.deal_id, arr);
+    }
+    const allDocIds = (docRows ?? []).map((r) => r.id);
+    if (allDocIds.length > 0) {
+      const { data: qs } = await supabase
+        .from("questions")
+        .select("document_id, status")
+        .in("document_id", allDocIds);
+      const totalsByDoc = new Map<string, { total: number; approved: number }>();
+      for (const q of qs ?? []) {
+        const e = totalsByDoc.get(q.document_id) ?? { total: 0, approved: 0 };
+        e.total += 1;
+        if (q.status === "approved") e.approved += 1;
+        totalsByDoc.set(q.document_id, e);
+      }
+      for (const [dealId, docIds] of docByDeal) {
+        const agg = { total: 0, approved: 0 };
+        for (const d of docIds) {
+          const t = totalsByDoc.get(d);
+          if (t) {
+            agg.total += t.total;
+            agg.approved += t.approved;
+          }
+        }
+        totals[dealId] = agg;
+      }
+    }
+  }
+
+  const v = view === "table" ? "table" : "board";
 
   return (
     <>
@@ -21,61 +70,40 @@ export default async function DealsPage() {
           </>
         }
         actions={
-          <Link href="/deals/new" className="btn btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            New deal
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/deals?view=board"
+              className="btn"
+              style={
+                v === "board"
+                  ? { background: "var(--accent-tint)", color: "var(--accent-2)", borderColor: "var(--accent-line)" }
+                  : undefined
+              }
+            >
+              Board
+            </Link>
+            <Link
+              href="/deals?view=table"
+              className="btn"
+              style={
+                v === "table"
+                  ? { background: "var(--accent-tint)", color: "var(--accent-2)", borderColor: "var(--accent-line)" }
+                  : undefined
+              }
+            >
+              Table
+            </Link>
+            <Link href="/deals/new" className="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New deal
+            </Link>
+          </div>
         }
       />
-      <div className="p-7">
-        <div className="card overflow-hidden">
-          {!deals || deals.length === 0 ? (
-            <div className="px-5 py-16 text-center">
-              <h3 className="text-base font-semibold mb-1" style={{ color: "var(--fg)" }}>No deals yet</h3>
-              <p className="text-sm mb-5" style={{ color: "var(--fg-4)" }}>
-                Create a deal to start processing an RFP.
-              </p>
-              <Link href="/deals/new" className="btn btn-primary inline-flex">
-                Create your first deal
-              </Link>
-            </div>
-          ) : (
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr style={{ color: "var(--fg-4)" }}>
-                  <th className="text-left font-medium px-5 py-2.5">Deal</th>
-                  <th className="text-left font-medium px-5 py-2.5">Client</th>
-                  <th className="text-left font-medium px-5 py-2.5">Status</th>
-                  <th className="text-left font-medium px-5 py-2.5">Due</th>
-                  <th className="text-right font-medium px-5 py-2.5">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deals.map((d) => (
-                  <tr key={d.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
-                    <td className="px-5 py-3">
-                      <Link href={`/deals/${d.id}`} className="font-medium" style={{ color: "var(--fg)" }}>
-                        {d.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3" style={{ color: "var(--fg-3)" }}>{d.client_name ?? "—"}</td>
-                    <td className="px-5 py-3">
-                      <StatusBadge status={d.status} label={dealStatusLabels[d.status]} />
-                    </td>
-                    <td className="px-5 py-3" style={{ color: "var(--fg-3)" }}>
-                      {d.due_date ? new Date(d.due_date).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-right num" style={{ color: "var(--fg-2)" }}>
-                      {d.value ? `$${Number(d.value).toLocaleString()}` : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+      <div className={v === "board" ? "p-7" : "p-7 max-w-[1200px]"}>
+        <DealsBoard view={v} deals={(deals ?? []) as any[]} totals={totals} />
       </div>
     </>
   );
