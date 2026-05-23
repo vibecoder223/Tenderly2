@@ -69,7 +69,7 @@ export default async function QuestionsTab({
     .eq("org_id", member.org_id);
 
   return (
-    <div className="q-page" style={{ padding: "20px 28px" }}>
+    <div className="q-page" style={{ padding: "16px 0 0 0" }}>
       <QuestionsTable
         dealId={id}
         documents={(documents ?? []) as any[]}

@@ -215,10 +215,7 @@ export default function QuestionsTable({
       style={{
         height: "calc(100vh - var(--topbar) - 56px)",
         minHeight: 0,
-        border: "1px solid var(--border)",
-        borderRadius: "var(--r-md)",
         overflow: "hidden",
-        boxShadow: "var(--shadow-1)",
       }}
     >
       {/* ── left: question list ─────────────────────────────────── */}
@@ -614,181 +611,223 @@ function QuestionDetailInline({
 
       <NoSourceBanner flag={r?.gap_flag ?? null} />
 
-      {/* ── body: 2-col ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 220px", gap: 20, alignItems: "start" }}>
-        {/* main col */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* draft card */}
-          <div className="card" style={{ padding: "16px 18px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--fg-3)" }}>Response draft</span>
-              <button
-                onClick={regenerate}
-                disabled={saving}
-                style={{
-                  fontSize: 11.5,
-                  color: "var(--accent)",
-                  background: "none",
-                  border: "none",
-                  cursor: saving ? "wait" : "pointer",
-                  padding: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                </svg>
-                Regenerate
-              </button>
-            </div>
-            <textarea
-              ref={textareaRef}
-              className="textarea"
-              rows={10}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              style={{ marginBottom: 10 }}
-            />
-            <CitationList citations={r?.citations ?? []} />
-            {info && (
-              <div style={{ fontSize: 12, marginTop: 8, color: info.startsWith("Error") ? "var(--err)" : "var(--ok)" }}>
-                {info}
-              </div>
-            )}
-            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <button className="btn" onClick={() => saveDraft(false)} disabled={saving}>
-                {saving ? "Saving…" : "Save draft"}
-              </button>
-              <button className="btn btn-primary" onClick={() => saveDraft(true)} disabled={saving}>
-                Submit for review
-              </button>
-              {(question.status === "submitted" || question.status === "in_review") && (
-                <>
-                  <span style={{ flex: 1 }} />
-                  <button className="btn btn-primary" onClick={() => approve("approve")} disabled={saving}>
-                    Approve
-                  </button>
-                  <button className="btn btn-danger" onClick={() => approve("reject")} disabled={saving}>
-                    Reject
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+      {/* ── metadata strip ── */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 18,
+          padding: "10px 14px",
+          background: "var(--bg)",
+          borderRadius: "var(--r)",
+          border: "1px solid var(--divider)",
+          alignItems: "center",
+        }}
+      >
+        {/* Assignee */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 11, color: "var(--fg-4)", fontWeight: 500 }}>Assignee</span>
+          <select
+            className="select"
+            style={{ fontSize: 12, padding: "3px 7px", height: 26, borderRadius: 5 }}
+            value={assignedTo ?? ""}
+            onChange={(e) => assignTo(e.target.value)}
+          >
+            <option value="">Unassigned</option>
+            {members.map((m) => (
+              <option key={m.user_id} value={m.user_id}>
+                {m.name || m.email}{m.user_id === currentUser.id ? " (you)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {/* comments */}
-          <div className="card" style={{ padding: "16px 18px" }}>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", marginBottom: 12 }}>
-              Comments {comments.length > 0 && <span style={{ color: "var(--fg-4)", fontWeight: 400 }}>({comments.length})</span>}
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {comments.length === 0 && (
-                <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>No comments yet.</span>
-              )}
-              {comments.map((c) => (
-                <div key={c.id} style={{ display: "flex", gap: 10 }}>
-                  <div
-                    style={{
-                      width: 26, height: 26,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg,#3B47D6,#5C6BFA)",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {(c.author_name || "??").slice(0, 2).toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, marginBottom: 3 }}>
-                      <span style={{ fontWeight: 600, color: "var(--fg)" }}>{c.author_name || "Member"}</span>
-                      <span style={{ color: "var(--fg-5)", marginLeft: 6 }}>
-                        {new Date(c.created_at).toISOString().replace("T", " ").slice(0, 16)}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 13, color: "var(--fg-2)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{c.body}</div>
-                  </div>
-                </div>
-              ))}
+        <div style={{ width: 1, height: 16, background: "var(--divider)" }} />
+
+        {/* Tone */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 11, color: "var(--fg-4)", fontWeight: 500 }}>Tone</span>
+          <select
+            className="select"
+            style={{ fontSize: 12, padding: "3px 7px", height: 26, borderRadius: 5 }}
+            value={tone}
+            onChange={(e) => setTone(e.target.value)}
+          >
+            <option value="formal">Formal</option>
+            <option value="technical">Technical</option>
+            <option value="consultative">Consultative</option>
+          </select>
+        </div>
+
+        <div style={{ width: 1, height: 16, background: "var(--divider)" }} />
+
+        {/* Topic */}
+        {(requirement?.topic ?? question.category) && (
+          <>
+            <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
+              Topic: <span style={{ color: "var(--fg-2)", fontWeight: 500, textTransform: "capitalize" }}>{requirement?.topic ?? question.category}</span>
+            </span>
+            <div style={{ width: 1, height: 16, background: "var(--divider)" }} />
+          </>
+        )}
+
+        {/* Source page */}
+        {requirement?.source_page != null && (
+          <>
+            <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
+              Page <span style={{ color: "var(--fg-2)", fontWeight: 500 }}>{requirement.source_page}</span>
+            </span>
+            <div style={{ width: 1, height: 16, background: "var(--divider)" }} />
+          </>
+        )}
+
+        {/* Mandatory */}
+        <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
+          {requirement?.is_mandatory ? (
+            <span style={{ color: "var(--err)", fontWeight: 500 }}>Mandatory</span>
+          ) : (
+            <span>Optional</span>
+          )}
+        </span>
+      </div>
+
+      {/* ── body: single column ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* draft card */}
+        <div className="card" style={{ padding: "18px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--fg-3)", letterSpacing: "0.01em" }}>Response draft</span>
+            <button
+              onClick={regenerate}
+              disabled={saving}
+              style={{
+                fontSize: 12,
+                color: "var(--accent)",
+                background: "none",
+                border: "none",
+                cursor: saving ? "wait" : "pointer",
+                padding: "4px 8px",
+                borderRadius: 5,
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                transition: "background var(--dur-fast) var(--ease)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-tint)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              Regenerate
+            </button>
+          </div>
+          <textarea
+            ref={textareaRef}
+            className="textarea"
+            rows={14}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            style={{
+              fontSize: 14,
+              lineHeight: 1.65,
+              color: "var(--fg)",
+              minHeight: 240,
+              marginBottom: 12,
+            }}
+          />
+          <CitationList citations={r?.citations ?? []} />
+          {info && (
+            <div style={{ fontSize: 12.5, marginTop: 10, color: info.startsWith("Error") ? "var(--err)" : "var(--ok)" }}>
+              {info}
             </div>
-            <form onSubmit={postComment} style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-              <textarea
-                className="textarea"
-                rows={3}
-                placeholder="Leave a comment…"
-                value={commentBody}
-                onChange={(e) => setCommentBody(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={!commentBody.trim() || postingComment}
-                style={{ alignSelf: "flex-start" }}
-              >
-                {postingComment ? "Posting…" : "Post comment"}
-              </button>
-            </form>
+          )}
+          <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
+            <button className="btn" onClick={() => saveDraft(false)} disabled={saving}>
+              {saving ? "Saving…" : "Save draft"}
+            </button>
+            <button className="btn btn-primary" onClick={() => saveDraft(true)} disabled={saving}>
+              Submit for review
+            </button>
+            {(question.status === "submitted" || question.status === "in_review") && (
+              <>
+                <span style={{ flex: 1 }} />
+                <button className="btn btn-primary" onClick={() => approve("approve")} disabled={saving}>
+                  Approve
+                </button>
+                <button className="btn btn-danger" onClick={() => approve("reject")} disabled={saving}>
+                  Reject
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* sidebar col */}
-        <div className="card" style={{ padding: "14px 16px" }}>
-          <h3 style={{ fontSize: 12, fontWeight: 600, color: "var(--fg)", marginBottom: 12 }}>Properties</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div>
-              <label className="label" style={{ fontSize: 11 }}>Assignee</label>
-              <select
-                className="select"
-                style={{ fontSize: 12, padding: "5px 8px" }}
-                value={assignedTo ?? ""}
-                onChange={(e) => assignTo(e.target.value)}
-              >
-                <option value="">Unassigned</option>
-                {members.map((m) => (
-                  <option key={m.user_id} value={m.user_id}>
-                    {m.name || m.email}{m.user_id === currentUser.id ? " (you)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label" style={{ fontSize: 11 }}>Tone</label>
-              <select
-                className="select"
-                style={{ fontSize: 12, padding: "5px 8px" }}
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-              >
-                <option value="formal">Formal</option>
-                <option value="technical">Technical</option>
-                <option value="consultative">Consultative</option>
-              </select>
-            </div>
-            <PropRow label="Topic" value={requirement?.topic ?? question.category ?? "—"} />
-            <PropRow label="Source page" value={requirement?.source_page ?? "—"} />
-            <PropRow label="Mandatory" value={requirement?.is_mandatory ? "Yes" : "No"} />
+        {/* comments */}
+        <div className="card" style={{ padding: "18px 20px" }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", marginBottom: 14 }}>
+            Comments {comments.length > 0 && <span style={{ color: "var(--fg-4)", fontWeight: 400 }}>({comments.length})</span>}
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {comments.length === 0 && (
+              <span style={{ fontSize: 13, color: "var(--fg-4)" }}>No comments yet.</span>
+            )}
+            {comments.map((c) => (
+              <div key={c.id} style={{ display: "flex", gap: 10 }}>
+                <div
+                  style={{
+                    width: 28, height: 28,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg,#3B47D6,#5C6BFA)",
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {(c.author_name || "??").slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12.5, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 600, color: "var(--fg)" }}>{c.author_name || "Member"}</span>
+                    <span style={{ color: "var(--fg-5)", marginLeft: 8 }}>
+                      {new Date(c.created_at).toISOString().replace("T", " ").slice(0, 16)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13.5, color: "var(--fg-2)", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{c.body}</div>
+                </div>
+              </div>
+            ))}
           </div>
+          <form onSubmit={postComment} style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+            <textarea
+              className="textarea"
+              rows={3}
+              placeholder="Leave a comment…"
+              value={commentBody}
+              onChange={(e) => setCommentBody(e.target.value)}
+              style={{ fontSize: 13.5, lineHeight: 1.55 }}
+            />
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={!commentBody.trim() || postingComment}
+              style={{ alignSelf: "flex-start" }}
+            >
+              {postingComment ? "Posting…" : "Post comment"}
+            </button>
+          </form>
         </div>
       </div>
     </div>
   );
 }
 
-function PropRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, paddingTop: 6, borderTop: "1px solid var(--divider)" }}>
-      <span style={{ color: "var(--fg-4)" }}>{label}</span>
-      <span style={{ color: "var(--fg)", textTransform: "capitalize" }}>{String(value)}</span>
-    </div>
-  );
-}
 
 function firstLine(s: string) {
   const line = s.split("\n")[0];
