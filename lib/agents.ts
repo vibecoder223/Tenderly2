@@ -439,19 +439,21 @@ export async function runResponseGenerationAgent(
   let totalIn = 0;
   let totalOut = 0;
   try {
-    const { data: deal } = await supabase
+    const { data: dealRaw } = await supabase
       .from("deals")
       .select("org_id")
       .eq("id", doc.deal_id)
       .single();
-    if (!deal) throw new Error("Deal not found for response generation");
+    if (!dealRaw) throw new Error("Deal not found for response generation");
+    const deal = dealRaw;
 
-    const { data: questions } = await supabase
+    const { data: questionsRaw } = await supabase
       .from("questions")
       .select("id, question_text, category, requirement_id")
       .eq("document_id", doc.id);
+    const questions = questionsRaw ?? [];
 
-    if (!questions || questions.length === 0) {
+    if (questions.length === 0) {
       await setStatus(supabase, doc.id, "completed");
       await recordRun(supabase, {
         document_id: doc.id,
