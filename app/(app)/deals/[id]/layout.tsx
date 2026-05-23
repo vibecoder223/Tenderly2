@@ -54,8 +54,10 @@ export default async function DealLayout({
 
   return (
     <>
-      <DealHeader deal={deal} completion={{ approved: approvedQ, total: totalQ }} />
-      <DealTabs dealId={deal.id} counts={{ questions: totalQ, approvals: submittedQ }} />
+      <div className="sticky top-0 z-20">
+        <DealHeader deal={deal} completion={{ approved: approvedQ, total: totalQ }} />
+        <DealTabs dealId={deal.id} counts={{ questions: totalQ, approvals: submittedQ }} />
+      </div>
       <div>{children}</div>
     </>
   );
