@@ -20,11 +20,13 @@
     "@supabase/supabase-js": "^2.105.4",
     "clsx": "^2.1.1",
     "docx": "^9.6.1",
+    "docxtemplater": "^3.68.7",
     "mammoth": "^1.8.0",
     "next": "14.2.18",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.10.38",
     "pdfkit": "^0.15.1",
+    "pizzip": "^3.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.25.76"
