@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type Item = { href: string; label: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
@@ -113,10 +114,35 @@ export default function Sidebar({
   orgName: string;
 }) {
   const path = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close on route change
+  useEffect(() => { setMobileOpen(false); }, [path]);
+
+  // Expose toggle to parent via custom event
+  useEffect(() => {
+    function handle() { setMobileOpen((v) => !v); }
+    window.addEventListener("sidebar-toggle", handle);
+    return () => window.removeEventListener("sidebar-toggle", handle);
+  }, []);
 
   return (
+    <>
+      {/* Mobile overlay backdrop */}
+      {mobileOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 29,
+            background: "oklch(0.10 0.02 264 / 0.45)",
+            backdropFilter: "blur(2px)",
+            display: "none",
+          }}
+        />
+      )}
     <aside
-      className="fixed inset-y-0 left-0 z-30 flex flex-col"
+      className={`fixed inset-y-0 left-0 z-30 flex flex-col sidebar-rail${mobileOpen ? " sidebar-open" : ""}`}
       style={{
         width: "var(--sidebar)",
         background: "var(--surface)",
@@ -266,6 +292,7 @@ export default function Sidebar({
         </form>
       </div>
     </aside>
+    </>
   );
 }
 

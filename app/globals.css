@@ -223,8 +223,9 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
 
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 1px 8px;
-  height: 20px;
+  padding: 2px 8px;
+  min-height: 20px;
+  white-space: nowrap;
   border-radius: 999px;
   font-size: var(--text-xs);
   font-weight: 500;
@@ -311,4 +312,88 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
 /* Show back button on narrow screens */
 @media (max-width: 900px) {
   .q-back-btn { display: flex !important; }
+}
+
+/* ──────────────── App shell — responsive layout */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--sidebar);
+  min-width: 0;
+  position: relative;
+}
+
+/* Mobile menu trigger — hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 13px;
+  left: 14px;
+  z-index: 40;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  color: var(--fg-3);
+}
+.mobile-menu-btn:hover { background: var(--bg-2); }
+
+@media (max-width: 768px) {
+  .app-main {
+    margin-left: 0;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Sidebar: hidden off-screen by default */
+  .sidebar-rail {
+    transform: translateX(-100%);
+    transition: transform var(--dur) var(--ease);
+    box-shadow: none;
+  }
+
+  /* Sidebar: visible when open */
+  .sidebar-rail.sidebar-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-3);
+  }
+
+  /* Backdrop: visible on mobile when sidebar open */
+  .sidebar-backdrop {
+    display: block !important;
+  }
+
+  /* Topbar: add left padding for hamburger space */
+  header.sticky {
+    padding-left: 52px !important;
+  }
+
+  /* Page padding: tighter on mobile */
+  .p-7 { padding: 16px !important; }
+  .px-7 { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Analytics KPI grid: 2 cols on mobile */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Analytics 2-col layout: stack */
+  .analytics-2col { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  /* Very small: single KPI column */
+  .kpi-grid { grid-template-columns: 1fr !important; }
 }
