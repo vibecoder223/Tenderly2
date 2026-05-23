@@ -4,7 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callClaudeText, callClaudeHaikuText } from "./anthropic";
+import { callGroqText, MODEL_FAST } from "./groq";
 import { isNoSource, retrieveForQuery, type Candidate } from "./retrieval";
 
 const PROMPTS = {
@@ -85,12 +85,11 @@ export async function generateAndPersistAnswer(
     .slice(0, 3);
 
   // 4. Generate
-  if (!process.env.ANTHROPIC_API_KEY) {
-    // No LLM key — surface a transparent placeholder rather than fabricating.
+  if (!process.env.OPENROUTER_API_KEY) {
     await upsertResponse(supabase, {
       question_id: args.question_id,
-      answer_text_with_markers: "AI_DISABLED: ANTHROPIC_API_KEY not configured.",
-      answer_text_clean: "AI_DISABLED: ANTHROPIC_API_KEY not configured.",
+      answer_text_with_markers: "AI_DISABLED: OPENROUTER_API_KEY not configured.",
+      answer_text_clean: "AI_DISABLED: OPENROUTER_API_KEY not configured.",
       tone: args.tone || "technical",
       confidence: 0,
       gap_flag: "no_source",
@@ -108,7 +107,7 @@ export async function generateAndPersistAnswer(
     sources: retrieval.candidates,
   });
 
-  const { text: rawAnswer, usage: genUsage } = await callClaudeText({
+  const { text: rawAnswer, usage: genUsage } = await callGroqText({
     system: PROMPTS.generator_system_v1,
     user,
     maxTokens: 900,
@@ -140,7 +139,7 @@ export async function generateAndPersistAnswer(
   // 7. Confidence pass (Haiku)
   let confidence = 0.5;
   try {
-    const { text, usage } = await callClaudeHaikuText({
+    const { text, usage } = await callGroqText({
       system: PROMPTS.confidence_system_v1,
       user: `<answer>
 ${rawAnswer}
@@ -150,6 +149,7 @@ ${rawAnswer}
 ${retrieval.candidates.map((c) => `<chunk id="${c.chunk_id}">${c.text}</chunk>`).join("\n")}
 </sources>`,
       maxTokens: 16,
+      model: MODEL_FAST,
     });
     totalIn += usage.input_tokens;
     totalOut += usage.output_tokens;
@@ -262,7 +262,13 @@ function extractCitations(
 }
 
 function stripMarkers(text: string): string {
-  return text.replace(/\s*\[c:[0-9a-f-]{36}\]/gi, "").replace(/\s+/g, " ").trim();
+  // Remove well-formed citations first.
+  let cleaned = text.replace(/\s*\[c:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, "");
+  // Then strip any malformed citation fragments (broken brackets, partial UUIDs).
+  cleaned = cleaned.replace(/\[c:[^\]]*?\]/gi, "");          // any leftover [c:...] brackets
+  cleaned = cleaned.replace(/\[c:[0-9a-f-]+/gi, "");         // unclosed [c:...
+  cleaned = cleaned.replace(/\b[0-9a-f]{4,}-[0-9a-f-]+\b/gi, ""); // orphan UUID fragments mid-text
+  return cleaned.replace(/\s+/g, " ").trim();
 }
 
 async function upsertResponse(

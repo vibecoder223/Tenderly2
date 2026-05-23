@@ -8,7 +8,19 @@ import crypto from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseDocument } from "./parse";
 import { chunkBlocks } from "./chunk";
-import { embedTexts, EMBED_DIMS, hasVoyage } from "./embeddings";
+import { embedTexts, hasEmbeddings } from "./embeddings";
+
+async function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(msg)), ms);
+  });
+  try {
+    return await Promise.race([p, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 type KDoc = {
   id: string;
@@ -22,10 +34,16 @@ export async function ingestKnowledgeDocument(
   supabase: SupabaseClient,
   doc: KDoc
 ): Promise<{ chunk_count: number; page_count: number; dedup: boolean }> {
-  await supabase
-    .from("knowledge_documents")
-    .update({ ingestion_status: "processing", error_message: null })
-    .eq("id", doc.id);
+  // Stage updates are written to error_message with "STAGE:" prefix so the UI
+  // can poll progress without a schema change. Final success clears it.
+  const setStage = async (stage: string) => {
+    await supabase
+      .from("knowledge_documents")
+      .update({ ingestion_status: "processing", error_message: `STAGE:${stage}` })
+      .eq("id", doc.id);
+  };
+
+  await setStage("downloading");
 
   // 1. Download
   const { data: blob, error: dlErr } = await supabase.storage
@@ -34,8 +52,13 @@ export async function ingestKnowledgeDocument(
   if (dlErr || !blob) throw new Error(`Storage download failed: ${dlErr?.message ?? "no data"}`);
   const buf = Buffer.from(await blob.arrayBuffer());
 
-  // 2. Parse
-  const parsed = await parseDocument(buf, doc.mime_type, doc.filename);
+  // 2. Parse (with timeout — mammoth can hang on malformed DOCX)
+  await setStage("parsing");
+  const parsed = await withTimeout(
+    parseDocument(buf, doc.mime_type, doc.filename),
+    60_000,
+    "Parsing timed out after 60s. The document may be corrupted or unusually complex."
+  );
   if (!parsed.blocks.length) throw new Error("No content extracted from document.");
 
   // 3. Hash for dedup
@@ -65,16 +88,19 @@ export async function ingestKnowledgeDocument(
   }
 
   // 4. Chunk
+  await setStage("chunking");
   const chunks = chunkBlocks({ blocks: parsed.blocks, filename: doc.filename });
   if (chunks.length === 0) throw new Error("Chunker produced 0 chunks (document may be empty).");
 
   // 5. Embed (batched inside embedTexts)
+  await setStage("embedding");
   const embeddings = await embedTexts(
     chunks.map((c) => c.text_for_embedding),
     "document"
   );
 
   // 6. Persist — wipe any prior chunks for this KB doc (idempotent re-ingest)
+  await setStage("storing");
   await supabase.from("document_chunks").delete().eq("knowledge_document_id", doc.id);
 
   const rows = chunks.map((c, i) => ({
@@ -88,15 +114,19 @@ export async function ingestKnowledgeDocument(
     raw_text: c.text,
     cleaned_text: c.text,
     text_for_embedding: c.text_for_embedding,
-    embedding: hasVoyage() ? embeddings[i] : null,
+    embedding: hasEmbeddings() ? embeddings[i] : null,
     sparse_terms: c.sparse_terms,
   }));
 
-  // Insert in slices — Postgres has practical limits on row size for vector columns.
-  for (let i = 0; i < rows.length; i += 50) {
-    const { error } = await supabase.from("document_chunks").insert(rows.slice(i, i + 50));
-    if (error) throw new Error(`Chunk insert failed: ${error.message}`);
-  }
+  // Insert in slices in parallel — Postgres handles concurrent inserts fine.
+  const slices: any[][] = [];
+  for (let i = 0; i < rows.length; i += 50) slices.push(rows.slice(i, i + 50));
+  await Promise.all(
+    slices.map(async (slice) => {
+      const { error } = await supabase.from("document_chunks").insert(slice);
+      if (error) throw new Error(`Chunk insert failed: ${error.message}`);
+    })
+  );
 
   await supabase
     .from("knowledge_documents")
@@ -104,9 +134,9 @@ export async function ingestKnowledgeDocument(
       ingestion_status: "ready",
       page_count: parsed.page_count,
       text_hash: textHash,
-      error_message: hasVoyage()
+      error_message: hasEmbeddings()
         ? null
-        : "Stored without embeddings — VOYAGE_API_KEY not configured. Set it and re-ingest to enable retrieval.",
+        : "Stored without embeddings — set JINA_API_KEY in .env.local and re-ingest to enable retrieval.",
     })
     .eq("id", doc.id);
 

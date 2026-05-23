@@ -11,7 +11,7 @@ export default async function QuestionsTab({
 }) {
   const { id } = await params;
   const { doc: docParam, status, topic, q } = await searchParams;
-  const { supabase, member } = await requireMembership();
+  const { supabase, member, user } = await requireMembership();
 
   const { data: deal } = await supabase
     .from("deals")
@@ -69,7 +69,7 @@ export default async function QuestionsTab({
     .eq("org_id", member.org_id);
 
   return (
-    <div className="p-7">
+    <div className="q-page" style={{ padding: "20px 28px" }}>
       <QuestionsTable
         dealId={id}
         documents={(documents ?? []) as any[]}
@@ -80,6 +80,11 @@ export default async function QuestionsTab({
         }))}
         members={(members ?? []) as any[]}
         initial={{ status, topic, q }}
+        currentUser={{
+          id: user.id,
+          name: (member as any).name ?? null,
+          email: (member as any).email ?? user.email ?? "",
+        }}
       />
     </div>
   );

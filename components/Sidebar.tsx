@@ -3,70 +3,91 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items: { href: string; label: string; icon: React.ReactNode }[] = [
+type Item = { href: string; label: string; icon: React.ReactNode };
+type Group = { title: string; items: Item[] };
+
+const groups: Group[] = [
   {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" />
-        <rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" />
-      </svg>
-    ),
+    title: "Workspace",
+    items: [
+      {
+        href: "/dashboard",
+        label: "Dashboard",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" />
+            <rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" />
+          </svg>
+        ),
+      },
+      {
+        href: "/deals",
+        label: "Deals",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    href: "/deals",
-    label: "Deals",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-      </svg>
-    ),
+    title: "Intelligence",
+    items: [
+      {
+        href: "/knowledge",
+        label: "Knowledge base",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/library",
+        label: "Reusable answers",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/templates",
+        label: "Templates",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="9" y1="21" x2="9" y2="9" />
+          </svg>
+        ),
+      },
+    ],
   },
   {
-    href: "/knowledge",
-    label: "Knowledge base",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-      </svg>
-    ),
+    title: "Insights",
+    items: [
+      {
+        href: "/analytics",
+        label: "Analytics",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v18h18" /><path d="M7 14l4-4 4 3 5-7" />
+          </svg>
+        ),
+      },
+    ],
   },
-  {
-    href: "/library",
-    label: "Reusable answers",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/templates",
-    label: "Templates",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <line x1="3" y1="9" x2="21" y2="9" />
-        <line x1="9" y1="21" x2="9" y2="9" />
-      </svg>
-    ),
-  },
-  {
-    href: "/analytics",
-    label: "Analytics",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3v18h18" /><path d="M7 14l4-4 4 3 5-7" />
-      </svg>
-    ),
-  },
+];
+
+const utility: Item[] = [
   {
     href: "/team",
     label: "Team",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
@@ -76,7 +97,7 @@ const items: { href: string; label: string; icon: React.ReactNode }[] = [
     href: "/settings",
     label: "Settings",
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
@@ -95,82 +116,148 @@ export default function Sidebar({
 
   return (
     <aside
-      className="fixed inset-y-0 left-0 flex flex-col z-30 border-r"
-      style={{ width: "var(--sidebar)", background: "var(--surface)", borderColor: "var(--border)" }}
+      className="fixed inset-y-0 left-0 z-30 flex flex-col"
+      style={{
+        width: "var(--sidebar)",
+        background: "var(--surface)",
+        borderRight: "1px solid var(--border)",
+      }}
     >
+      {/* Brand */}
       <div
-        className="flex items-center gap-2.5 px-5 border-b"
-        style={{ height: "var(--topbar)", borderColor: "var(--border)" }}
+        className="flex items-center gap-2.5 px-4"
+        style={{
+          height: "var(--topbar)",
+          borderBottom: "1px solid var(--divider)",
+        }}
       >
-        <div
-          className="w-[26px] h-[26px] rounded-[7px] relative"
+        <Mark />
+        <span
           style={{
-            background: "linear-gradient(140deg,#0F1626 0%,#2A3245 70%,#3B47D6 100%)",
-            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)",
+            fontSize: 15.5,
+            fontWeight: 600,
+            letterSpacing: "-0.012em",
+            color: "var(--fg)",
           }}
         >
-          <span
-            className="absolute"
-            style={{
-              inset: 7,
-              borderLeft: "1.5px solid rgba(255,255,255,0.85)",
-              borderBottom: "1.5px solid rgba(255,255,255,0.85)",
-              borderBottomLeftRadius: 4,
-            }}
-          />
-        </div>
-        <span className="text-[16px] font-semibold tracking-tight" style={{ color: "var(--fg)" }}>
           Tenderly
         </span>
       </div>
 
-      <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] px-3 pt-[18px] pb-1.5" style={{ color: "var(--fg-5)" }}>
-        Workspace
+      {/* Primary navigation */}
+      <div className="flex-1 overflow-y-auto" style={{ padding: "12px 0" }}>
+        {groups.map((group, gi) => (
+          <div key={group.title} style={{ marginTop: gi === 0 ? 0 : 18 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: "var(--fg-5)",
+                padding: "0 16px 6px",
+              }}
+            >
+              {group.title}
+            </div>
+            <nav style={{ display: "flex", flexDirection: "column", gap: 1, padding: "0 8px" }}>
+              {group.items.map((it) => (
+                <NavItem key={it.href} item={it} path={path} />
+              ))}
+            </nav>
+          </div>
+        ))}
       </div>
-      <nav className="flex flex-col gap-px px-2">
-        {items.slice(0, 2).map((it) => renderItem(it, path))}
-      </nav>
 
-      <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] px-3 pt-[14px] pb-1.5" style={{ color: "var(--fg-5)" }}>
-        Intelligence
-      </div>
-      <nav className="flex flex-col gap-px px-2">
-        {items.slice(2, 5).map((it) => renderItem(it, path))}
-      </nav>
-
-      <div className="text-[10.5px] font-semibold uppercase tracking-[0.08em] px-3 pt-[14px] pb-1.5" style={{ color: "var(--fg-5)" }}>
-        Insights
-      </div>
-      <nav className="flex flex-col gap-px px-2">
-        {items.slice(5).map((it) => renderItem(it, path))}
-      </nav>
-
+      {/* Utility — visually separated, sits above the user card */}
       <div
-        className="mt-auto flex items-center gap-2.5 p-3 border-t"
-        style={{ borderColor: "var(--border)" }}
+        style={{
+          padding: "8px",
+          borderTop: "1px solid var(--divider)",
+        }}
+      >
+        <nav style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          {utility.map((it) => (
+            <NavItem key={it.href} item={it} path={path} />
+          ))}
+        </nav>
+      </div>
+
+      {/* User card */}
+      <div
+        className="flex items-center gap-2.5"
+        style={{
+          padding: "10px 12px",
+          borderTop: "1px solid var(--divider)",
+          background: "var(--bg)",
+        }}
       >
         <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
-          style={{ background: "linear-gradient(135deg,#3B47D6,#5C6BFA)" }}
+          className="flex items-center justify-center text-white"
+          style={{
+            width: 28, height: 28,
+            borderRadius: 7,
+            background: "linear-gradient(135deg, oklch(0.50 0.20 264), oklch(0.62 0.16 270))",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.15)",
+            flexShrink: 0,
+          }}
         >
           {(user.name || user.email).slice(0, 2).toUpperCase()}
         </div>
-        <div className="leading-tight flex-1 min-w-0">
-          <strong className="text-[12.5px] font-semibold block truncate" style={{ color: "var(--fg)" }}>
+        <div style={{ lineHeight: 1.2, flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: "var(--fg)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {user.name || user.email}
-          </strong>
-          <span className="text-[11.5px] block truncate" style={{ color: "var(--fg-4)" }}>
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--fg-4)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              marginTop: 1,
+            }}
+          >
             {orgName}
-          </span>
+          </div>
         </div>
         <form action="/api/auth/signout" method="post">
           <button
             type="submit"
             title="Sign out"
-            className="p-1.5 rounded hover:bg-[var(--bg-2)]"
-            style={{ color: "var(--fg-4)" }}
+            aria-label="Sign out"
+            style={{
+              padding: 6,
+              borderRadius: 5,
+              color: "var(--fg-4)",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              transition: "background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)",
+              display: "inline-flex",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "var(--bg-2)";
+              (e.currentTarget as HTMLElement).style.color = "var(--fg-2)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+              (e.currentTarget as HTMLElement).style.color = "var(--fg-4)";
+            }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
@@ -182,34 +269,80 @@ export default function Sidebar({
   );
 }
 
-function renderItem(it: { href: string; label: string; icon: React.ReactNode }, path: string) {
+function NavItem({ item, path }: { item: Item; path: string }) {
   const active =
-    it.href === "/dashboard"
+    item.href === "/dashboard"
       ? path === "/dashboard"
-      : path === it.href || path.startsWith(it.href + "/");
+      : path === item.href || path.startsWith(item.href + "/");
+
   return (
     <Link
-      key={it.href}
-      href={it.href}
+      href={item.href}
       style={{
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "8px 12px",
+        padding: "7px 10px",
         borderRadius: 6,
         fontSize: 13,
-        fontWeight: 500,
+        fontWeight: active ? 600 : 500,
         background: active ? "var(--accent-tint)" : "transparent",
         color: active ? "var(--accent-2)" : "var(--fg-3)",
+        position: "relative",
+        transition: "background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.background = "var(--bg-2)";
+          (e.currentTarget as HTMLElement).style.color = "var(--fg-2)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+          (e.currentTarget as HTMLElement).style.color = "var(--fg-3)";
+        }
       }}
     >
       <span
-        style={{ width: 16, height: 16, display: "inline-flex", color: active ? "var(--accent)" : "var(--fg-4)" }}
         aria-hidden
+        style={{
+          width: 16, height: 16,
+          display: "inline-flex",
+          color: active ? "var(--accent)" : "var(--fg-4)",
+          flexShrink: 0,
+          transition: "color var(--dur-fast) var(--ease)",
+        }}
       >
-        {it.icon}
+        {item.icon}
       </span>
-      {it.label}
+      <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {item.label}
+      </span>
     </Link>
+  );
+}
+
+function Mark() {
+  return (
+    <div
+      style={{
+        width: 26, height: 26,
+        borderRadius: 7,
+        background: "linear-gradient(140deg, oklch(0.20 0.025 264) 0%, oklch(0.30 0.030 264) 60%, oklch(0.50 0.20 264) 100%)",
+        boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.08)",
+        position: "relative",
+      }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          inset: 7,
+          borderLeft: "1.5px solid oklch(1 0 0 / 0.85)",
+          borderBottom: "1.5px solid oklch(1 0 0 / 0.85)",
+          borderBottomLeftRadius: 4,
+        }}
+      />
+    </div>
   );
 }

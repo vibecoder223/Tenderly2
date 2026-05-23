@@ -12,6 +12,7 @@ import {
   AlignmentType,
   Footer,
   PageNumber,
+  ImageRun,
 } from "docx";
 
 export type ExportQuestion = {
@@ -27,13 +28,41 @@ export type ExportOptions = {
   client_name: string | null;
   org_name: string | null;
   citation_style: "inline" | "footnote";
+  /** When provided, render each document as its own section heading + Q&A list. */
+  sections?: { heading: string; items: ExportQuestion[] }[];
+  /**
+   * Proposal sections (Executive Summary, Client Understanding, etc.)
+   * rendered BEFORE the Q&A block. Each has a heading + body text.
+   */
+  proposalSections?: { heading: string; content: string }[];
+  /** Accent color hex (no #) for headings, defaults to 3B47D6 */
+  accentColor?: string;
+  /** Optional template logo (raw bytes + extension) rendered at top of doc. */
+  logo?: { buffer: Buffer; ext: "png" | "jpg" } | null;
 };
 
 export async function renderDocx(
   questions: ExportQuestion[],
   opts: ExportOptions
 ): Promise<Buffer> {
-  const titleParas = [
+  const titleParas: Paragraph[] = [];
+  if (opts.logo) {
+    titleParas.push(
+      new Paragraph({
+        alignment: AlignmentType.LEFT,
+        spacing: { after: 240 },
+        children: [
+          new ImageRun({
+            type: opts.logo.ext === "png" ? "png" : "jpg",
+            data: opts.logo.buffer,
+            transformation: { width: 140, height: 60 },
+            altText: { title: "Logo", description: "Template logo", name: "Logo" },
+          }),
+        ],
+      })
+    );
+  }
+  titleParas.push(
     new Paragraph({
       heading: HeadingLevel.TITLE,
       alignment: AlignmentType.LEFT,
@@ -42,8 +71,8 @@ export async function renderDocx(
     new Paragraph({
       children: [new TextRun({ text: opts.deal_name, size: 28, color: "5B6478" })],
       spacing: { after: 100 },
-    }),
-  ];
+    })
+  );
   if (opts.client_name) {
     titleParas.push(
       new Paragraph({
@@ -80,80 +109,138 @@ export async function renderDocx(
   );
 
   const bodyParas: Paragraph[] = [];
+  const accent = opts.accentColor ?? "3B47D6";
   // Footnote refs are numbered across the whole doc.
   let footnoteCounter = 0;
+  let footnoteSourceList: ExportQuestion[] = [];
 
-  for (const q of questions) {
-    // Requirement ID
-    if (q.requirement_id) {
-      bodyParas.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: q.requirement_id, bold: true, color: "3B47D6", size: 20 }),
-          ],
-          spacing: { before: 240, after: 60 },
-        })
-      );
-    }
-    // Question
-    bodyParas.push(
-      new Paragraph({
-        heading: HeadingLevel.HEADING_2,
-        children: [new TextRun({ text: q.question_text, bold: true, size: 24 })],
-        spacing: { after: 120 },
-      })
-    );
+  // If sections were provided, emit a heading per document and iterate that;
+  // otherwise fall back to the flat `questions` list.
+  const groups: { heading?: string; items: ExportQuestion[] }[] =
+    opts.sections && opts.sections.length > 0
+      ? opts.sections.map((s) => ({ heading: s.heading, items: s.items }))
+      : [{ items: questions }];
 
-    // Answer
-    if (q.gap_flag === "no_source") {
-      bodyParas.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text:
-                "No source found in the knowledge base. This requirement requires human review before submission.",
-              italics: true,
-              color: "C0392B",
-              size: 22,
-            }),
-          ],
-          spacing: { after: 240 },
-        })
-      );
-      continue;
-    }
-
-    const answerRuns: TextRun[] = [
-      new TextRun({ text: q.answer || "(no response)", size: 22 }),
-    ];
-
-    if (opts.citation_style === "inline") {
-      const inline = q.citations
-        .map((c) => `[Source: ${c.document_filename}${c.page != null ? `, p.${c.page}` : ""}]`)
-        .join(" ");
-      if (inline) answerRuns.push(new TextRun({ text: ` ${inline}`, size: 20, color: "5B6478" }));
-    } else if (opts.citation_style === "footnote" && q.citations.length > 0) {
-      // Mark a footnote reference. We render as a superscript number + emit
-      // the footnote text in a single "References" list at the end. (Real
-      // .docx footnotes via `docx` package require its `footnotes` API which
-      // is more involved; this is a clean, readable equivalent.)
-      const refs: string[] = [];
-      for (const c of q.citations) {
-        footnoteCounter += 1;
-        refs.push(`${footnoteCounter}`);
+  // Render the Q&A block (heading + every question). Used inline when a
+  // template section uses the __QA_BLOCK__ sentinel, OR appended at the end
+  // when no such section exists.
+  function renderQaBlock(): Paragraph[] {
+    const out: Paragraph[] = [];
+    for (const group of groups) {
+      if (group.heading) {
+        out.push(
+          new Paragraph({
+            heading: HeadingLevel.HEADING_1,
+            children: [new TextRun({ text: group.heading, bold: true, size: 32, color: accent })],
+            spacing: { before: 360, after: 200 },
+          })
+        );
       }
-      answerRuns.push(
-        new TextRun({ text: ` [${refs.join(", ")}]`, superScript: true, size: 18, color: "3B47D6" })
-      );
+      for (const q of group.items) {
+        footnoteSourceList.push(q);
+        if (q.requirement_id) {
+          out.push(
+            new Paragraph({
+              children: [new TextRun({ text: q.requirement_id, bold: true, color: "3B47D6", size: 20 })],
+              spacing: { before: 240, after: 60 },
+            })
+          );
+        }
+        out.push(
+          new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            children: [new TextRun({ text: q.question_text, bold: true, size: 24 })],
+            spacing: { after: 120 },
+          })
+        );
+        if (q.gap_flag === "no_source") {
+          out.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "No source found in the knowledge base. This requirement requires human review before submission.",
+                  italics: true,
+                  color: "C0392B",
+                  size: 22,
+                }),
+              ],
+              spacing: { after: 240 },
+            })
+          );
+          continue;
+        }
+        const answerRuns: TextRun[] = [new TextRun({ text: q.answer || "(no response)", size: 22 })];
+        if (opts.citation_style === "inline") {
+          const inline = q.citations
+            .map((c) => `[Source: ${c.document_filename}${c.page != null ? `, p.${c.page}` : ""}]`)
+            .join(" ");
+          if (inline) answerRuns.push(new TextRun({ text: ` ${inline}`, size: 20, color: "5B6478" }));
+        } else if (opts.citation_style === "footnote" && q.citations.length > 0) {
+          const refs: string[] = [];
+          for (const _c of q.citations) {
+            footnoteCounter += 1;
+            refs.push(`${footnoteCounter}`);
+          }
+          answerRuns.push(
+            new TextRun({ text: ` [${refs.join(", ")}]`, superScript: true, size: 18, color: "3B47D6" })
+          );
+        }
+        out.push(
+          new Paragraph({
+            children: answerRuns,
+            spacing: { after: 240 },
+            alignment: AlignmentType.JUSTIFIED,
+          })
+        );
+      }
     }
+    return out;
+  }
 
-    bodyParas.push(
-      new Paragraph({
-        children: answerRuns,
-        spacing: { after: 240 },
-        alignment: AlignmentType.JUSTIFIED,
-      })
-    );
+  let qaRendered = false;
+
+  // Proposal narrative sections — render in user-defined order. A section
+  // whose content is "__QA_BLOCK__" expands into the full Q&A block at that
+  // position instead.
+  if (opts.proposalSections && opts.proposalSections.length > 0) {
+    for (const ps of opts.proposalSections) {
+      if (ps.content === "__QA_BLOCK__") {
+        // Heading from the user's section name, then the questions.
+        bodyParas.push(
+          new Paragraph({
+            heading: HeadingLevel.HEADING_1,
+            children: [new TextRun({ text: ps.heading, bold: true, size: 32, color: accent })],
+            spacing: { before: 480, after: 200 },
+          })
+        );
+        bodyParas.push(...renderQaBlock());
+        qaRendered = true;
+        continue;
+      }
+      bodyParas.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun({ text: ps.heading, bold: true, size: 32, color: accent })],
+          spacing: { before: 480, after: 160 },
+        })
+      );
+      const lines = ps.content.split("\n").filter((l) => l.trim() !== "");
+      for (const line of lines) {
+        bodyParas.push(
+          new Paragraph({
+            children: [new TextRun({ text: line, size: 22 })],
+            spacing: { after: 160 },
+            alignment: AlignmentType.JUSTIFIED,
+          })
+        );
+      }
+    }
+  }
+
+  // Fall back to appending the Q&A at the end if the template didn't include
+  // a qa section (or no template was used at all).
+  if (!qaRendered) {
+    bodyParas.push(...renderQaBlock());
   }
 
   if (opts.citation_style === "footnote") {
@@ -165,7 +252,7 @@ export async function renderDocx(
       })
     );
     let n = 0;
-    for (const q of questions) {
+    for (const q of footnoteSourceList) {
       for (const c of q.citations) {
         n += 1;
         bodyParas.push(

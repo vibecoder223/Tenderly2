@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireMembership } from "@/utils/auth";
 import StatusBadge from "@/components/StatusBadge";
 import UploadCard from "../UploadCard";
+import DeleteDocumentButton from "./DeleteDocumentButton";
 
 export default async function DealDocumentsPage({
   params,
@@ -78,9 +79,12 @@ export default async function DealDocumentsPage({
                       {new Date(d.created_at).toISOString().replace("T", " ").slice(0, 16)}
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <Link href={`/deals/${id}/questions?doc=${d.id}`} className="btn">
-                        Open questions →
-                      </Link>
+                      <span className="inline-flex items-center gap-2">
+                        <Link href={`/deals/${id}/questions?doc=${d.id}`} className="btn">
+                          Open questions →
+                        </Link>
+                        <DeleteDocumentButton documentId={d.id} filename={d.filename} />
+                      </span>
                     </td>
                   </tr>
                 ))}

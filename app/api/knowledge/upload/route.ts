@@ -60,31 +60,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: insertErr.message }, { status: 500 });
   }
 
-  // Kick off ingestion synchronously. For a 50-page PDF on Voyage, this stays
-  // under the 300s function limit. For larger corpora we'd queue this; not
-  // in scope for v1.
-  try {
-    const result = await ingestKnowledgeDocument(writer, {
-      id: row.id,
-      org_id: row.org_id,
-      filename: row.filename,
-      file_path: row.file_path,
-      mime_type: row.mime_type,
+  // Kick off ingestion in the background. The client polls the doc row via
+  // GET /api/knowledge/[id] and watches the STAGE: marker in error_message.
+  ingestKnowledgeDocument(writer, {
+    id: row.id,
+    org_id: row.org_id,
+    filename: row.filename,
+    file_path: row.file_path,
+    mime_type: row.mime_type,
+  })
+    .then((result) =>
+      logActivity(supabase, {
+        org_id: member.org_id,
+        user_id: user.id,
+        action: "ingested",
+        entity_type: "knowledge_document",
+        entity_id: row.id,
+        metadata: { filename, ...result },
+      })
+    )
+    .catch(async (e: any) => {
+      await writer
+        .from("knowledge_documents")
+        .update({ ingestion_status: "failed", error_message: e.message })
+        .eq("id", row.id);
     });
-    await logActivity(supabase, {
-      org_id: member.org_id,
-      user_id: user.id,
-      action: "ingested",
-      entity_type: "knowledge_document",
-      entity_id: row.id,
-      metadata: { filename, ...result },
-    });
-    return NextResponse.json({ knowledge_document: row, ...result });
-  } catch (e: any) {
-    await writer
-      .from("knowledge_documents")
-      .update({ ingestion_status: "failed", error_message: e.message })
-      .eq("id", row.id);
-    return NextResponse.json({ error: e.message, knowledge_document: row }, { status: 500 });
-  }
+
+  return NextResponse.json({ knowledge_document: row });
 }

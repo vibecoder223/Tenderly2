@@ -5,8 +5,8 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callClaudeJson } from "./anthropic";
-import { embedTexts, hasVoyage, rerank } from "./embeddings";
+import { callGroqJson, MODEL_FAST } from "./groq";
+import { embedTexts, hasEmbeddings, rerank } from "./embeddings";
 
 export type Candidate = {
   chunk_id: string;
@@ -38,9 +38,9 @@ export async function retrieveForQuery(
 
   // 1. Query expansion (Haiku). If Anthropic isn't configured we skip.
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
-  if (process.env.ANTHROPIC_API_KEY) {
+  if (process.env.OPENROUTER_API_KEY) {
     try {
-      const { data, usage } = await callClaudeJson<{
+      const { data, usage } = await callGroqJson<{
         paraphrases: string[];
         keywords: string[];
       }>({
@@ -51,6 +51,7 @@ Return JSON:
 No prose, no fences.`,
         user: opts.query,
         maxTokens: 400,
+        model: MODEL_FAST,
       });
       if (Array.isArray(data?.paraphrases) && Array.isArray(data?.keywords)) {
         expansion = {
@@ -65,9 +66,9 @@ No prose, no fences.`,
     }
   }
 
-  // 2. Dense retrieval (only if Voyage configured — otherwise zero vectors return nothing useful).
+  // 2. Dense retrieval (only if an embedding provider is configured).
   const dense: Candidate[] = [];
-  if (hasVoyage()) {
+  if (hasEmbeddings()) {
     const queries = [opts.query, ...(expansion?.paraphrases ?? [])];
     const embeds = await embedTexts(queries, "query");
     const denseMap = new Map<string, Candidate>();
@@ -121,7 +122,7 @@ No prose, no fences.`,
   }
 
   let ranked: Candidate[];
-  if (hasVoyage() && candidates.length > 1) {
+  if (hasEmbeddings() && candidates.length > 1) {
     const order = await rerank({
       query: opts.query,
       documents: candidates.map((c) => c.text),

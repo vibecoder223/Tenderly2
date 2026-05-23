@@ -22,19 +22,19 @@ export default async function ExportPage({
     .maybeSingle();
   if (!deal) notFound();
 
+  const { data: allDocs } = await supabase
+    .from("documents")
+    .select("id, filename, created_at")
+    .eq("deal_id", dealId)
+    .order("created_at", { ascending: true });
+  const documents = allDocs ?? [];
+
   let docId = docParam;
-  if (!docId) {
-    const { data: latest } = await supabase
-      .from("documents")
-      .select("id")
-      .eq("deal_id", dealId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    docId = latest?.id;
+  if (!docId && documents.length > 0) {
+    docId = documents[documents.length - 1].id; // most recent
   }
 
-  if (!docId) {
+  if (documents.length === 0) {
     return (
       <div className="p-7 max-w-[860px]">
         <div className="card p-10 text-center">
@@ -52,20 +52,42 @@ export default async function ExportPage({
     );
   }
 
-  const { data: questions } = await supabase
-    .from("questions")
-    .select("id, status, responses(status)")
-    .eq("document_id", docId);
-
-  const approved = (questions ?? []).filter((q: any) =>
-    q.responses?.some((r: any) => r.status === "approved")
-  ).length;
+  // Counts per document for the picker
+  const docIds = documents.map((d) => d.id);
+  const { data: questionsAll } = docIds.length
+    ? await supabase
+        .from("questions")
+        .select("id, document_id, responses(status)")
+        .in("document_id", docIds)
+    : { data: [] as any[] };
+  const countsByDoc: Record<string, { total: number; approved: number }> = {};
+  for (const d of documents) countsByDoc[d.id] = { total: 0, approved: 0 };
+  for (const q of (questionsAll ?? []) as any[]) {
+    const c = countsByDoc[q.document_id];
+    if (!c) continue;
+    c.total += 1;
+    if ((q.responses ?? []).some((r: any) => r.status === "approved")) c.approved += 1;
+  }
+  const totalQuestions = Object.values(countsByDoc).reduce((s, c) => s + c.total, 0);
+  const totalApproved = Object.values(countsByDoc).reduce((s, c) => s + c.approved, 0);
 
   const { data: exports } = await supabase
     .from("exports")
     .select("id, file_path, format, created_at")
     .eq("deal_id", dealId)
     .order("created_at", { ascending: false });
+
+  // Templates list (may be empty or table missing — fail soft)
+  let templates: { id: string; name: string; kind: string | null; is_default: boolean }[] = [];
+  try {
+    const { data: tplRows } = await supabase
+      .from("proposal_templates")
+      .select("id, name, kind, is_default")
+      .eq("org_id", member.org_id)
+      .order("is_default", { ascending: false })
+      .order("name");
+    templates = tplRows ?? [];
+  } catch {}
 
   return (
     <div className="p-7 max-w-[920px] space-y-6">
@@ -74,11 +96,22 @@ export default async function ExportPage({
           Final proposal
         </h2>
         <p className="text-[13px] mb-4" style={{ color: "var(--fg-4)" }}>
-          {approved} of {questions?.length ?? 0} questions approved. Approved answers are
-          rendered with citations; un-approved questions fall back to drafts.
+          {totalApproved} of {totalQuestions} questions approved across {documents.length} document{documents.length === 1 ? "" : "s"}.
+          Choose whether to merge everything into one proposal or export a single document.
         </p>
-        <ExportControls dealId={dealId} documentId={docId} />
+        <ExportControls
+          dealId={dealId}
+          documents={documents.map((d) => ({
+            id: d.id,
+            filename: d.filename,
+            total: countsByDoc[d.id]?.total ?? 0,
+            approved: countsByDoc[d.id]?.approved ?? 0,
+          }))}
+          initialDocId={docId ?? null}
+          templates={templates}
+        />
       </div>
+
 
       {exports && exports.length > 0 && (
         <div className="card overflow-hidden">

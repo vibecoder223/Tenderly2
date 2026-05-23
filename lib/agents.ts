@@ -11,10 +11,10 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { callClaudeJson, callClaudeText, estimateCost } from "./anthropic";
+import { callGroqJson, callGroqText, estimateCost } from "./groq";
 import { parseDocument, type ParsedDoc } from "./parse";
 import { chunkBlocks, type ProducedChunk } from "./chunk";
-import { embedTexts, hasVoyage } from "./embeddings";
+import { embedTexts, hasVoyage, hasEmbeddings } from "./embeddings";
 import { generateAndPersistAnswer } from "./rag";
 
 type Doc = {
@@ -153,7 +153,7 @@ export async function runChunkingAgent(
         raw_text: c.text,
         cleaned_text: c.text,
         text_for_embedding: c.text_for_embedding,
-        embedding: hasVoyage() ? embeddings[i] : null,
+        embedding: hasEmbeddings() ? embeddings[i] : null,
         sparse_terms: c.sparse_terms,
       }));
       for (let i = 0; i < rows.length; i += 50) {
@@ -211,63 +211,106 @@ export async function runExtractionAgent(
   let totalIn = 0;
   let totalOut = 0;
 
-  try {
-    for (const c of chunks) {
-      const sys = `You are an expert RFP analyst. Extract every distinct requirement, question, or compliance item from the given RFP section. Be exhaustive but de-duplicate.
+  // Concurrency helper — run tasks in parallel with a max pool size and start stagger.
+  async function pLimit<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+    const results: T[] = new Array(tasks.length);
+    let idx = 0;
+    async function worker(staggerMs: number) {
+      if (staggerMs > 0) await new Promise((r) => setTimeout(r, staggerMs));
+      while (idx < tasks.length) {
+        const i = idx++;
+        results[i] = await tasks[i]();
+      }
+    }
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, (_, wi) =>
+      worker(wi * 400) // stagger workers by 400ms to avoid thundering herd
+    );
+    await Promise.all(workers);
+    return results;
+  }
+
+  const sys = `You are an expert RFP analyst. Extract every distinct requirement, question, or compliance item from ALL sections provided. Be exhaustive but de-duplicate within the batch.
 
 Return a JSON array. Each item:
 {
-  "requirement_id": "Q2.3" | "R-4.1" | "REQ-N",   // stable identifier, prefer the document's own numbering
-  "section": "4.2" | "Section 4.2 Security",        // section identifier or title if visible
+  "requirement_id": "Q2.3" | "R-4.1" | "REQ-N",
+  "section": "4.2" | "Section 4.2 Security",
   "text": "<the full requirement text, paraphrased if needed>",
-  "classification": "must" | "should" | "info",     // must = shall/required/mandatory; should = should/preferred; info = informational
+  "classification": "must" | "should" | "info",
   "topic": "security" | "legal" | "pricing" | "technical" | "commercial",
-  "source_page": <integer page number from the supplied page hint, or null>
+  "source_page": <integer page number, or null>
 }
 
 Return ONLY the JSON array. No prose, no markdown fences.`;
 
-      const user = `Section: ${c.section_path || "Body"}
-Source page: ${c.page_start}${c.page_end !== c.page_start ? `–${c.page_end}` : ""}
+  try {
+    type ChunkResult = { reqs: ExtractedRequirement[]; inTok: number; outTok: number };
 
-${c.text}`;
+    // Batch chunks 4 at a time — reduces Groq calls by ~4x.
+    const BATCH = 4;
+    const batches: ProducedChunk[][] = [];
+    for (let i = 0; i < chunks.length; i += BATCH) batches.push(chunks.slice(i, i + BATCH));
+
+    const tasks = batches.map((batch) => async (): Promise<ChunkResult> => {
+      const user = batch
+        .map(
+          (c, idx) =>
+            `--- Section ${idx + 1}: ${c.section_path || "Body"} (page ${c.page_start}${c.page_end !== c.page_start ? `–${c.page_end}` : ""}) ---\n${c.text}`
+        )
+        .join("\n\n");
 
       let parsed: ExtractedRequirement[] | null = null;
       let lastErr: string | null = null;
+      let inTok = 0, outTok = 0;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const { data, usage } = await callClaudeJson<unknown>({
+          const { data, usage, raw } = await callGroqJson<unknown>({
             system: sys,
             user:
               attempt === 0
                 ? user
-                : `${user}\n\n[Previous response failed validation: ${lastErr}. Return ONLY a JSON array matching the schema.]`,
+                : `${user}\n\n[Previous attempt failed: ${lastErr}. Return ONLY a JSON array.]`,
             maxTokens: 4096,
+            // Use the quality model — small models silently return [] on
+            // complex structured extraction with this schema.
           });
-          totalIn += usage.input_tokens;
-          totalOut += usage.output_tokens;
+          inTok += usage.input_tokens;
+          outTok += usage.output_tokens;
           const validated = RequirementArraySchema.safeParse(data);
           if (validated.success) {
             parsed = validated.data;
+            if (parsed.length === 0) {
+              console.warn(`[extraction] LLM returned empty array. Raw response:`, raw.slice(0, 400));
+            }
             break;
           }
           lastErr = validated.error.issues
             .slice(0, 3)
             .map((i) => `${i.path.join(".")}: ${i.message}`)
             .join("; ");
+          console.warn(`[extraction] Validation failed (attempt ${attempt + 1}):`, lastErr, "Raw:", raw.slice(0, 300));
         } catch (e: any) {
           lastErr = e.message;
+          console.warn(`[extraction] Call failed (attempt ${attempt + 1}):`, e.message);
         }
       }
       if (!parsed) {
-        // Skip this chunk — don't fail the entire run on one bad section.
-        continue;
+        console.warn(`[extraction] Chunk batch produced no parsed reqs after retries. Last error:`, lastErr);
+        return { reqs: [], inTok, outTok };
       }
-      for (const r of parsed) {
-        // Fill source_page from chunk if model didn't provide one.
-        if (r.source_page == null) r.source_page = c.page_start;
-        allReqs.push(r);
-      }
+      // Fill missing source_page from the first chunk in the batch.
+      const reqs = parsed.map((r) => {
+        if (r.source_page == null) r.source_page = batch[0].page_start;
+        return r;
+      });
+      return { reqs, inTok, outTok };
+    });
+
+    const results = await pLimit(tasks, 3);
+    for (const r of results) {
+      totalIn += r.inTok;
+      totalOut += r.outTok;
+      allReqs.push(...r.reqs);
     }
 
     // Dedup by (requirement_id, text)
@@ -420,16 +463,28 @@ export async function runResponseGenerationAgent(
       return;
     }
 
-    for (const q of questions) {
-      const usage = await generateAndPersistAnswer(supabase, {
-        question_id: q.id,
-        question_text: q.question_text,
-        org_id: deal.org_id,
-        org_name: opts.orgName,
-        tone: opts.tone || "technical",
-      });
-      totalIn += usage.input_tokens;
-      totalOut += usage.output_tokens;
+    // Process questions with bounded concurrency to avoid rate limits.
+    const qResults: { input_tokens: number; output_tokens: number }[] = new Array(questions.length);
+    let qIdx = 0;
+    async function qWorker(staggerMs: number) {
+      if (staggerMs > 0) await new Promise((r) => setTimeout(r, staggerMs));
+      while (qIdx < questions.length) {
+        const i = qIdx++;
+        const q = questions[i];
+        qResults[i] = await generateAndPersistAnswer(supabase, {
+          question_id: q.id,
+          question_text: q.question_text,
+          org_id: deal.org_id,
+          org_name: opts.orgName,
+          tone: opts.tone || "technical",
+        });
+      }
+    }
+    const concurrency = Math.min(3, questions.length);
+    await Promise.all(Array.from({ length: concurrency }, (_, wi) => qWorker(wi * 300)));
+    for (const u of qResults) {
+      totalIn += u.input_tokens;
+      totalOut += u.output_tokens;
     }
 
     await setStatus(supabase, doc.id, "completed");

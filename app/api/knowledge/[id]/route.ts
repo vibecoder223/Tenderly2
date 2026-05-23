@@ -3,6 +3,35 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
 
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = createClient(await cookies());
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { data } = await supabase
+    .from("knowledge_documents")
+    .select("id, ingestion_status, error_message, page_count")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Extract stage from error_message if it has STAGE: prefix.
+  const errMsg = data.error_message ?? "";
+  const stage = errMsg.startsWith("STAGE:") ? errMsg.slice(6) : null;
+  const errorMessage = stage ? null : data.error_message;
+
+  return NextResponse.json({
+    knowledge_document: {
+      id: data.id,
+      ingestion_status: data.ingestion_status,
+      stage,
+      error_message: errorMessage,
+      page_count: data.page_count,
+    },
+  });
+}
+
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = createClient(await cookies());

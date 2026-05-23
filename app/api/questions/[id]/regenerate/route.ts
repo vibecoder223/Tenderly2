@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
-import { callClaudeText } from "@/lib/anthropic";
+import { tryCreateAdminClient } from "@/utils/supabase/admin";
+import { generateAndPersistAnswer } from "@/lib/rag";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,14 +13,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENROUTER_API_KEY) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured. Set it in .env.local to use AI regeneration." },
+      { error: "OPENROUTER_API_KEY is not configured. Set it in .env.local." },
       { status: 503 }
     );
   }
 
-  const { tone } = await req.json();
+  const { tone } = await req.json().catch(() => ({ tone: "technical" }));
 
   const { data: q } = await supabase
     .from("questions")
@@ -28,39 +29,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .maybeSingle();
   if (!q) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const orgName =
-    (q as any).documents?.deals?.organizations?.name ??
-    "Workspace";
+  const orgId = (q as any).documents?.deals?.org_id ?? "";
+  const orgName = (q as any).documents?.deals?.organizations?.name ?? "Workspace";
+
+  const writer = tryCreateAdminClient() ?? supabase;
 
   try {
-    const { text } = await callClaudeText({
-      system: `You are a senior solutions engineer drafting a response for an RFP. Write a clear, ${tone || "technical"} response in 150–300 words. Be specific and direct.`,
-      user: `Company: ${orgName}\n\nQuestion / requirement:\n${q.question_text}\n\nDraft the response now. Output only the response text.`,
-      maxTokens: 800,
+    await generateAndPersistAnswer(writer, {
+      question_id: id,
+      question_text: (q as any).question_text,
+      org_id: orgId,
+      org_name: orgName,
+      tone: tone || "technical",
     });
-
-    const { data: existing } = await supabase
+    const { data: resp } = await supabase
       .from("responses")
-      .select("id")
+      .select("draft_text, final_text")
       .eq("question_id", id)
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (existing) {
-      await supabase
-        .from("responses")
-        .update({ ai_generated_draft: text, draft_text: text, tone: tone || "technical" })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("responses").insert({
-        question_id: id,
-        ai_generated_draft: text,
-        draft_text: text,
-        tone: tone || "technical",
-        status: "draft",
-      });
-    }
-
-    return NextResponse.json({ draft_text: text });
+    return NextResponse.json({ draft_text: resp?.draft_text || resp?.final_text || "" });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

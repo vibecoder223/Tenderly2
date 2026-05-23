@@ -24,16 +24,16 @@ export async function POST(req: Request) {
 
   // If the LLM key is missing, mark the document with a clear state and return
   // success — upload UX shouldn't error out.
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENROUTER_API_KEY) {
     await supabase
       .from("documents")
       .update({
         processing_status: "uploaded",
         error_message:
-          "ANTHROPIC_API_KEY not configured. The file is stored, but the AI pipeline (text extraction, requirement parsing, response generation) is disabled until a key is set in .env.local.",
+          "OPENROUTER_API_KEY not configured. The file is stored, but the AI pipeline is disabled until a key is set in .env.local.",
       })
       .eq("id", document_id);
-    return NextResponse.json({ ok: true, skipped: true, reason: "anthropic_key_missing" });
+    return NextResponse.json({ ok: true, skipped: true, reason: "groq_key_missing" });
   }
 
   // Prefer admin for the pipeline (writes across many tables across long runs).
