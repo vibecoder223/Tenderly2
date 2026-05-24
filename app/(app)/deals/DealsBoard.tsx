@@ -16,9 +16,9 @@ type Deal = {
 };
 
 const COLUMNS: { key: string; label: string; aliases: string[] }[] = [
-  { key: "new",         label: "New",         aliases: ["new", "open", "draft"] },
+  { key: "new",         label: "New",         aliases: ["new"] },
   { key: "in_progress", label: "In progress", aliases: ["in_progress"] },
-  { key: "submitted",   label: "Submitted",   aliases: ["submitted", "responded"] },
+  { key: "submitted",   label: "Submitted",   aliases: ["submitted"] },
   { key: "won",         label: "Won",         aliases: ["won"] },
   { key: "lost",        label: "Lost",        aliases: ["lost"] },
 ];
