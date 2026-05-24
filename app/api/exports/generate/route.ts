@@ -423,8 +423,6 @@ export async function POST(req: Request) {
     .single();
   if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
 
-  await supabase.from("deals").update({ status: "responded" }).eq("id", deal_id);
-
   return NextResponse.json({ exportId: row.id, format: ext });
 }
 
