@@ -306,16 +306,26 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
           No templates in this category yet.
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="card overflow-hidden">
+          {/* Column headers */}
+          <div
+            className="flex items-center gap-5 px-5 py-2.5"
+            style={{ borderBottom: "1px solid var(--divider)", background: "var(--bg-2)" }}
+          >
+            <span style={{ width: 34, flexShrink: 0 }} />
+            <span className="text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--fg-5)", width: 200, flexShrink: 0 }}>Name</span>
+            <span className="flex-1 text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--fg-5)" }}>Sections</span>
+            <span className="text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--fg-5)", flexShrink: 0 }}>Updated</span>
+            <span style={{ width: 28, flexShrink: 0 }} />
+          </div>
           {visible.map((t) => (
-            <TemplateCard
+            <TemplateRow
               key={t.id}
               t={t}
               onEdit={() => openEditor(t)}
               onDelete={() => del(t.id)}
               onSetDefault={() => setDefault(t.id)}
               onDuplicate={async () => {
-                const sections = introToSections(t.intro);
                 const res = await fetch("/api/templates", {
                   method: "POST",
                   headers: { "content-type": "application/json" },
@@ -333,8 +343,6 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
                   const { template } = await res.json();
                   setTemplates([template, ...templates]);
                 }
-                // Silence unused var
-                void sections;
               }}
             />
           ))}
@@ -371,9 +379,24 @@ function EmptyState({ onAI, onWord }: { onAI: () => void; onWord: () => void }) 
   );
 }
 
-// ---- Template card ----
+// ---- Template row (list view) ----
 
-function TemplateCard({
+const KIND_META: Record<TemplateKind, { label: string; color: string }> = {
+  ai:   { label: "AI",   color: "var(--accent)" },
+  text: { label: "Text", color: "var(--fg-4)" },
+  docx: { label: "Word", color: "oklch(0.50 0.18 250)" },
+};
+
+function rowSummary(t: T, kind: TemplateKind): string {
+  if (kind === "ai") {
+    const secs = introToSections(t.intro);
+    if (secs) return secs.map((s) => s.type === "qa" ? "Q&A" : s.name).join("  ·  ");
+  }
+  if (kind === "docx") return t.file_name || "uploaded.docx";
+  return t.intro ? t.intro.replace(/\n+/g, " ").slice(0, 160) : "No intro text";
+}
+
+function TemplateRow({
   t,
   onEdit,
   onDelete,
@@ -386,174 +409,88 @@ function TemplateCard({
   onDuplicate: () => void;
   onSetDefault: () => void;
 }) {
-  const sections = introToSections(t.intro);
   const kind = classifyTemplate(t);
-  const aiCount = sections?.filter((s) => s.type === "ai").length ?? 0;
-  const staticCount = sections?.filter((s) => s.type === "static").length ?? 0;
-  const hasQa = sections?.some((s) => s.type === "qa") ?? false;
+  const { label: kindLabel, color: kindColor } = KIND_META[kind];
+  const summary = rowSummary(t, kind);
   const updated = formatUpdated(t.updated_at ?? t.created_at ?? null);
 
-  const KIND_BADGE: Record<TemplateKind, { label: string; bg: string; fg: string }> = {
-    ai:   { label: "AI Native",     bg: "color-mix(in srgb, var(--accent) 12%, white)", fg: "var(--accent)" },
-    text: { label: "Text Template", bg: "var(--bg-2)",                                   fg: "var(--fg-3)" },
-    docx: { label: "Word Template", bg: "color-mix(in srgb, #2563eb 12%, white)",        fg: "#2563eb" },
-  };
-  const badge = KIND_BADGE[kind];
-
   return (
-    <div className="card p-5 flex flex-col" style={{ minHeight: 220 }}>
-      {/* HEADER */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-            <h3 className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)", maxWidth: 200 }}>
-              {t.name}
-            </h3>
-            {t.is_default && (
-              <span className="badge" style={{
-                background: "color-mix(in srgb, var(--ok) 12%, white)",
-                color: "var(--ok)",
-                fontWeight: 600,
-              }}>
-                ✓ Default
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="badge" style={{
-              background: badge.bg, color: badge.fg, fontWeight: 600, fontSize: 10.5,
-            }}>
-              {badge.label}
-            </span>
-            {kind === "ai" && aiCount > 0 && (
-              <span className="badge" style={{ background: "var(--bg-2)", color: "var(--fg-4)", fontSize: 10.5 }}>
-                Auto-fill capable
-              </span>
-            )}
-            {hasQa && (
-              <span className="badge" style={{ background: "var(--bg-2)", color: "var(--fg-4)", fontSize: 10.5 }}>
-                Compliance-aware
-              </span>
-            )}
-            {kind === "docx" && (
-              <span className="badge" style={{ background: "var(--bg-2)", color: "var(--fg-4)", fontSize: 10.5 }}>
-                Placeholder fill
-              </span>
-            )}
-          </div>
+    <div
+      className="flex items-center gap-5 px-5 py-4 border-t"
+      style={{ borderColor: "var(--divider)" }}
+    >
+      {/* Kind label — fixed width, uppercase, colored */}
+      <span
+        style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+          textTransform: "uppercase", color: kindColor,
+          flexShrink: 0, width: 34,
+        }}
+      >
+        {kindLabel}
+      </span>
+
+      {/* Name + default indicator */}
+      <div style={{ flexShrink: 0, width: 200, minWidth: 0 }}>
+        <div
+          className="text-[13.5px] font-semibold truncate"
+          style={{ color: "var(--fg)", lineHeight: 1.3 }}
+        >
+          {t.name}
         </div>
-
-        <CardMenu
-          isDefault={t.is_default}
-          onEdit={kind === "docx" ? null : onEdit}
-          onDuplicate={onDuplicate}
-          onSetDefault={onSetDefault}
-          onDelete={onDelete}
-        />
-      </div>
-
-      {/* DESCRIPTION */}
-      {t.description ? (
-        <p className="text-[12px] line-clamp-2 mb-3" style={{ color: "var(--fg-4)" }}>
-          {t.description}
-        </p>
-      ) : null}
-
-      {/* BODY */}
-      <div className="flex-1">
-        {kind === "ai" && sections ? (
-          <SectionsPreview sections={sections} aiCount={aiCount} staticCount={staticCount} hasQa={hasQa} />
-        ) : kind === "docx" ? (
-          <div className="rounded p-3" style={{ background: "var(--bg-2)" }}>
-            <div className="flex items-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="1.6" style={{ color: "var(--fg-4)", flexShrink: 0 }}>
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              <span className="text-[12px] truncate" style={{ color: "var(--fg-3)" }}>
-                {t.file_name || "uploaded.docx"}
-              </span>
-            </div>
-            <p className="text-[11px] mt-2" style={{ color: "var(--fg-4)" }}>
-              AI replaces placeholder tokens at export time. Structure & branding preserved.
-            </p>
+        {t.is_default && (
+          <div
+            className="text-[10.5px] font-semibold mt-0.5"
+            style={{ color: "var(--ok)", letterSpacing: "0.02em" }}
+          >
+            Default
           </div>
-        ) : (
-          <p className="text-[12px] line-clamp-3" style={{ color: "var(--fg-4)" }}>
-            {t.intro ? t.intro.slice(0, 200) : "(no intro text)"}
-          </p>
+        )}
+        {t.description && !t.is_default && (
+          <div className="text-[11px] truncate mt-0.5" style={{ color: "var(--fg-5)" }}>
+            {t.description}
+          </div>
         )}
       </div>
 
-      {/* FOOTER */}
-      <div className="flex items-center justify-between gap-2 mt-4 pt-3"
-        style={{ borderTop: "1px solid var(--divider)" }}>
-        <div className="text-[11px]" style={{ color: "var(--fg-5)" }}>
-          Updated {updated}
-        </div>
-        <div className="flex items-center gap-2">
-          {kind !== "docx" && (
-            <button className="btn text-[12px]" onClick={onEdit} style={{ padding: "4px 12px" }}>
-              Edit
-            </button>
-          )}
-        </div>
+      {/* Section sequence / summary — takes remaining space */}
+      <div
+        className="flex-1 min-w-0 text-[12px] truncate"
+        style={{ color: "var(--fg-4)" }}
+        title={summary}
+      >
+        {kind === "ai" ? (
+          summary.split("  ·  ").map((name, i, arr) => (
+            <span key={i}>
+              <span style={{ color: i % 2 === 0 ? "var(--fg-3)" : "var(--fg-4)" }}>
+                {name}
+              </span>
+              {i < arr.length - 1 && (
+                <span style={{ color: "var(--fg-5)", margin: "0 5px" }}>·</span>
+              )}
+            </span>
+          ))
+        ) : (
+          summary
+        )}
       </div>
-    </div>
-  );
-}
 
-// ---- Sections preview (grouped) ----
+      {/* Updated */}
+      <span
+        className="text-[11px] num"
+        style={{ color: "var(--fg-5)", flexShrink: 0 }}
+      >
+        {updated}
+      </span>
 
-function SectionsPreview({
-  sections,
-  aiCount,
-  staticCount,
-  hasQa,
-}: {
-  sections: TemplateSection[];
-  aiCount: number;
-  staticCount: number;
-  hasQa: boolean;
-}) {
-  const aiNames = sections.filter((s) => s.type === "ai").map((s) => s.name);
-  const staticNames = sections.filter((s) => s.type === "static").map((s) => s.name);
-
-  return (
-    <div className="space-y-2">
-      {aiCount > 0 && (
-        <SectionGroup
-          label={`AI Sections (${aiCount})`}
-          color="var(--accent)"
-          names={aiNames}
-        />
-      )}
-      {staticCount > 0 && (
-        <SectionGroup
-          label={`Static (${staticCount})`}
-          color="var(--fg-3)"
-          names={staticNames}
-        />
-      )}
-      {hasQa && (
-        <SectionGroup
-          label="Q&A Block"
-          color="#16a34a"
-          names={["Compliance matrix"]}
-        />
-      )}
-    </div>
-  );
-}
-
-function SectionGroup({ label, color, names }: { label: string; color: string; names: string[] }) {
-  return (
-    <div className="text-[11.5px]">
-      <div style={{ color, fontWeight: 600, marginBottom: 2 }}>{label}</div>
-      <div style={{ color: "var(--fg-4)", paddingLeft: 8 }} className="line-clamp-2">
-        {names.join(" · ")}
-      </div>
+      {/* Actions */}
+      <CardMenu
+        isDefault={t.is_default}
+        onEdit={kind === "docx" ? null : onEdit}
+        onDuplicate={onDuplicate}
+        onSetDefault={onSetDefault}
+        onDelete={onDelete}
+      />
     </div>
   );
 }
