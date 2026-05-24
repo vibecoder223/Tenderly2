@@ -132,7 +132,7 @@ export default function UploadCard({ dealId }: { dealId: string }) {
         if (doc.processing_status === "completed") {
           stopPolling();
           setTimeout(() => {
-            router.push(`/deals/${dealId}/triage?doc=${docId}`);
+            router.push(`/deals/${dealId}/questions?doc=${docId}`);
             router.refresh();
           }, 600);
         } else if (doc.processing_status === "failed") {
