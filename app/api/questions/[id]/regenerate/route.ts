@@ -32,6 +32,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const orgId = (q as any).documents?.deals?.org_id ?? "";
   const orgName = (q as any).documents?.deals?.organizations?.name ?? "Workspace";
 
+  // Guard: AI drafts retrieve from the knowledge base. Empty KB = empty drafts.
+  // Bail with a clear error rather than producing hallucinated output.
+  const { count: kbReady } = await supabase
+    .from("knowledge_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", orgId)
+    .eq("ingestion_status", "ready");
+  if (!kbReady || kbReady === 0) {
+    return NextResponse.json(
+      {
+        error:
+          "Your knowledge base is empty. Upload at least one past proposal, policy, or security doc before generating drafts.",
+      },
+      { status: 409 }
+    );
+  }
+
   const writer = tryCreateAdminClient() ?? supabase;
 
   try {

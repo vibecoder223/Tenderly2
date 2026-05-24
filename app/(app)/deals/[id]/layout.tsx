@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireMembership } from "@/utils/auth";
 import DealHeader from "@/components/DealHeader";
 import DealTabs from "@/components/DealTabs";
+import KnowledgeEmptyBanner from "@/components/KnowledgeEmptyBanner";
 
 export default async function DealLayout({
   children,
@@ -52,12 +53,22 @@ export default async function DealLayout({
     submittedQ = s ?? 0;
   }
 
+  // Detect empty knowledge base (org-scoped). Sample docs are excluded so
+  // users still see the nudge to upload real source material.
+  const { count: kbReady } = await supabase
+    .from("knowledge_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", member.org_id)
+    .eq("ingestion_status", "ready");
+  const showKbBanner = (kbReady ?? 0) === 0;
+
   return (
     <>
       <div className="sticky top-0 z-20">
         <DealHeader deal={deal} completion={{ approved: approvedQ, total: totalQ }} />
         <DealTabs dealId={deal.id} counts={{ questions: totalQ, approvals: submittedQ }} />
       </div>
+      {showKbBanner && <KnowledgeEmptyBanner />}
       <div>{children}</div>
     </>
   );
