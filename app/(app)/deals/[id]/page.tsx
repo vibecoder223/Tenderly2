@@ -194,13 +194,9 @@ export default async function DealOverview({
               <ul className="space-y-2.5">
                 {((recentActs as any).data ?? []).map((a: any, i: number) => (
                   <li key={i} className="text-[12.5px]">
-                    <span style={{ color: "var(--fg-2)" }}>
-                      {a.action} {a.entity_type}
-                      {a.metadata?.filename ? `: ${a.metadata.filename}` : ""}
-                      {a.metadata?.name ? `: ${a.metadata.name}` : ""}
-                    </span>
+                    <span style={{ color: "var(--fg-2)" }}>{humanizeAct(a)}</span>
                     <div style={{ color: "var(--fg-5)" }} className="text-[11px]">
-                      {new Date(a.created_at).toISOString().replace("T", " ").slice(0, 16)}
+                      {fmtActivityDate(a.created_at)}
                     </div>
                   </li>
                 ))}
@@ -293,6 +289,34 @@ function PipelineBar({
       </div>
     </div>
   );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function humanizeAct(a: { action: string; entity_type: string; metadata: any }): string {
+  const who = a.metadata?.user_name ?? a.metadata?.actor ?? "Someone";
+  const file = a.metadata?.filename || a.metadata?.name;
+  const entity = file ? `"${file}"` : a.entity_type?.replace(/_/g, " ");
+  switch (a.action) {
+    case "created":   return `${who} created ${entity}`;
+    case "updated":   return `${who} updated ${entity}`;
+    case "deleted":   return `${who} deleted ${entity}`;
+    case "uploaded":  return `${who} uploaded ${entity}`;
+    case "approved":  return `${who} approved ${entity}`;
+    case "rejected":  return `${who} sent ${entity} back for revision`;
+    case "submitted": return `${who} submitted ${entity} for review`;
+    case "generated": return `AI generated draft for ${entity}`;
+    case "ingested":  return `${entity} indexed into knowledge base`;
+    case "exported":  return `${who} exported ${entity}`;
+    default:          return `${who} ${a.action} ${entity}`;
+  }
+}
+
+function fmtActivityDate(iso: string): string {
+  const diff = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.round(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.round(diff / 3600)}h ago`;
+  return new Date(iso).toISOString().slice(0, 10);
 }
 
 function EmptyPipeline({ dealId, hasDocuments }: { dealId: string; hasDocuments: boolean }) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   CitationList,
@@ -73,6 +73,24 @@ export default function QuestionDetail({
   const [commentBody, setCommentBody] = useState("");
   const [commentsLocal, setCommentsLocal] = useState<Comment[]>(comments);
   const [postingComment, setPostingComment] = useState(false);
+  const [autoSave, setAutoSave] = useState<null | "saving" | Date>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const autosaveDraft = useCallback(async (text: string, currentTone: string) => {
+    setAutoSave("saving");
+    const res = await fetch(`/api/questions/${question.id}/respond`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ draft_text: text, tone: currentTone }),
+    });
+    setAutoSave(res.ok ? new Date() : null);
+  }, [question.id]);
+
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => autosaveDraft(draft, tone), 1500);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [draft, tone, autosaveDraft]);
 
   async function saveDraft(submit = false) {
     setSaving(true);
@@ -203,7 +221,12 @@ export default function QuestionDetail({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
           />
-          <CitationList citations={r?.citations ?? []} />
+          <div className="flex items-center justify-between">
+            <CitationList citations={r?.citations ?? []} />
+            <span className="text-[11px]" style={{ color: "var(--fg-5)" }}>
+              {autoSave === "saving" ? "Saving…" : autoSave instanceof Date ? `Saved ${timeSince(autoSave)}` : ""}
+            </span>
+          </div>
           {info && (
             <div
               className="text-[12px]"
@@ -321,6 +344,13 @@ export default function QuestionDetail({
       </aside>
     </div>
   );
+}
+
+function timeSince(d: Date): string {
+  const s = Math.round((Date.now() - d.getTime()) / 1000);
+  if (s < 5) return "just now";
+  if (s < 60) return `${s}s ago`;
+  return `${Math.round(s / 60)}m ago`;
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {

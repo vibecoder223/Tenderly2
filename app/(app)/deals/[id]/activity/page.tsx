@@ -65,16 +65,9 @@ export default async function DealActivityPage({
                 className="px-5 py-3 border-t text-[13px]"
                 style={{ borderColor: "var(--divider)" }}
               >
-                <div style={{ color: "var(--fg-2)" }}>
-                  {a.action}{" "}
-                  <span className="mono" style={{ color: "var(--fg-4)" }}>
-                    {a.entity_type}
-                  </span>
-                  {a.metadata?.filename ? `: ${a.metadata.filename}` : ""}
-                  {a.metadata?.name ? `: ${a.metadata.name}` : ""}
-                </div>
+                <div style={{ color: "var(--fg-2)" }}>{humanize(a)}</div>
                 <div className="text-[11.5px]" style={{ color: "var(--fg-5)" }}>
-                  {new Date(a.created_at).toISOString().replace("T", " ").slice(0, 16)}
+                  {fmtDate(a.created_at)}
                 </div>
               </li>
             ))}
@@ -144,4 +137,34 @@ export default async function DealActivityPage({
       </section>
     </div>
   );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function humanize(a: { action: string; entity_type: string; metadata: any }): string {
+  const who = a.metadata?.user_name ?? a.metadata?.actor ?? "Someone";
+  const file = a.metadata?.filename || a.metadata?.name;
+  const entity = file ? `"${file}"` : a.entity_type?.replace(/_/g, " ");
+  switch (a.action) {
+    case "created":   return `${who} created ${entity}`;
+    case "updated":   return `${who} updated ${entity}`;
+    case "deleted":   return `${who} deleted ${entity}`;
+    case "uploaded":  return `${who} uploaded ${entity}`;
+    case "approved":  return `${who} approved ${entity}`;
+    case "rejected":  return `${who} sent ${entity} back for revision`;
+    case "submitted": return `${who} submitted ${entity} for review`;
+    case "generated": return `AI generated draft for ${entity}`;
+    case "ingested":  return `${entity} indexed into knowledge base`;
+    case "exported":  return `${who} exported ${entity}`;
+    case "assigned":  return `${who} assigned ${entity}`;
+    default:          return `${who} ${a.action} ${entity}`;
+  }
+}
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  const diff = Math.round((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.round(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.round(diff / 3600)}h ago`;
+  return d.toISOString().slice(0, 10);
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 
 type Item = { href: string; label: string; icon: React.ReactNode };
 type Group = { title: string; items: Item[] };
@@ -27,6 +27,15 @@ const groups: Group[] = [
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+          </svg>
+        ),
+      },
+      {
+        href: "/my-queue",
+        label: "My queue",
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
           </svg>
         ),
       },
@@ -114,7 +123,11 @@ export default function Sidebar({
   orgName: string;
 }) {
   const path = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [queueCount, setQueueCount] = useState<number | null>(null);
+  const [searchVal, setSearchVal] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Close on route change
   useEffect(() => { setMobileOpen(false); }, [path]);
@@ -125,6 +138,19 @@ export default function Sidebar({
     window.addEventListener("sidebar-toggle", handle);
     return () => window.removeEventListener("sidebar-toggle", handle);
   }, []);
+
+  // Inbox count
+  useEffect(() => {
+    fetch("/api/inbox/count").then(r => r.json()).then(d => setQueueCount(d.count ?? 0)).catch(() => {});
+  }, [path]);
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = searchVal.trim();
+    if (!q) return;
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setSearchVal("");
+  }
 
   return (
     <>
@@ -170,8 +196,34 @@ export default function Sidebar({
         </span>
       </div>
 
+      {/* Search */}
+      <div style={{ padding: "8px 8px 4px" }}>
+        <form onSubmit={submitSearch}>
+          <label style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "6px 10px", borderRadius: 6,
+            background: "var(--bg-2)", border: "1px solid var(--border)",
+            cursor: "text",
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-5)", flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              ref={searchRef}
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+              placeholder="Search…"
+              style={{
+                flex: 1, background: "none", border: "none", outline: "none",
+                fontSize: 12.5, color: "var(--fg-2)", minWidth: 0,
+              }}
+            />
+          </label>
+        </form>
+      </div>
+
       {/* Primary navigation */}
-      <div className="flex-1 overflow-y-auto" style={{ padding: "12px 0" }}>
+      <div className="flex-1 overflow-y-auto" style={{ padding: "8px 0 12px" }}>
         {groups.map((group, gi) => (
           <div key={group.title} style={{ marginTop: gi === 0 ? 0 : 18 }}>
             <div
@@ -188,7 +240,12 @@ export default function Sidebar({
             </div>
             <nav style={{ display: "flex", flexDirection: "column", gap: 1, padding: "0 8px" }}>
               {group.items.map((it) => (
-                <NavItem key={it.href} item={it} path={path} />
+                <NavItem
+                  key={it.href}
+                  item={it}
+                  path={path}
+                  badge={it.href === "/my-queue" && queueCount ? queueCount : undefined}
+                />
               ))}
             </nav>
           </div>
@@ -296,7 +353,7 @@ export default function Sidebar({
   );
 }
 
-function NavItem({ item, path }: { item: Item; path: string }) {
+function NavItem({ item, path, badge }: { item: Item; path: string; badge?: number }) {
   const active =
     item.href === "/dashboard"
       ? path === "/dashboard"
@@ -346,6 +403,17 @@ function NavItem({ item, path }: { item: Item; path: string }) {
       <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {item.label}
       </span>
+      {badge != null && badge > 0 && (
+        <span style={{
+          fontSize: 10.5, fontWeight: 600, lineHeight: 1,
+          padding: "2px 6px", borderRadius: 99,
+          background: active ? "var(--accent-tint2)" : "var(--warn-tint, oklch(0.97 0.04 60))",
+          color: active ? "var(--accent-2)" : "var(--warn, oklch(0.60 0.15 60))",
+          flexShrink: 0,
+        }}>
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }

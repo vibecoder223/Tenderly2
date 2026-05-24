@@ -1,6 +1,7 @@
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
 import KnowledgeView from "./KnowledgeView";
+import KnowledgeTestPanel from "@/components/KnowledgeTestPanel";
 
 export default async function KnowledgePage() {
   const { supabase } = await requireMembership();
@@ -19,8 +20,9 @@ export default async function KnowledgePage() {
           </>
         }
       />
-      <div className="p-7 max-w-[1100px]">
+      <div className="p-7 max-w-[1100px] space-y-6">
         <KnowledgeView initial={(items ?? []) as any[]} />
+        <KnowledgeTestPanel />
       </div>
     </>
   );

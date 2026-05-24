@@ -1,5 +1,6 @@
 import Link from "next/link";
 import StatusBadge, { dealStatusLabels } from "@/components/StatusBadge";
+import CloneDealButton from "@/components/CloneDealButton";
 
 export default function DealHeader({
   deal,
@@ -41,6 +42,10 @@ export default function DealHeader({
             label={dealStatusLabels[deal.status] ?? deal.status}
           />
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 self-start">
+        <CloneDealButton dealId={deal.id} />
       </div>
 
       <div className="flex items-stretch gap-5 text-[12px]" style={{ color: "var(--fg-4)" }}>
