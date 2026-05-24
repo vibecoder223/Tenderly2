@@ -37,15 +37,17 @@ function SignupForm() {
       password,
       options: { data: { name, invite_token: invite || undefined } },
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setErr(error.message);
       return;
     }
     if (!data.session) {
+      setLoading(false);
       setInfo("Check your inbox to confirm your email, then sign in.");
       return;
     }
+    // Keep spinner active through the redirect
     if (invite) {
       router.push(`/auth/accept?token=${invite}`);
     } else {
@@ -95,7 +97,20 @@ function SignupForm() {
         {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
         {info && <div className="text-xs" style={{ color: "var(--ok)" }}>{info}</div>}
         <button type="submit" className="btn btn-primary w-full justify-center mt-2" disabled={loading}>
-          {loading ? "Creating account…" : invite ? "Create account & join" : "Create account"}
+          {loading ? (
+            <>
+              <svg
+                width="14" height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                style={{ animation: "spin 0.75s linear infinite", flexShrink: 0 }}
+              >
+                <circle cx="7" cy="7" r="5.5" stroke="oklch(1 0 0 / 0.35)" strokeWidth="1.5" />
+                <path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              Creating account…
+            </>
+          ) : invite ? "Create account & join" : "Create account"}
         </button>
       </form>
       <div className="text-xs text-center mt-5" style={{ color: "var(--fg-4)" }}>

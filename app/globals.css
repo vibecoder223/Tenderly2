@@ -245,6 +245,10 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 .page-in {
   animation: fadeUp var(--dur-slow) var(--ease) both;
 }

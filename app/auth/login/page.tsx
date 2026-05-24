@@ -29,11 +29,12 @@ function LoginForm() {
     setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setErr(error.message);
       return;
     }
+    // Keep spinner active through the redirect
     router.push(next);
     router.refresh();
   }
@@ -69,7 +70,20 @@ function LoginForm() {
         </div>
         {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
         <button type="submit" className="btn btn-primary w-full justify-center mt-2" disabled={loading}>
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? (
+            <>
+              <svg
+                width="14" height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                style={{ animation: "spin 0.75s linear infinite", flexShrink: 0 }}
+              >
+                <circle cx="7" cy="7" r="5.5" stroke="oklch(1 0 0 / 0.35)" strokeWidth="1.5" />
+                <path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              Signing in…
+            </>
+          ) : "Sign in"}
         </button>
       </form>
       <div className="text-xs text-center mt-5" style={{ color: "var(--fg-4)" }}>
