@@ -82,29 +82,19 @@ type Comment = {
 /* ─── status helpers ────────────────────────────────────────────────────── */
 
 const STATUS_LABEL: Record<string, string> = {
-  unanswered: "Unanswered",
-  pending: "Unanswered",
-  ai_drafted: "AI drafted",
-  assigned: "Assigned",
-  in_progress: "In progress",
-  in_review: "In review",
-  submitted: "In review",
+  todo: "To do",
+  drafting: "Drafting",
+  review: "In review",
   approved: "Approved",
-  finalized: "Finalized",
-  rejected: "Rejected",
+  blocked: "Blocked",
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  unanswered: "var(--fg-5)",
-  pending: "var(--fg-5)",
-  ai_drafted: "var(--accent)",
-  assigned: "var(--accent)",
-  in_progress: "var(--accent)",
-  in_review: "var(--warn)",
-  submitted: "var(--warn)",
+  todo: "var(--fg-5)",
+  drafting: "var(--accent)",
+  review: "var(--warn)",
   approved: "var(--ok)",
-  finalized: "var(--ok)",
-  rejected: "var(--err)",
+  blocked: "var(--err)",
 };
 
 function StatusDot({ status }: { status: string }) {
@@ -165,12 +155,7 @@ export default function QuestionsTable({
 
   const filtered = useMemo(() => {
     return questions.filter((q) => {
-      if (status !== "all") {
-        if (status === "unanswered" && !["unanswered", "pending"].includes(q.status)) return false;
-        if (status === "drafting" && !["ai_drafted", "assigned", "in_progress"].includes(q.status)) return false;
-        if (status === "review" && !["in_review", "submitted"].includes(q.status)) return false;
-        if (status === "approved" && q.status !== "approved") return false;
-      }
+      if (status !== "all" && q.status !== status) return false;
       if (topic !== "all" && q.topic !== topic) return false;
       if (search && !`${q.requirement_id ?? ""} ${q.question_text}`.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
@@ -252,10 +237,11 @@ export default function QuestionsTable({
           <div style={{ display: "flex", gap: 6 }}>
             <select className="select" style={{ flex: 1, fontSize: 11.5, padding: "5px 8px" }} value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="all">All statuses</option>
-              <option value="unanswered">Unanswered</option>
+              <option value="todo">To do</option>
               <option value="drafting">Drafting</option>
               <option value="review">In review</option>
               <option value="approved">Approved</option>
+              <option value="blocked">Blocked</option>
             </select>
             <select className="select" style={{ flex: 1, fontSize: 11.5, padding: "5px 8px" }} value={topic} onChange={(e) => setTopic(e.target.value)}>
               <option value="all">All topics</option>
@@ -751,7 +737,7 @@ function QuestionDetailInline({
             <button className="btn btn-primary" onClick={() => saveDraft(true)} disabled={saving}>
               Submit for review
             </button>
-            {(question.status === "submitted" || question.status === "in_review") && (
+            {question.status === "review" && (
               <>
                 <span style={{ flex: 1 }} />
                 <button className="btn btn-primary" onClick={() => approve("approve")} disabled={saving}>

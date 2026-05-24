@@ -62,9 +62,10 @@ export default async function DealOverview({
     return m;
   }, {});
   const approved = byStatus["approved"] ?? 0;
-  const drafting = (byStatus["ai_drafted"] ?? 0) + (byStatus["in_progress"] ?? 0) + (byStatus["assigned"] ?? 0);
-  const inReview = (byStatus["in_review"] ?? 0) + (byStatus["submitted"] ?? 0);
-  const unanswered = (byStatus["unanswered"] ?? 0) + (byStatus["pending"] ?? 0);
+  const drafting = byStatus["drafting"] ?? 0;
+  const inReview = byStatus["review"] ?? 0;
+  const unanswered = byStatus["todo"] ?? 0;
+  const blocked = byStatus["blocked"] ?? 0;
   const completionPct = total > 0 ? Math.round((approved / total) * 100) : 0;
 
   const mandatoryCount = (mandatory as any).count ?? 0;
@@ -104,9 +105,9 @@ export default async function DealOverview({
             ) : (
               <PipelineBar
                 stages={[
-                  { key: "unanswered", label: "Unanswered", count: unanswered, color: "var(--fg-5)" },
+                  { key: "todo", label: "To do", count: unanswered, color: "var(--fg-5)" },
                   { key: "drafting", label: "Drafting", count: drafting, color: "var(--accent)" },
-                  { key: "in_review", label: "In review", count: inReview, color: "var(--warn)" },
+                  { key: "review", label: "In review", count: inReview, color: "var(--warn)" },
                   { key: "approved", label: "Approved", count: approved, color: "var(--ok)" },
                 ]}
               />

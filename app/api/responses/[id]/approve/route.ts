@@ -33,7 +33,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .eq("id", response.question_id);
   } else if (decision === "reject") {
     await supabase.from("responses").update({ status: "draft" }).eq("id", id);
-    await supabase.from("questions").update({ status: "rejected" }).eq("id", response.question_id);
+    await supabase.from("questions").update({ status: "blocked" }).eq("id", response.question_id);
   }
 
   return NextResponse.json({ ok: true });

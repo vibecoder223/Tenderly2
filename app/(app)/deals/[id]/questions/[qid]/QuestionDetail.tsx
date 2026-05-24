@@ -219,7 +219,7 @@ export default function QuestionDetail({
             <button onClick={() => saveDraft(true)} className="btn btn-primary" disabled={saving}>
               Submit for review
             </button>
-            {(question.status === "submitted" || question.status === "in_review") && (
+            {question.status === "review" && (
               <>
                 <span style={{ flex: 1 }} />
                 <button onClick={() => approve("approve")} className="btn btn-primary" disabled={saving}>

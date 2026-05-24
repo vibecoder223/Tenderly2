@@ -41,9 +41,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
   }
 
+  // Map response state → question workflow state in the new taxonomy.
+  // submitted = up for review; draft = still drafting.
   await supabase
     .from("questions")
-    .update({ status: status === "submitted" ? "submitted" : "in_progress" })
+    .update({ status: status === "submitted" ? "review" : "drafting" })
     .eq("id", id);
 
   return NextResponse.json({ ok: true });

@@ -15,12 +15,11 @@ type Deal = {
 };
 
 const COLUMNS: { key: string; label: string; aliases: string[] }[] = [
-  { key: "new",          label: "New",          aliases: ["new", "open"] },
-  { key: "drafting",     label: "Drafting",     aliases: ["parsing", "drafting", "in_progress"] },
-  { key: "under_review", label: "Under review", aliases: ["under_review", "awaiting_approval"] },
-  { key: "submitted",    label: "Submitted",    aliases: ["submitted", "completed", "responded"] },
-  { key: "won",          label: "Won",          aliases: ["won"] },
-  { key: "lost",         label: "Lost",         aliases: ["lost"] },
+  { key: "new",         label: "New",         aliases: ["new"] },
+  { key: "in_progress", label: "In progress", aliases: ["in_progress"] },
+  { key: "submitted",   label: "Submitted",   aliases: ["submitted"] },
+  { key: "won",         label: "Won",         aliases: ["won"] },
+  { key: "lost",        label: "Lost",        aliases: ["lost"] },
 ];
 
 function resolveColumn(status: string): string {

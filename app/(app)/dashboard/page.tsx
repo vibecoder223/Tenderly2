@@ -54,8 +54,8 @@ export default async function DashboardPage() {
       for (const q of qs ?? []) {
         questionTotals.total += 1;
         if (q.status === "approved") questionTotals.approved += 1;
-        if (["in_review", "submitted"].includes(q.status)) questionTotals.inReview += 1;
-        if (["unanswered", "pending"].includes(q.status)) questionTotals.unanswered += 1;
+        if (q.status === "review") questionTotals.inReview += 1;
+        if (q.status === "todo") questionTotals.unanswered += 1;
         const e = totalsByDoc.get(q.document_id) ?? { total: 0, approved: 0 };
         e.total += 1;
         if (q.status === "approved") e.approved += 1;
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
   }
 
   const activeDeals = allDeals.filter((d) =>
-    ["new", "open", "parsing", "drafting", "in_progress", "under_review", "awaiting_approval"].includes(d.status)
+    ["new", "in_progress"].includes(d.status)
   );
   const overdue = activeDeals.filter(
     (d) => d.due_date && new Date(d.due_date).getTime() < Date.now()

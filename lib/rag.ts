@@ -337,7 +337,7 @@ async function upsertResponse(
   if (args.status === "requires_review") {
     await supabase
       .from("questions")
-      .update({ status: "in_progress" })
+      .update({ status: "drafting" })
       .eq("id", args.question_id);
   }
 }

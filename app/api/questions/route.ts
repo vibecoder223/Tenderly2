@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       question_text,
       category: category || null,
       priority: priority || "medium",
-      status: "pending",
+      status: "todo",
     })
     .select()
     .single();

@@ -54,7 +54,7 @@ export default async function CompliancePage({
   const mustItems = reqList.filter((r: any) => r.classification === "must");
   const unansweredMust = mustItems.filter((r: any) => {
     const q = qByReq.get(r.requirement_id);
-    return !q || ["unanswered", "pending"].includes(q.status);
+    return !q || q.status === "todo";
   });
 
   if (reqList.length === 0) {
@@ -100,7 +100,7 @@ export default async function CompliancePage({
           <tbody>
             {reqList.map((r: any) => {
               const q = qByReq.get(r.requirement_id);
-              const status = q?.status ?? "unanswered";
+              const status = q?.status ?? "todo";
               return (
                 <tr key={r.id} className="border-t align-top" style={{ borderColor: "var(--divider)" }}>
                   <td className="px-5 py-3 mono text-[11.5px]" style={{ color: "var(--fg-4)" }}>
@@ -152,13 +152,11 @@ export default async function CompliancePage({
 }
 
 function ComplianceCell({ status }: { status: string }) {
-  if (status === "approved" || status === "finalized")
-    return <span className="badge badge-ok">Covered</span>;
-  if (status === "submitted" || status === "in_review")
-    return <span className="badge badge-warn">In review</span>;
-  if (status === "ai_drafted" || status === "in_progress" || status === "assigned")
-    return <span className="badge badge-accent">Drafting</span>;
-  return <span className="badge badge-err">Unanswered</span>;
+  if (status === "approved") return <span className="badge badge-ok">Covered</span>;
+  if (status === "review") return <span className="badge badge-warn">In review</span>;
+  if (status === "drafting") return <span className="badge badge-accent">Drafting</span>;
+  if (status === "blocked") return <span className="badge badge-err">Blocked</span>;
+  return <span className="badge badge-err">To do</span>;
 }
 
 function Tile({

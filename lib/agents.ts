@@ -402,7 +402,7 @@ export async function runStructuringAgent(
               : r.classification === "should"
               ? "medium"
               : "low",
-          status: "pending",
+          status: "todo",
         }))
       );
     }

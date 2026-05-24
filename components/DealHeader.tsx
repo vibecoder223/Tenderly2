@@ -1,20 +1,5 @@
 import Link from "next/link";
-import StatusBadge from "@/components/StatusBadge";
-
-export const dealStatusLabels: Record<string, string> = {
-  new: "New",
-  parsing: "Parsing",
-  drafting: "Drafting",
-  in_progress: "In progress",
-  under_review: "Under review",
-  awaiting_approval: "Awaiting approval",
-  completed: "Completed",
-  submitted: "Submitted",
-  won: "Won",
-  lost: "Lost",
-  open: "Open",
-  responded: "Responded",
-};
+import StatusBadge, { dealStatusLabels } from "@/components/StatusBadge";
 
 export default function DealHeader({
   deal,

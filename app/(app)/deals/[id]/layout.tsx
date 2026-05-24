@@ -45,7 +45,7 @@ export default async function DealLayout({
     const { count: s } = await supabase
       .from("questions")
       .select("id", { count: "exact", head: true })
-      .in("status", ["submitted", "in_review"])
+      .in("status", ["review"])
       .in("document_id", docIds);
     totalQ = t ?? 0;
     approvedQ = a ?? 0;

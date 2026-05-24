@@ -192,9 +192,9 @@ export default async function AnalyticsPage({
     const dids = dealDocIds.get(deal.id) ?? [];
     const qs = questions.filter((q) => dids.includes(q.document_id));
     const counts = {
-      unanswered: qs.filter((q) => q.status === "unanswered").length,
+      unanswered: qs.filter((q) => q.status === "todo").length,
       drafting: qs.filter((q) => q.status === "drafting").length,
-      review: qs.filter((q) => q.status === "in_review").length,
+      review: qs.filter((q) => q.status === "review").length,
       approved: qs.filter((q) => q.status === "approved").length,
       total: qs.length,
     };
@@ -215,7 +215,7 @@ export default async function AnalyticsPage({
   const h48 = 48 * 3600_000;
 
   const stuckInReview = questions.filter((q) => {
-    if (q.status !== "in_review") return false;
+    if (q.status !== "review") return false;
     const t = parseDate(q.last_activity_at);
     if (!t) return false;
     return now.getTime() - t.getTime() > h48;

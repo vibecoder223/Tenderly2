@@ -1,40 +1,69 @@
+// Single source of truth for status labels + tones.
+// Canonical taxonomy after migration 0007:
+//   Deal:     new, in_progress, submitted, won, lost
+//   Question: todo, drafting, review, approved, blocked
+// Processing + compliance statuses are independent enums kept as-is.
+
 export const dealStatusLabels: Record<string, string> = {
-  open: "Open",
+  new: "New",
   in_progress: "In progress",
-  responded: "Responded",
+  submitted: "Submitted",
   won: "Won",
   lost: "Lost",
 };
 
+export const questionStatusLabels: Record<string, string> = {
+  todo: "To do",
+  drafting: "Drafting",
+  review: "In review",
+  approved: "Approved",
+  blocked: "Blocked",
+};
+
 const tone: Record<string, "ok" | "warn" | "err" | "accent" | "default"> = {
-  open: "default",
+  // Deal statuses
+  new: "default",
   in_progress: "accent",
-  responded: "warn",
+  submitted: "warn",
   won: "ok",
   lost: "err",
-  // Processing statuses
+
+  // Question statuses
+  todo: "default",
+  drafting: "accent",
+  review: "warn",
+  approved: "ok",
+  blocked: "err",
+
+  // Processing statuses (documents / knowledge)
+  uploading: "default",
   uploaded: "default",
   extracting: "accent",
   chunked: "accent",
   analyzing: "accent",
   structured: "accent",
+  parsing: "accent",
+  chunking: "accent",
+  embedding: "accent",
+  storing: "accent",
+  ready: "ok",
   completed: "ok",
   failed: "err",
-  // Question/response statuses
-  pending: "default",
-  submitted: "warn",
-  approved: "ok",
-  rejected: "err",
-  draft: "default",
-  exported: "ok",
+
   // Compliance
   compliant: "ok",
   partial: "warn",
   non_compliant: "err",
+  pending: "default",
 };
 
 export default function StatusBadge({ status, label }: { status: string; label?: string }) {
   const cls = tone[status] || "default";
+  const resolved =
+    label ??
+    dealStatusLabels[status] ??
+    questionStatusLabels[status] ??
+    status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
   return (
     <span className={`badge ${cls === "default" ? "" : `badge-${cls}`}`}>
       <span
@@ -46,7 +75,7 @@ export default function StatusBadge({ status, label }: { status: string; label?:
           opacity: 0.7,
         }}
       />
-      {label ?? (status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " "))}
+      {resolved}
     </span>
   );
 }

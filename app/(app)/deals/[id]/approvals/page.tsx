@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireMembership } from "@/utils/auth";
-import ReviewList from "../review/ReviewList";
+import ReviewList from "./ReviewList";
 
 export default async function ApprovalsPage({
   params,
@@ -57,7 +57,7 @@ export default async function ApprovalsPage({
       "id, requirement_id, question_text, status, responses(id, draft_text, final_text, status, confidence, gap_flag, citations(id, document_filename, section_path, page, quote))"
     )
     .eq("document_id", docId)
-    .in("status", ["submitted", "in_review", "approved", "in_progress"]);
+    .in("status", ["review", "approved", "drafting"]);
 
   return (
     <div className="p-7 max-w-[1100px]">
