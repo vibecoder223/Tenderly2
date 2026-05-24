@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
 import StatusBadge from "@/components/StatusBadge";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 export default async function DashboardPage() {
   const { supabase, member } = await requireMembership();
@@ -160,6 +161,113 @@ export default async function DashboardPage() {
 
   const isEmpty = allDeals.length === 0;
 
+  // ─── Onboarding checklist state ────────────────────────────────────────
+  // Steps complete only when the user has REAL (non-sample) data.
+  const { data: orgRow } = await supabase
+    .from("organizations")
+    .select("onboarding_dismissed")
+    .eq("id", orgId)
+    .maybeSingle();
+  const onboardingDismissed = orgRow?.onboarding_dismissed ?? false;
+
+  const [
+    { count: realKbCount },
+    { count: realDealCount },
+    { count: teamCount },
+  ] = await Promise.all([
+    supabase
+      .from("knowledge_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("is_sample", false),
+    supabase
+      .from("deals")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("is_sample", false),
+    supabase
+      .from("team_members")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId),
+  ]);
+
+  // RFP-uploaded step needs at least one real document on a real deal
+  let realRfpCount = 0;
+  if ((realDealCount ?? 0) > 0) {
+    const { data: realDealRows } = await supabase
+      .from("deals")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("is_sample", false);
+    const realDealIds = (realDealRows ?? []).map((d) => d.id);
+    if (realDealIds.length > 0) {
+      const { count } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .in("deal_id", realDealIds)
+        .eq("is_sample", false);
+      realRfpCount = count ?? 0;
+    }
+  }
+
+  // Pick a target deal for the "Upload RFP" step deep-link: the user's
+  // first real deal if any, else the seeded sample, else the deals index.
+  let rfpDealLink = "/deals";
+  if ((realDealCount ?? 0) > 0) {
+    const { data: firstReal } = await supabase
+      .from("deals")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("is_sample", false)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (firstReal?.id) rfpDealLink = `/deals/${firstReal.id}/documents`;
+  } else {
+    const { data: sample } = await supabase
+      .from("deals")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("is_sample", true)
+      .limit(1)
+      .maybeSingle();
+    if (sample?.id) rfpDealLink = `/deals/${sample.id}/documents`;
+  }
+
+  const onboardingSteps = [
+    {
+      key: "kb",
+      label: "Upload knowledge documents",
+      desc: "Past proposals, security docs, and policies. These power your AI drafts.",
+      href: "/knowledge",
+      done: (realKbCount ?? 0) > 0,
+    },
+    {
+      key: "deal",
+      label: "Create your first deal",
+      desc: "Set up the workspace for a specific RFP, with client and due date.",
+      href: "/deals/new",
+      done: (realDealCount ?? 0) > 0,
+    },
+    {
+      key: "rfp",
+      label: "Upload an RFP to your deal",
+      desc: "TenderOps extracts questions and drafts answers from your knowledge base.",
+      href: rfpDealLink,
+      done: realRfpCount > 0,
+    },
+    {
+      key: "team",
+      label: "Invite teammates",
+      desc: "Bring in SMEs and reviewers. They get assigned questions and approval rights.",
+      href: "/team",
+      done: (teamCount ?? 0) > 1,
+    },
+  ];
+
+  const onboardingComplete = onboardingSteps.every((s) => s.done);
+  const showOnboarding = !onboardingDismissed && !onboardingComplete;
+
   return (
     <>
       <Topbar
@@ -188,8 +296,12 @@ export default async function DashboardPage() {
           </p>
         </div>
 
+        {showOnboarding && (
+          <OnboardingChecklist steps={onboardingSteps} total={onboardingSteps.length} />
+        )}
+
         {isEmpty ? (
-          <OnboardingCard kbReady={kbReady} />
+          !showOnboarding && <OnboardingCard kbReady={kbReady} />
         ) : (
           <>
             {inbox.length > 0 && <NeedsYou items={inbox} />}

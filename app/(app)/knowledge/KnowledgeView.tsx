@@ -13,6 +13,7 @@ type KDoc = {
   file_size: number | null;
   created_at: string;
   error_message: string | null;
+  is_sample?: boolean;
 };
 
 const docTypeLabel: Record<string, string> = {
@@ -285,8 +286,26 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
               {items.map((d) => (
                 <tr key={d.id} className="border-t align-top" style={{ borderColor: "var(--divider)" }}>
                   <td className="px-5 py-3">
-                    <div className="font-medium" style={{ color: "var(--fg)" }}>
+                    <div className="font-medium inline-flex items-center gap-2" style={{ color: "var(--fg)" }}>
                       {d.filename}
+                      {d.is_sample && (
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            padding: "2px 6px",
+                            borderRadius: 4,
+                            background: "var(--accent-tint)",
+                            color: "var(--accent-2)",
+                            lineHeight: 1.2,
+                            flexShrink: 0,
+                          }}
+                        >
+                          Sample
+                        </span>
+                      )}
                     </div>
                     {d.error_message && (
                       <div

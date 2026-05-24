@@ -12,6 +12,7 @@ type Deal = {
   status: string;
   value: number | string | null;
   due_date: string | null;
+  is_sample?: boolean;
 };
 
 const COLUMNS: { key: string; label: string; aliases: string[] }[] = [
@@ -469,8 +470,9 @@ export default function DealsBoard({
                 return (
                   <tr key={d.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
                     <td className="px-5 py-3">
-                      <Link href={`/deals/${d.id}`} className="font-medium" style={{ color: "var(--fg)" }}>
+                      <Link href={`/deals/${d.id}`} className="font-medium inline-flex items-center gap-2" style={{ color: "var(--fg)" }}>
                         {d.name}
+                        {d.is_sample && <SampleBadge />}
                       </Link>
                     </td>
                     <td className="px-5 py-3" style={{ color: "var(--fg-3)" }}>{d.client_name ?? "—"}</td>
@@ -601,7 +603,10 @@ export default function DealsBoard({
                             className="text-[13px] font-medium leading-tight"
                             style={{ color: "var(--fg)", flex: 1, minWidth: 0 }}
                           >
-                            {d.name}
+                            <span className="inline-flex items-center gap-1.5 flex-wrap">
+                              {d.name}
+                              {d.is_sample && <SampleBadge />}
+                            </span>
                           </div>
                           <DealCardMenu
                             dealId={d.id}
@@ -643,5 +648,26 @@ export default function DealsBoard({
         })}
       </div>
     </>
+  );
+}
+
+function SampleBadge() {
+  return (
+    <span
+      style={{
+        fontSize: 9.5,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        padding: "2px 6px",
+        borderRadius: 4,
+        background: "var(--accent-tint)",
+        color: "var(--accent-2)",
+        lineHeight: 1.2,
+        flexShrink: 0,
+      }}
+    >
+      Sample
+    </span>
   );
 }

@@ -6,7 +6,7 @@ export default async function KnowledgePage() {
   const { supabase } = await requireMembership();
   const { data: items } = await supabase
     .from("knowledge_documents")
-    .select("id, filename, doc_type, ingestion_status, page_count, file_size, created_at, error_message")
+    .select("id, filename, doc_type, ingestion_status, page_count, file_size, created_at, error_message, is_sample")
     .order("created_at", { ascending: false });
 
   return (

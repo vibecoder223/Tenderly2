@@ -70,5 +70,101 @@ export async function POST(req: Request) {
 
   await writer.from("org_settings").insert({ org_id: org.id });
 
+  // ─── Seed sample data so the workspace isn't a blank slate ─────────────
+  // Everything tagged is_sample=true so the onboarding checklist won't count
+  // these toward completion, and the UI can render a "Sample" badge.
+  await seedSampleData(writer, org.id, user.id);
+
   return NextResponse.json({ ok: true, org });
+}
+
+async function seedSampleData(writer: any, orgId: string, userId: string) {
+  // Sample knowledge document. No chunks are seeded; this row exists so the
+  // user can see what a populated knowledge base looks like before they upload
+  // real material. Their first real upload powers actual retrieval.
+  const { data: kdoc } = await writer
+    .from("knowledge_documents")
+    .insert({
+      org_id: orgId,
+      filename: "Sample — Acme Past Proposal.pdf",
+      doc_type: "past_proposal",
+      file_path: `sample/${orgId}/sample-past-proposal.pdf`,
+      ingestion_status: "ready",
+      uploaded_by: userId,
+      is_sample: true,
+    })
+    .select("id")
+    .single();
+
+  // Sample deal in the active pipeline
+  const dueDate = new Date(Date.now() + 14 * 86_400_000).toISOString();
+  const { data: deal } = await writer
+    .from("deals")
+    .insert({
+      org_id: orgId,
+      name: "Sample — Acme Corp Q1 RFP",
+      client_name: "Acme Corp",
+      status: "in_progress",
+      owner_id: userId,
+      value: 250_000,
+      due_date: dueDate,
+      is_sample: true,
+    })
+    .select("id")
+    .single();
+  if (!deal) return;
+
+  // Sample RFP document inside the deal
+  const { data: doc } = await writer
+    .from("documents")
+    .insert({
+      deal_id: deal.id,
+      filename: "Sample-RFP.pdf",
+      file_path: `sample/${orgId}/sample-rfp.pdf`,
+      processing_status: "completed",
+      is_sample: true,
+    })
+    .select("id")
+    .single();
+  if (!doc) return;
+
+  // A few questions across the pipeline stages so the user can see what every
+  // status looks like in the UI without having to wait for AI processing.
+  const samples: Array<{ text: string; status: string; priority: string }> = [
+    {
+      text: "Describe your information security program and any relevant certifications (ISO 27001, SOC 2, etc.).",
+      status: "approved",
+      priority: "high",
+    },
+    {
+      text: "What is your standard SLA for production incidents at severity 1?",
+      status: "review",
+      priority: "high",
+    },
+    {
+      text: "Please summarize your approach to data encryption at rest and in transit.",
+      status: "drafting",
+      priority: "medium",
+    },
+    {
+      text: "Describe your disaster recovery plan and recovery time objectives.",
+      status: "todo",
+      priority: "high",
+    },
+    {
+      text: "List the integrations your platform supports out of the box.",
+      status: "todo",
+      priority: "low",
+    },
+  ];
+
+  await writer.from("questions").insert(
+    samples.map((s) => ({
+      document_id: doc.id,
+      question_text: s.text,
+      status: s.status,
+      priority: s.priority,
+      is_sample: true,
+    }))
+  );
 }
