@@ -6,8 +6,11 @@
 
 export const dealStatusLabels: Record<string, string> = {
   new: "New",
+  open: "Open",
+  draft: "Draft",
   in_progress: "In progress",
   submitted: "Submitted",
+  responded: "Responded",
   won: "Won",
   lost: "Lost",
 };
@@ -23,8 +26,11 @@ export const questionStatusLabels: Record<string, string> = {
 const tone: Record<string, "ok" | "warn" | "err" | "accent" | "default"> = {
   // Deal statuses
   new: "default",
+  open: "default",
+  draft: "default",
   in_progress: "accent",
   submitted: "warn",
+  responded: "warn",
   won: "ok",
   lost: "err",
 

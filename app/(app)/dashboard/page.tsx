@@ -96,8 +96,9 @@ export default async function DashboardPage() {
     }
   }
 
+  const ACTIVE_STATUSES = ["new", "in_progress", "open", "draft"];
   const activeDeals = allDeals.filter((d) =>
-    ["new", "in_progress"].includes(d.status)
+    ACTIVE_STATUSES.includes(d.status)
   );
   const overdue = activeDeals.filter(
     (d) => d.due_date && new Date(d.due_date).getTime() < Date.now()
