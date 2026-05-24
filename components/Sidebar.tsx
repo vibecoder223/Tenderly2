@@ -166,7 +166,7 @@ export default function Sidebar({
             color: "var(--fg)",
           }}
         >
-          Tenderly
+          TenderOps
         </span>
       </div>
 
@@ -356,20 +356,22 @@ function Mark() {
       style={{
         width: 26, height: 26,
         borderRadius: 7,
-        background: "linear-gradient(140deg, oklch(0.20 0.025 264) 0%, oklch(0.30 0.030 264) 60%, oklch(0.50 0.20 264) 100%)",
-        boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.08)",
-        position: "relative",
+        background: "linear-gradient(140deg, oklch(0.18 0.04 264) 0%, oklch(0.28 0.08 264) 55%, oklch(0.48 0.22 264) 100%)",
+        boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.12), 0 1px 3px oklch(0.10 0.02 264 / 0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
       }}
     >
-      <span
-        style={{
-          position: "absolute",
-          inset: 7,
-          borderLeft: "1.5px solid oklch(1 0 0 / 0.85)",
-          borderBottom: "1.5px solid oklch(1 0 0 / 0.85)",
-          borderBottomLeftRadius: 4,
-        }}
-      />
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+        {/* T stem + crossbar */}
+        <rect x="3" y="3" width="9" height="1.6" rx="0.8" fill="oklch(1 0 0 / 0.90)" />
+        <rect x="6.7" y="4.6" width="1.6" height="4.2" rx="0.8" fill="oklch(1 0 0 / 0.90)" />
+        {/* O ring */}
+        <rect x="3.5" y="9.5" width="8" height="2.8" rx="1.4" fill="oklch(1 0 0 / 0.90)" />
+        <rect x="5" y="10.6" width="5" height="0.6" rx="0.3" fill="oklch(0.28 0.08 264 / 1)" />
+      </svg>
     </div>
   );
 }

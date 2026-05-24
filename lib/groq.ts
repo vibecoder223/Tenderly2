@@ -66,7 +66,7 @@ async function call(opts: {
           Authorization: `Bearer ${getKey()}`,
           "Content-Type": "application/json",
           "HTTP-Referer": "https://tenderly.app",
-          "X-Title": "Tenderly",
+          "X-Title": "TenderOps",
         },
         body: JSON.stringify(body),
         signal: ctrl.signal,

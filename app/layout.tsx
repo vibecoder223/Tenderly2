@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tenderly — RFP Response Platform",
+  title: "TenderOps — RFP Response Platform",
   description: "AI-powered RFP automation",
 };
 

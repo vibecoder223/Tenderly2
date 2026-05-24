@@ -125,7 +125,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
             Knowledge base
           </h2>
           <p className="text-[13px]" style={{ color: "var(--fg-4)" }}>
-            Past proposals, security documents, policies. Tenderly retrieves from
+            Past proposals, security documents, policies. TenderOps retrieves from
             these to draft cited answers to RFP requirements.
           </p>
         </div>
