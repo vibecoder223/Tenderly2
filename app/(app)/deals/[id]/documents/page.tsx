@@ -4,6 +4,14 @@ import { requireMembership } from "@/utils/auth";
 import StatusBadge from "@/components/StatusBadge";
 import UploadCard from "../UploadCard";
 import DeleteDocumentButton from "./DeleteDocumentButton";
+import RetryDocumentButton from "./RetryDocumentButton";
+
+const FAILED_STATUSES = new Set([
+  "failed",
+  "embedding_failed",
+  "extraction_failed",
+  "generation_failed",
+]);
 
 export default async function DealDocumentsPage({
   params,
@@ -63,7 +71,7 @@ export default async function DealDocumentsPage({
                       {d.error_message && (
                         <div
                           className="text-[11.5px] mt-1"
-                          style={{ color: d.processing_status === "failed" ? "var(--err)" : "var(--fg-4)" }}
+                          style={{ color: FAILED_STATUSES.has(d.processing_status) ? "var(--err)" : "var(--fg-4)" }}
                         >
                           {d.error_message}
                         </div>
@@ -80,6 +88,9 @@ export default async function DealDocumentsPage({
                     </td>
                     <td className="px-5 py-3 text-right">
                       <span className="inline-flex items-center gap-2">
+                        {FAILED_STATUSES.has(d.processing_status) && (
+                          <RetryDocumentButton documentId={d.id} />
+                        )}
                         <Link href={`/deals/${id}/questions?doc=${d.id}`} className="btn">
                           Open questions →
                         </Link>

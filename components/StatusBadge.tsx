@@ -55,6 +55,9 @@ const tone: Record<string, "ok" | "warn" | "err" | "accent" | "default"> = {
   ready: "ok",
   completed: "ok",
   failed: "err",
+  embedding_failed: "err",
+  extraction_failed: "err",
+  generation_failed: "err",
 
   // Compliance
   compliant: "ok",
