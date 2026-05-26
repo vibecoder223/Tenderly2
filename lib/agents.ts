@@ -211,24 +211,6 @@ export async function runExtractionAgent(
   let totalIn = 0;
   let totalOut = 0;
 
-  // Concurrency helper — run tasks in parallel with a max pool size and start stagger.
-  async function pLimit<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
-    const results: T[] = new Array(tasks.length);
-    let idx = 0;
-    async function worker(staggerMs: number) {
-      if (staggerMs > 0) await new Promise((r) => setTimeout(r, staggerMs));
-      while (idx < tasks.length) {
-        const i = idx++;
-        results[i] = await tasks[i]();
-      }
-    }
-    const workers = Array.from({ length: Math.min(limit, tasks.length) }, (_, wi) =>
-      worker(wi * 400) // stagger workers by 400ms to avoid thundering herd
-    );
-    await Promise.all(workers);
-    return results;
-  }
-
   const sys = `You are an expert RFP analyst. Extract every distinct requirement, question, or compliance item from ALL sections provided. Be exhaustive but de-duplicate within the batch.
 
 Return a JSON array. Each item:
@@ -305,7 +287,8 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
       return { reqs, inTok, outTok };
     });
 
-    const results = await pLimit(tasks, 1); // sequential on free tier — avoids TPM 429s
+    // Fire all batches in parallel — rate limiter handles RPM/TPM pacing.
+    const results = await Promise.all(tasks.map((t) => t()));
     for (const r of results) {
       totalIn += r.inTok;
       totalOut += r.outTok;
@@ -464,25 +447,18 @@ export async function runResponseGenerationAgent(
       return;
     }
 
-    // Process questions with bounded concurrency to avoid rate limits.
-    const qResults: { input_tokens: number; output_tokens: number }[] = new Array(questions.length);
-    let qIdx = 0;
-    async function qWorker(staggerMs: number) {
-      if (staggerMs > 0) await new Promise((r) => setTimeout(r, staggerMs));
-      while (qIdx < questions.length) {
-        const i = qIdx++;
-        const q = questions[i];
-        qResults[i] = await generateAndPersistAnswer(supabase, {
+    // Fire all questions in parallel — rate limiter paces Groq calls.
+    const qResults = await Promise.all(
+      questions.map((q) =>
+        generateAndPersistAnswer(supabase, {
           question_id: q.id,
           question_text: q.question_text,
           org_id: deal.org_id,
           org_name: opts.orgName,
           tone: opts.tone || "technical",
-        });
-      }
-    }
-    const concurrency = Math.min(3, questions.length);
-    await Promise.all(Array.from({ length: concurrency }, (_, wi) => qWorker(wi * 300)));
+        })
+      )
+    );
     for (const u of qResults) {
       totalIn += u.input_tokens;
       totalOut += u.output_tokens;
