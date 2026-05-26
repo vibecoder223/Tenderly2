@@ -1,7 +1,13 @@
 /**
- * LLM client — Groq API (fast, free tier).
- * Export names unchanged so all callers stay compatible.
+ * LLM client — Groq API.
+ *
+ * All calls route through the central rate limiter so we never hammer Groq
+ * past its RPM/TPM ceiling. The limiter freezes the bucket on real 429s.
+ *
+ * Export names unchanged so callers stay compatible.
  */
+
+import { withRateLimit, estimateTokens, RateLimitError } from "./rate-limiter";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -26,6 +32,10 @@ function getKey(): string {
   return k;
 }
 
+function bucketKey(model: string): string {
+  return model === MODEL_FAST ? "groq-8b" : "groq-70b";
+}
+
 async function call(opts: {
   system: string;
   user: string;
@@ -33,23 +43,26 @@ async function call(opts: {
   json?: boolean;
   model?: string;
 }): Promise<{ raw: string; usage: Usage }> {
-  const model = opts.model ?? MODEL;
+  const model     = opts.model ?? MODEL;
+  const maxTokens = opts.maxTokens ?? 1500;
   const body: any = {
     model,
     messages: [
       { role: "system", content: opts.system },
       { role: "user",   content: opts.user },
     ],
-    max_tokens:  opts.maxTokens ?? 1500,
+    max_tokens:  maxTokens,
     temperature: 0.2,
   };
   if (opts.json) body.response_format = { type: "json_object" };
 
-  let res: Response;
-  let attempts = 0;
-  while (true) {
+  // Pre-call estimate: input prompt tokens + worst-case output.
+  const estimate = estimateTokens(opts.system) + estimateTokens(opts.user) + maxTokens;
+
+  return await withRateLimit(bucketKey(model), estimate, async () => {
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 90_000);
+    let res: Response;
     try {
       res = await fetch(GROQ_URL, {
         method:  "POST",
@@ -63,29 +76,30 @@ async function call(opts: {
     } finally {
       clearTimeout(timer);
     }
-    if (res.status !== 429 || attempts >= 4) break;
-    const retryAfter = res.headers.get("retry-after");
-    const waitSec    = retryAfter ? Number(retryAfter) : 8;
-    const wait       = Math.min(30, Math.max(2, waitSec)) * 1000 + 500;
-    console.warn(`[groq] 429 — retrying in ${Math.round(wait / 1000)}s (attempt ${attempts + 1})`);
-    await new Promise((r) => setTimeout(r, wait));
-    attempts++;
-  }
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Groq ${res.status}: ${txt.slice(0, 300)}`);
-  }
+    if (res.status === 429) {
+      const retryAfter = Number(res.headers.get("retry-after") ?? "8");
+      const retryAfterMs = Math.min(60_000, Math.max(2_000, retryAfter * 1000));
+      return { actualTokens: 0, retryAfterMs, value: null as any };
+    }
 
-  const j   = await res.json();
-  const raw = j.choices?.[0]?.message?.content ?? "";
-  return {
-    raw,
-    usage: {
-      input_tokens:  j.usage?.prompt_tokens    ?? 0,
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Groq ${res.status}: ${txt.slice(0, 300)}`);
+    }
+
+    const j   = await res.json();
+    const raw = j.choices?.[0]?.message?.content ?? "";
+    const usage: Usage = {
+      input_tokens:  j.usage?.prompt_tokens     ?? 0,
       output_tokens: j.usage?.completion_tokens ?? 0,
-    },
-  };
+    };
+
+    return {
+      actualTokens: usage.input_tokens + usage.output_tokens,
+      value: { raw, usage },
+    };
+  });
 }
 
 export async function callGroqJson<T = unknown>(opts: {
@@ -137,3 +151,5 @@ export async function callGroqText(opts: {
   const { raw, usage } = await call(opts);
   return { text: raw.trim(), usage };
 }
+
+export { RateLimitError };
