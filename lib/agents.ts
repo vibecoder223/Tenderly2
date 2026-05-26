@@ -276,6 +276,13 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
         }
       }
       if (!parsed) {
+        // If the failure was an API error (rate limit, network, server),
+        // bubble it up so the orchestrator marks the doc as extraction_failed.
+        // Validation-only failures (LLM produced bad JSON) return empty so a
+        // doc that legitimately has no requirements still proceeds.
+        if (lastErr && /rate.?limit|429|^Groq |timeout|abort/i.test(lastErr)) {
+          throw new Error(`Extraction batch failed: ${lastErr}`);
+        }
         console.warn(`[extraction] Chunk batch produced no parsed reqs after retries. Last error:`, lastErr);
         return { reqs: [], inTok, outTok };
       }
@@ -503,14 +510,45 @@ export async function runFullPipeline(
     .single();
   if (error || !doc) throw new Error(error?.message || "Document not found");
 
+  // Each stage gets its own catch so we can record a specific failure status.
+  // The UI uses these to decide which retry button to show.
+  let parsed: ParsedDoc;
   try {
-    const parsed = await runIngestionAgent(supabase, doc);
-    const chunks = await runChunkingAgent(supabase, doc, parsed);
-    const reqs = await runExtractionAgent(supabase, doc, chunks);
-    await runStructuringAgent(supabase, doc, reqs);
-    await runResponseGenerationAgent(supabase, doc, opts);
+    parsed = await runIngestionAgent(supabase, doc);
   } catch (e: any) {
     await setStatus(supabase, documentId, "failed", e.message);
+    throw e;
+  }
+
+  let chunks: ProducedChunk[];
+  try {
+    chunks = await runChunkingAgent(supabase, doc, parsed);
+  } catch (e: any) {
+    // Chunking embeds inline — if Jina is the cause, mark embedding_failed.
+    const status = /jina|embed/i.test(e.message) ? "embedding_failed" : "failed";
+    await setStatus(supabase, documentId, status, e.message);
+    throw e;
+  }
+
+  let reqs: any[];
+  try {
+    reqs = await runExtractionAgent(supabase, doc, chunks);
+  } catch (e: any) {
+    await setStatus(supabase, documentId, "extraction_failed", e.message);
+    throw e;
+  }
+
+  try {
+    await runStructuringAgent(supabase, doc, reqs);
+  } catch (e: any) {
+    await setStatus(supabase, documentId, "failed", e.message);
+    throw e;
+  }
+
+  try {
+    await runResponseGenerationAgent(supabase, doc, opts);
+  } catch (e: any) {
+    await setStatus(supabase, documentId, "generation_failed", e.message);
     throw e;
   }
 }
