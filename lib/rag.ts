@@ -85,11 +85,11 @@ export async function generateAndPersistAnswer(
     .slice(0, 3);
 
   // 4. Generate
-  if (!process.env.GROQ_API_KEY) {
+  if (!process.env.CEREBRAS_API_KEY) {
     await upsertResponse(supabase, {
       question_id: args.question_id,
-      answer_text_with_markers: "AI_DISABLED: GROQ_API_KEY not configured.",
-      answer_text_clean: "AI_DISABLED: GROQ_API_KEY not configured.",
+      answer_text_with_markers: "AI_DISABLED: CEREBRAS_API_KEY not configured.",
+      answer_text_clean: "AI_DISABLED: CEREBRAS_API_KEY not configured.",
       tone: args.tone || "technical",
       confidence: 0,
       gap_flag: "no_source",

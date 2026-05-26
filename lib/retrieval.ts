@@ -38,7 +38,7 @@ export async function retrieveForQuery(
 
   // 1. Query expansion. Skip if LLM unavailable.
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
-  if (process.env.GROQ_API_KEY) {
+  if (process.env.CEREBRAS_API_KEY) {
     try {
       const { data, usage } = await callGroqJson<{
         paraphrases: string[];

@@ -31,10 +31,15 @@ type BucketCfg = {
 };
 
 const DEFAULTS: Record<string, BucketCfg> = {
-  "groq-70b":    { rpm: 30, tpm: 6_000,     concurrent: 2 },
-  "groq-8b":     { rpm: 30, tpm: 120_000,   concurrent: 4 },
-  "jina-embed":  { rpm: 60, tpm: 1_000_000, concurrent: 4 },
-  "jina-rerank": { rpm: 60, tpm: 1_000_000, concurrent: 2 },
+  // Cerebras free tier — 30 RPM / 60K TPM / 1M tokens per day on quality
+  // models. ~10x the TPM headroom of Groq free 70B.
+  "cerebras-120b": { rpm: 30, tpm: 60_000,    concurrent: 3 },
+  "cerebras-8b":   { rpm: 60, tpm: 60_000,    concurrent: 4 },
+  // Legacy Groq buckets kept for fallback configurations.
+  "groq-70b":     { rpm: 30, tpm: 6_000,     concurrent: 2 },
+  "groq-8b":      { rpm: 30, tpm: 120_000,   concurrent: 4 },
+  "jina-embed":   { rpm: 60, tpm: 1_000_000, concurrent: 4 },
+  "jina-rerank":  { rpm: 60, tpm: 1_000_000, concurrent: 2 },
 };
 
 function envOverride(key: string, suffix: "RPM" | "TPM" | "CONCURRENT"): number | null {

@@ -1,24 +1,27 @@
 /**
- * LLM client — Groq API.
+ * LLM client — Cerebras Inference API (OpenAI-compatible).
  *
- * All calls route through the central rate limiter so we never hammer Groq
- * past its RPM/TPM ceiling. The limiter freezes the bucket on real 429s.
+ * Cerebras runs Llama models 2-3× faster than Groq on their wafer-scale chips,
+ * with more generous free-tier limits (60K TPM vs Groq's 6K on 70B).
  *
- * Export names unchanged so callers stay compatible.
+ * Filename and exported names kept as "groq*" so the rest of the codebase
+ * doesn't need to change — only the upstream provider swaps.
+ *
+ * All calls route through the central rate limiter.
  */
 
 import { withRateLimit, estimateTokens, RateLimitError } from "./rate-limiter";
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
 
 // Quality model — response generation, complex extraction.
-export const MODEL      = "llama-3.3-70b-versatile";
+export const MODEL      = "gpt-oss-120b";
 // Fast/cheap — extraction batches, query expansion, confidence scoring.
-export const MODEL_FAST = "llama-3.1-8b-instant";
+export const MODEL_FAST = "llama3.1-8b";
 
-// Rough USD/MTok for cost display only.
-const INPUT_PRICE_PER_MTOK  = 0.59;
-const OUTPUT_PRICE_PER_MTOK = 0.79;
+// Rough USD/MTok for cost display only (Cerebras pricing similar to Groq).
+const INPUT_PRICE_PER_MTOK  = 0.85;
+const OUTPUT_PRICE_PER_MTOK = 1.20;
 
 export function estimateCost(input: number, output: number): number {
   return (input / 1_000_000) * INPUT_PRICE_PER_MTOK + (output / 1_000_000) * OUTPUT_PRICE_PER_MTOK;
@@ -27,13 +30,13 @@ export function estimateCost(input: number, output: number): number {
 export type Usage = { input_tokens: number; output_tokens: number };
 
 function getKey(): string {
-  const k = process.env.GROQ_API_KEY;
-  if (!k) throw new Error("GROQ_API_KEY not set.");
+  const k = process.env.CEREBRAS_API_KEY;
+  if (!k) throw new Error("CEREBRAS_API_KEY not set.");
   return k;
 }
 
 function bucketKey(model: string): string {
-  return model === MODEL_FAST ? "groq-8b" : "groq-70b";
+  return model === MODEL_FAST ? "cerebras-8b" : "cerebras-120b";
 }
 
 async function call(opts: {
@@ -64,7 +67,7 @@ async function call(opts: {
     const timer = setTimeout(() => ctrl.abort(), 90_000);
     let res: Response;
     try {
-      res = await fetch(GROQ_URL, {
+      res = await fetch(CEREBRAS_URL, {
         method:  "POST",
         headers: {
           Authorization:  `Bearer ${getKey()}`,
@@ -85,7 +88,7 @@ async function call(opts: {
 
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(`Groq ${res.status}: ${txt.slice(0, 300)}`);
+      throw new Error(`Cerebras ${res.status}: ${txt.slice(0, 300)}`);
     }
 
     const j   = await res.json();
@@ -129,7 +132,7 @@ export async function callGroqJson<T = unknown>(opts: {
     parsed = JSON.parse(cleaned);
   } catch {
     const m = cleaned.match(/[\[{][\s\S]*[\]}]/);
-    if (!m) throw new Error(`Groq response not valid JSON: ${cleaned.slice(0, 200)}`);
+    if (!m) throw new Error(`Cerebras response not valid JSON: ${cleaned.slice(0, 200)}`);
     parsed = JSON.parse(m[0]);
   }
 
