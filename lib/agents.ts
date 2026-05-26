@@ -11,7 +11,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { callGroqJson, callGroqText, estimateCost } from "./groq";
+import { callGroqJson, callGroqText, estimateCost, MODEL_FAST } from "./groq";
 import { parseDocument, type ParsedDoc } from "./parse";
 import { chunkBlocks, type ProducedChunk } from "./chunk";
 import { embedTexts, hasVoyage, hasEmbeddings } from "./embeddings";
@@ -271,8 +271,7 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
                 ? user
                 : `${user}\n\n[Previous attempt failed: ${lastErr}. Return ONLY a JSON array.]`,
             maxTokens: 4096,
-            // Use the quality model — small models silently return [] on
-            // complex structured extraction with this schema.
+            model: MODEL_FAST, // 8B instant: 131K TPM — avoids free-tier throttle on 70B (6K TPM)
           });
           inTok += usage.input_tokens;
           outTok += usage.output_tokens;
@@ -306,7 +305,7 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
       return { reqs, inTok, outTok };
     });
 
-    const results = await pLimit(tasks, 3);
+    const results = await pLimit(tasks, 1); // sequential on free tier — avoids TPM 429s
     for (const r of results) {
       totalIn += r.inTok;
       totalOut += r.outTok;

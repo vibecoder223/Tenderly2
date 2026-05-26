@@ -24,13 +24,13 @@ export async function POST(req: Request) {
 
   // If the LLM key is missing, mark the document with a clear state and return
   // success — upload UX shouldn't error out.
-  if (!process.env.OPENROUTER_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     await supabase
       .from("documents")
       .update({
         processing_status: "uploaded",
         error_message:
-          "OPENROUTER_API_KEY not configured. The file is stored, but the AI pipeline is disabled until a key is set in .env.local.",
+          "GROQ_API_KEY not configured. The file is stored, but the AI pipeline is disabled until a key is set in .env.local.",
       })
       .eq("id", document_id);
     return NextResponse.json({ ok: true, skipped: true, reason: "groq_key_missing" });
