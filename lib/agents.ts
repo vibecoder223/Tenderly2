@@ -14,7 +14,7 @@ import { z } from "zod";
 import { callGroqJson, callGroqText, estimateCost, MODEL_FAST } from "./groq";
 import { parseDocument, type ParsedDoc } from "./parse";
 import { chunkBlocks, type ProducedChunk } from "./chunk";
-import { embedTexts, hasVoyage, hasEmbeddings } from "./embeddings";
+import { embedTexts, hasEmbeddings } from "./embeddings";
 import { generateAndPersistAnswer } from "./rag";
 
 type Doc = {
@@ -134,11 +134,11 @@ export async function runChunkingAgent(
       .single();
     const orgId = deal?.org_id ?? null;
 
-    // Embed (no-op zero vectors if Voyage key missing).
-    const embeddings = await embedTexts(
-      chunks.map((c) => c.text_for_embedding),
-      "document"
-    );
+    // Embed via Jina. Skip if no provider configured — embedTexts now throws
+    // instead of returning zero vectors, so we gate the call.
+    const embeddings: number[][] = hasEmbeddings()
+      ? await embedTexts(chunks.map((c) => c.text_for_embedding), "document")
+      : [];
 
     await supabase.from("document_chunks").delete().eq("document_id", doc.id);
     if (chunks.length > 0) {

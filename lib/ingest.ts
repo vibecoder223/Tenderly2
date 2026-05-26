@@ -92,12 +92,12 @@ export async function ingestKnowledgeDocument(
   const chunks = chunkBlocks({ blocks: parsed.blocks, filename: doc.filename });
   if (chunks.length === 0) throw new Error("Chunker produced 0 chunks (document may be empty).");
 
-  // 5. Embed (batched inside embedTexts)
+  // 5. Embed (batched inside embedTexts). Skip the call entirely when no
+  // provider is configured — embedTexts now throws instead of returning zeros.
   await setStage("embedding");
-  const embeddings = await embedTexts(
-    chunks.map((c) => c.text_for_embedding),
-    "document"
-  );
+  const embeddings: number[][] = hasEmbeddings()
+    ? await embedTexts(chunks.map((c) => c.text_for_embedding), "document")
+    : [];
 
   // 6. Persist — wipe any prior chunks for this KB doc (idempotent re-ingest)
   await setStage("storing");

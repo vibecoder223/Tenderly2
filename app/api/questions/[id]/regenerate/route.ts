@@ -13,9 +13,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!process.env.OPENROUTER_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     return NextResponse.json(
-      { error: "OPENROUTER_API_KEY is not configured. Set it in .env.local." },
+      { error: "GROQ_API_KEY is not configured. Set it in .env.local." },
       { status: 503 }
     );
   }

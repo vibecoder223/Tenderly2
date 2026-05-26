@@ -1,80 +1,66 @@
 /**
- * Embeddings + reranking — Voyage AI (primary).
+ * Embeddings + reranking — Jina AI only.
  *
- * Voyage AI: voyage-3-large @ 1024 dimensions. Matches our DB column.
- *   Set VOYAGE_API_KEY in .env.local.
+ * Embedding model: jina-embeddings-v3 @ 1024 dimensions. Matches our DB column.
+ * Rerank model: jina-reranker-v2-base-multilingual.
  *
- * If the key is missing, zero vectors are written so the chunk row is stored
- * but won't match anything until re-embedded.
+ * Set JINA_API_KEY in .env.local. If missing, callers must handle the throw.
+ * No silent zero-vector fallback — that hid broken docs.
  */
 
-const VOYAGE_URL = "https://api.voyageai.com/v1";
-const VOYAGE_EMBED_MODEL  = process.env.VOYAGE_EMBED_MODEL  || "voyage-3-large";
-const VOYAGE_RERANK_MODEL = process.env.VOYAGE_RERANK_MODEL || "rerank-2";
+const JINA_URL = "https://api.jina.ai/v1";
 
-export const EMBED_DIMS = 1024; // Voyage 3 large native dimension
+const JINA_EMBED_MODEL  = process.env.JINA_EMBED_MODEL  || "jina-embeddings-v3";
+const JINA_RERANK_MODEL = process.env.JINA_RERANK_MODEL || "jina-reranker-v2-base-multilingual";
 
-function hasVoyage() { return !!process.env.VOYAGE_API_KEY; }
+export const EMBED_DIMS = 1024;
+
+const JINA_BATCH_SIZE = 100;
+
+function hasJina() { return !!process.env.JINA_API_KEY; }
 
 /** True if any embedding provider is available. */
-export function hasEmbeddings() { return hasVoyage(); }
+export function hasEmbeddings() { return hasJina(); }
 
-/** Legacy export kept for callers that import hasVoyage directly. */
-export { hasVoyage };
+/** Legacy alias — kept so older callers compile. Routes to hasJina. */
+export const hasVoyage = hasJina;
 
 // ─── Embeddings ──────────────────────────────────────────────
 
-// ── Voyage concurrency gate ───────────────────────────────────
-// Voyage paid tier handles ~2000 RPM. Cap at 6 concurrent calls.
-let voyageInFlight = 0;
-const voyageWaiters: (() => void)[] = [];
-const VOYAGE_MAX_CONCURRENT = 6;
-const VOYAGE_BATCH_SIZE = 128; // Voyage accepts up to 128 inputs per call.
-
-async function withVoyageSlot<T>(fn: () => Promise<T>): Promise<T> {
-  if (voyageInFlight >= VOYAGE_MAX_CONCURRENT) {
-    await new Promise<void>((resolve) => voyageWaiters.push(resolve));
-  }
-  voyageInFlight++;
-  try {
-    return await fn();
-  } finally {
-    voyageInFlight--;
-    const next = voyageWaiters.shift();
-    if (next) next();
-  }
-}
-
-async function embedVoyage(texts: string[], inputType: "document" | "query"): Promise<number[][]> {
-  // Split into batches and fire them all in parallel (gated by the semaphore).
+async function embedJina(
+  texts: string[],
+  inputType: "document" | "query"
+): Promise<number[][]> {
+  const task = inputType === "query" ? "retrieval.query" : "retrieval.passage";
   const batches: { start: number; texts: string[] }[] = [];
-  for (let i = 0; i < texts.length; i += VOYAGE_BATCH_SIZE) {
-    batches.push({ start: i, texts: texts.slice(i, i + VOYAGE_BATCH_SIZE) });
+  for (let i = 0; i < texts.length; i += JINA_BATCH_SIZE) {
+    batches.push({ start: i, texts: texts.slice(i, i + JINA_BATCH_SIZE) });
   }
   const out: number[][] = new Array(texts.length);
+
   await Promise.all(
     batches.map(async ({ start, texts: batch }) => {
-      const res = await withVoyageSlot(() =>
-        fetch(`${VOYAGE_URL}/embeddings`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: VOYAGE_EMBED_MODEL,
-            input: batch,
-            input_type: inputType,
-            // Use Voyage's native dimension (1024) — matches our DB column.
-          }),
-        })
-      );
+      const res = await fetch(`${JINA_URL}/embeddings`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${process.env.JINA_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: JINA_EMBED_MODEL,
+          input: batch,
+          task,
+          dimensions: EMBED_DIMS,
+          embedding_type: "float",
+        }),
+      });
       if (!res.ok) {
         const t = await res.text();
-        throw new Error(`Voyage embed failed: ${res.status} ${t.slice(0, 300)}`);
+        throw new Error(`Jina embed failed: ${res.status} ${t.slice(0, 300)}`);
       }
-      const j = await res.json() as { data: { embedding: number[]; index: number }[] };
-      // Write embeddings into out[] at the correct absolute index.
+      const j = (await res.json()) as {
+        data: { embedding: number[]; index: number }[];
+      };
       j.data
         .sort((a, b) => a.index - b.index)
         .forEach((d, localIdx) => {
@@ -82,55 +68,63 @@ async function embedVoyage(texts: string[], inputType: "document" | "query"): Pr
         });
     })
   );
+
   return out;
 }
 
+/**
+ * Embed a list of texts.
+ * Throws if Jina is not configured or the call fails — callers must catch and
+ * mark the document/chunk as failed. We no longer return zero vectors silently.
+ */
 export async function embedTexts(
   texts: string[],
   inputType: "document" | "query" = "document"
 ): Promise<number[][]> {
   if (texts.length === 0) return [];
-
-  if (hasVoyage()) {
-    try {
-      return await embedVoyage(texts, inputType);
-    } catch (e: any) {
-      console.warn(`[embeddings] Voyage failed (${e.message}). Using zero vectors — retrieval will not work for this batch.`);
-    }
+  if (!hasJina()) {
+    throw new Error("Embeddings unavailable: JINA_API_KEY not set in .env.local.");
   }
-
-  console.warn("[embeddings] No embedding provider configured. Set VOYAGE_API_KEY in .env.local.");
-  return texts.map(() => new Array(EMBED_DIMS).fill(0));
+  return await embedJina(texts, inputType);
 }
 
 // ─── Reranking ────────────────────────────────────────────────
 
 export type RerankResult = { index: number; score: number };
 
-async function rerankVoyage(opts: { query: string; documents: string[]; topK: number }): Promise<RerankResult[]> {
-  const res = await withVoyageSlot(() =>
-    fetch(`${VOYAGE_URL}/rerank`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: VOYAGE_RERANK_MODEL,
-        query: opts.query,
-        documents: opts.documents,
-        top_k: opts.topK,
-      }),
-    })
-  );
+async function rerankJina(opts: {
+  query: string;
+  documents: string[];
+  topK: number;
+}): Promise<RerankResult[]> {
+  const res = await fetch(`${JINA_URL}/rerank`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${process.env.JINA_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: JINA_RERANK_MODEL,
+      query: opts.query,
+      documents: opts.documents,
+      top_n: opts.topK,
+    }),
+  });
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`Voyage rerank failed: ${res.status} ${t.slice(0, 300)}`);
+    throw new Error(`Jina rerank failed: ${res.status} ${t.slice(0, 300)}`);
   }
-  const j = await res.json() as { data: { index: number; relevance_score: number }[] };
-  return j.data.map((d) => ({ index: d.index, score: d.relevance_score }));
+  const j = (await res.json()) as {
+    results: { index: number; relevance_score: number }[];
+  };
+  return j.results.map((d) => ({ index: d.index, score: d.relevance_score }));
 }
 
+/**
+ * Rerank documents. Returns identity ordering with score 0.5 if Jina is
+ * unavailable — rerank is a quality boost, not a hard requirement, so we
+ * degrade rather than fail the whole request.
+ */
 export async function rerank(opts: {
   query: string;
   documents: string[];
@@ -139,11 +133,13 @@ export async function rerank(opts: {
   if (opts.documents.length === 0) return [];
   const topK = opts.topK ?? Math.min(opts.documents.length, 10);
 
-  if (hasVoyage()) {
-    try { return await rerankVoyage({ ...opts, topK }); }
-    catch (e: any) { console.warn(`[embeddings] Voyage rerank failed: ${e.message}`); }
+  if (hasJina()) {
+    try {
+      return await rerankJina({ ...opts, topK });
+    } catch (e: any) {
+      console.warn(`[embeddings] Jina rerank failed: ${e.message}`);
+    }
   }
 
-  // Identity ordering — no reranker available
   return opts.documents.map((_, i) => ({ index: i, score: 0.5 }));
 }

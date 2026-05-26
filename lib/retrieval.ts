@@ -36,9 +36,9 @@ export async function retrieveForQuery(
   let usageIn = 0;
   let usageOut = 0;
 
-  // 1. Query expansion (Haiku). If Anthropic isn't configured we skip.
+  // 1. Query expansion. Skip if LLM unavailable.
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
-  if (process.env.OPENROUTER_API_KEY) {
+  if (process.env.GROQ_API_KEY) {
     try {
       const { data, usage } = await callGroqJson<{
         paraphrases: string[];
