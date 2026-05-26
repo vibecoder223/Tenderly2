@@ -4,12 +4,10 @@
  * Embedding model: jina-embeddings-v3 @ 1024 dimensions. Matches our DB column.
  * Rerank model:    jina-reranker-v2-base-multilingual.
  *
- * All calls route through the central rate limiter. embedTexts throws if
- * Jina is missing or fails — callers must catch and mark the document as
- * failed. No silent zero-vector fallback (that hid broken docs).
+ * Calls fire without artificial throttling. On a real 429 we honour the
+ * `retry-after` header and retry once. Persistent 429 bubbles a real error
+ * so callers can mark the document failed instead of waiting forever.
  */
-
-import { withRateLimit, estimateTokens } from "./rate-limiter";
 
 const JINA_URL = "https://api.jina.ai/v1";
 
@@ -19,6 +17,7 @@ const JINA_RERANK_MODEL = process.env.JINA_RERANK_MODEL || "jina-reranker-v2-bas
 export const EMBED_DIMS = 1024;
 
 const JINA_BATCH_SIZE = 100;
+const MAX_RETRY_WAIT_MS = 15_000;
 
 function hasJina() { return !!process.env.JINA_API_KEY; }
 
@@ -28,6 +27,45 @@ export function hasEmbeddings() { return hasJina(); }
 /** Legacy alias — kept so older callers compile. Routes to hasJina. */
 export const hasVoyage = hasJina;
 
+export class JinaRateLimitError extends Error {
+  constructor(message: string, public retryAfterMs: number) {
+    super(message);
+    this.name = "JinaRateLimitError";
+  }
+}
+
+async function jinaFetch(path: string, body: any): Promise<Response> {
+  let attempt = 0;
+  while (true) {
+    const res = await fetch(`${JINA_URL}${path}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${process.env.JINA_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (res.status === 429) {
+      const retryAfter = Number(res.headers.get("retry-after") ?? "5");
+      const retryAfterMs = Math.max(1_000, retryAfter * 1000);
+      if (attempt < 1 && retryAfterMs <= MAX_RETRY_WAIT_MS) {
+        const jitter = retryAfterMs * (0.9 + Math.random() * 0.2);
+        console.warn(`[jina] 429 on ${path} — retrying in ${Math.round(jitter / 1000)}s`);
+        await new Promise((r) => setTimeout(r, jitter));
+        attempt++;
+        continue;
+      }
+      throw new JinaRateLimitError(
+        `Jina 429 on ${path} — retry-after ${Math.round(retryAfterMs / 1000)}s`,
+        retryAfterMs,
+      );
+    }
+
+    return res;
+  }
+}
+
 // ─── Embeddings ──────────────────────────────────────────────
 
 async function embedJinaBatch(
@@ -35,54 +73,30 @@ async function embedJinaBatch(
   inputType: "document" | "query"
 ): Promise<number[][]> {
   const task = inputType === "query" ? "retrieval.query" : "retrieval.passage";
-  const estimate = batch.reduce((s, t) => s + estimateTokens(t), 0);
 
-  return await withRateLimit("jina-embed", estimate, async () => {
-    const res = await fetch(`${JINA_URL}/embeddings`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${process.env.JINA_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: JINA_EMBED_MODEL,
-        input: batch,
-        task,
-        dimensions: EMBED_DIMS,
-        embedding_type: "float",
-      }),
-    });
-
-    if (res.status === 429) {
-      const retryAfter = Number(res.headers.get("retry-after") ?? "10");
-      return {
-        actualTokens: 0,
-        retryAfterMs: Math.min(60_000, Math.max(2_000, retryAfter * 1000)),
-        value: null as any,
-      };
-    }
-
-    if (!res.ok) {
-      const t = await res.text();
-      throw new Error(`Jina embed failed: ${res.status} ${t.slice(0, 300)}`);
-    }
-
-    const j = (await res.json()) as {
-      data: { embedding: number[]; index: number }[];
-      usage?: { total_tokens?: number };
-    };
-    const result: number[][] = new Array(batch.length);
-    j.data
-      .sort((a, b) => a.index - b.index)
-      .forEach((d, localIdx) => {
-        result[localIdx] = d.embedding;
-      });
-
-    return {
-      actualTokens: j.usage?.total_tokens ?? estimate,
-      value: result,
-    };
+  const res = await jinaFetch("/embeddings", {
+    model: JINA_EMBED_MODEL,
+    input: batch,
+    task,
+    dimensions: EMBED_DIMS,
+    embedding_type: "float",
   });
+
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Jina embed failed: ${res.status} ${t.slice(0, 300)}`);
+  }
+
+  const j = (await res.json()) as {
+    data: { embedding: number[]; index: number }[];
+  };
+  const result: number[][] = new Array(batch.length);
+  j.data
+    .sort((a, b) => a.index - b.index)
+    .forEach((d, localIdx) => {
+      result[localIdx] = d.embedding;
+    });
+  return result;
 }
 
 /**
@@ -105,7 +119,8 @@ export async function embedTexts(
     batches.push({ start: i, texts: texts.slice(i, i + JINA_BATCH_SIZE) });
   }
 
-  // Batches run in parallel; limiter handles pacing/queueing.
+  // Batches run in parallel — Jina free tier is generous (500 RPM, 1M
+  // tokens/month) and we rarely send more than a few batches per doc.
   await Promise.all(
     batches.map(async ({ start, texts: batch }) => {
       const embs = await embedJinaBatch(batch, inputType);
@@ -127,48 +142,22 @@ async function rerankJina(opts: {
   documents: string[];
   topK: number;
 }): Promise<RerankResult[]> {
-  const estimate =
-    estimateTokens(opts.query) +
-    opts.documents.reduce((s, d) => s + estimateTokens(d), 0);
-
-  return await withRateLimit("jina-rerank", estimate, async () => {
-    const res = await fetch(`${JINA_URL}/rerank`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${process.env.JINA_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: JINA_RERANK_MODEL,
-        query: opts.query,
-        documents: opts.documents,
-        top_n: opts.topK,
-      }),
-    });
-
-    if (res.status === 429) {
-      const retryAfter = Number(res.headers.get("retry-after") ?? "10");
-      return {
-        actualTokens: 0,
-        retryAfterMs: Math.min(60_000, Math.max(2_000, retryAfter * 1000)),
-        value: null as any,
-      };
-    }
-
-    if (!res.ok) {
-      const t = await res.text();
-      throw new Error(`Jina rerank failed: ${res.status} ${t.slice(0, 300)}`);
-    }
-
-    const j = (await res.json()) as {
-      results: { index: number; relevance_score: number }[];
-      usage?: { total_tokens?: number };
-    };
-    return {
-      actualTokens: j.usage?.total_tokens ?? estimate,
-      value: j.results.map((d) => ({ index: d.index, score: d.relevance_score })),
-    };
+  const res = await jinaFetch("/rerank", {
+    model: JINA_RERANK_MODEL,
+    query: opts.query,
+    documents: opts.documents,
+    top_n: opts.topK,
   });
+
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Jina rerank failed: ${res.status} ${t.slice(0, 300)}`);
+  }
+
+  const j = (await res.json()) as {
+    results: { index: number; relevance_score: number }[];
+  };
+  return j.results.map((d) => ({ index: d.index, score: d.relevance_score }));
 }
 
 /**

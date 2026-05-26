@@ -60,31 +60,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: insertErr.message }, { status: 500 });
   }
 
-  // Kick off ingestion in the background. The client polls the doc row via
-  // GET /api/knowledge/[id] and watches the STAGE: marker in error_message.
-  ingestKnowledgeDocument(writer, {
-    id: row.id,
-    org_id: row.org_id,
-    filename: row.filename,
-    file_path: row.file_path,
-    mime_type: row.mime_type,
-  })
-    .then((result) =>
-      logActivity(supabase, {
-        org_id: member.org_id,
-        user_id: user.id,
-        action: "ingested",
-        entity_type: "knowledge_document",
-        entity_id: row.id,
-        metadata: { filename, ...result },
-      })
-    )
-    .catch(async (e: any) => {
-      await writer
-        .from("knowledge_documents")
-        .update({ ingestion_status: "failed", error_message: e.message })
-        .eq("id", row.id);
+  // Await ingestion inside the request. Next.js dev (and some hosts) cancel
+  // fire-and-forget promises after the route returns, which left documents
+  // permanently stuck on STAGE:parsing. The client already shows an upload
+  // progress UI, so a few extra seconds for the response is acceptable.
+  try {
+    const result = await ingestKnowledgeDocument(writer, {
+      id: row.id,
+      org_id: row.org_id,
+      filename: row.filename,
+      file_path: row.file_path,
+      mime_type: row.mime_type,
     });
+    await logActivity(supabase, {
+      org_id: member.org_id,
+      user_id: user.id,
+      action: "ingested",
+      entity_type: "knowledge_document",
+      entity_id: row.id,
+      metadata: { filename, ...result },
+    });
+  } catch (e: any) {
+    await writer
+      .from("knowledge_documents")
+      .update({ ingestion_status: "failed", error_message: e.message })
+      .eq("id", row.id);
+  }
 
   return NextResponse.json({ knowledge_document: row });
 }

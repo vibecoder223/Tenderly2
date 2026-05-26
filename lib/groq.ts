@@ -1,16 +1,14 @@
 /**
  * LLM client — Cerebras Inference API (OpenAI-compatible).
  *
- * Cerebras runs Llama models 2-3× faster than Groq on their wafer-scale chips,
- * with more generous free-tier limits (60K TPM vs Groq's 6K on 70B).
+ * Cerebras runs Llama and GPT-OSS models 2-3× faster than Groq on their
+ * wafer-scale chips. Free tier: 30 RPM / 60K TPM / 1M tokens per day per
+ * model. We fire requests without artificial throttling and react to real
+ * 429s with a single retry that honours the `retry-after` header.
  *
  * Filename and exported names kept as "groq*" so the rest of the codebase
  * doesn't need to change — only the upstream provider swaps.
- *
- * All calls route through the central rate limiter.
  */
-
-import { withRateLimit, estimateTokens, RateLimitError } from "./rate-limiter";
 
 const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
 
@@ -19,7 +17,7 @@ export const MODEL      = "gpt-oss-120b";
 // Fast/cheap — extraction batches, query expansion, confidence scoring.
 export const MODEL_FAST = "llama3.1-8b";
 
-// Rough USD/MTok for cost display only (Cerebras pricing similar to Groq).
+// Rough USD/MTok for cost display only.
 const INPUT_PRICE_PER_MTOK  = 0.85;
 const OUTPUT_PRICE_PER_MTOK = 1.20;
 
@@ -29,15 +27,24 @@ export function estimateCost(input: number, output: number): number {
 
 export type Usage = { input_tokens: number; output_tokens: number };
 
+export class RateLimitError extends Error {
+  constructor(message: string, public retryAfterMs: number) {
+    super(message);
+    this.name = "RateLimitError";
+  }
+}
+
 function getKey(): string {
   const k = process.env.CEREBRAS_API_KEY;
   if (!k) throw new Error("CEREBRAS_API_KEY not set.");
   return k;
 }
 
-function bucketKey(model: string): string {
-  return model === MODEL_FAST ? "cerebras-8b" : "cerebras-120b";
-}
+// Max wait the inline retry will tolerate. Cerebras free tier 429s typically
+// resolve within a minute, so we wait through them rather than failing fast.
+// Anything longer bubbles as RateLimitError so the caller can mark the doc
+// failed and the UI can surface a Retry button.
+const MAX_RETRY_WAIT_MS = 65_000;
 
 async function call(opts: {
   system: string;
@@ -59,11 +66,8 @@ async function call(opts: {
   };
   if (opts.json) body.response_format = { type: "json_object" };
 
-  // Pre-call estimate. Use half of maxTokens since most responses don't use
-  // the full budget — the limiter corrects with the real usage on release().
-  const estimate = estimateTokens(opts.system) + estimateTokens(opts.user) + Math.ceil(maxTokens / 2);
-
-  return await withRateLimit(bucketKey(model), estimate, async () => {
+  let attempt = 0;
+  while (true) {
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 90_000);
     let res: Response;
@@ -82,9 +86,23 @@ async function call(opts: {
     }
 
     if (res.status === 429) {
-      const retryAfter = Number(res.headers.get("retry-after") ?? "8");
-      const retryAfterMs = Math.min(60_000, Math.max(2_000, retryAfter * 1000));
-      return { actualTokens: 0, retryAfterMs, value: null as any };
+      const retryAfter = Number(res.headers.get("retry-after") ?? "5");
+      const retryAfterMs = Math.max(1_000, retryAfter * 1000);
+
+      // Two attempts max. Wait only if the upstream wait is short enough that
+      // a retry can actually help; otherwise bubble out so the caller marks
+      // the work as rate-limited and the UI can show retry.
+      if (attempt < 1 && retryAfterMs <= MAX_RETRY_WAIT_MS) {
+        const jitter = retryAfterMs * (0.9 + Math.random() * 0.2);
+        console.warn(`[cerebras] 429 — retrying in ${Math.round(jitter / 1000)}s`);
+        await new Promise((r) => setTimeout(r, jitter));
+        attempt++;
+        continue;
+      }
+      throw new RateLimitError(
+        `Cerebras 429 on ${model} — retry-after ${Math.round(retryAfterMs / 1000)}s`,
+        retryAfterMs,
+      );
     }
 
     if (!res.ok) {
@@ -94,16 +112,14 @@ async function call(opts: {
 
     const j   = await res.json();
     const raw = j.choices?.[0]?.message?.content ?? "";
-    const usage: Usage = {
-      input_tokens:  j.usage?.prompt_tokens     ?? 0,
-      output_tokens: j.usage?.completion_tokens ?? 0,
-    };
-
     return {
-      actualTokens: usage.input_tokens + usage.output_tokens,
-      value: { raw, usage },
+      raw,
+      usage: {
+        input_tokens:  j.usage?.prompt_tokens     ?? 0,
+        output_tokens: j.usage?.completion_tokens ?? 0,
+      },
     };
-  });
+  }
 }
 
 export async function callGroqJson<T = unknown>(opts: {
@@ -112,11 +128,11 @@ export async function callGroqJson<T = unknown>(opts: {
   maxTokens?: number;
   model?: string;
   /**
-   * Output mode. Default "json_object" forces `response_format` so the model
-   * returns a top-level object. Use "text" when you want an array — some
-   * models (notably gpt-oss-120b and llama3.1-8b on Cerebras) misbehave under
-   * json_object mode for arrays, returning either a schema descriptor like
-   * {"type":"object"} or a single object instead of the requested array.
+   * Output mode. Default "json_object" forces `response_format`. Use "text"
+   * when you want an array — some Cerebras models (gpt-oss-120b, llama3.1-8b)
+   * misbehave under json_object mode for arrays and return either a schema
+   * descriptor like {"type":"object"} or a single object instead of the
+   * requested array.
    */
   mode?: "json_object" | "text";
 }): Promise<{ data: T; usage: Usage; raw: string }> {
@@ -141,10 +157,20 @@ export async function callGroqJson<T = unknown>(opts: {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    // Extract the largest [...] or {...} block from the response text.
     const m = cleaned.match(/[\[{][\s\S]*[\]}]/);
     if (!m) throw new Error(`Cerebras response not valid JSON: ${cleaned.slice(0, 200)}`);
-    parsed = JSON.parse(m[0]);
+    try {
+      parsed = JSON.parse(m[0]);
+    } catch (e: any) {
+      // Truncated-array salvage: trim back to the last well-formed object
+      // and close the array. Cerebras sometimes hits max_tokens mid-array.
+      const salvaged = salvageTruncatedArray(m[0]);
+      if (salvaged !== null) {
+        parsed = salvaged;
+      } else {
+        throw new Error(`Cerebras response not parseable JSON (${e.message}): ${m[0].slice(0, 200)}`);
+      }
+    }
   }
 
   // Unwrap object → array. Cerebras often returns { "type": "object",
@@ -157,6 +183,38 @@ export async function callGroqJson<T = unknown>(opts: {
   return { data: parsed as T, usage, raw };
 }
 
+/**
+ * Best-effort recovery for an unterminated JSON array — walk backwards to the
+ * last balanced object and close the array. Returns null if nothing usable.
+ */
+function salvageTruncatedArray(s: string): any[] | null {
+  if (!s.startsWith("[")) return null;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  let lastGoodEnd = -1;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (esc) { esc = false; continue; }
+    if (c === "\\") { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === "{" || c === "[") depth++;
+    else if (c === "}" || c === "]") {
+      depth--;
+      if (depth === 1 && c === "}") lastGoodEnd = i; // top-level object closed
+    }
+  }
+  if (lastGoodEnd < 0) return null;
+  const candidate = s.slice(0, lastGoodEnd + 1) + "]";
+  try {
+    const v = JSON.parse(candidate);
+    return Array.isArray(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function callGroqText(opts: {
   system: string;
   user: string;
@@ -166,5 +224,3 @@ export async function callGroqText(opts: {
   const { raw, usage } = await call(opts);
   return { text: raw.trim(), usage };
 }
-
-export { RateLimitError };

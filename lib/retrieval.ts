@@ -36,9 +36,11 @@ export async function retrieveForQuery(
   let usageIn = 0;
   let usageOut = 0;
 
-  // 1. Query expansion. Skip if LLM unavailable.
+  // 1. Query expansion. Off by default — it costs an extra LLM call per
+  // question and the recall gain is small. Set RAG_USE_QUERY_EXPANSION=1 to
+  // re-enable. Embeddings still capture paraphrase similarity.
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
-  if (process.env.CEREBRAS_API_KEY) {
+  if (process.env.RAG_USE_QUERY_EXPANSION === "1" && process.env.CEREBRAS_API_KEY) {
     try {
       const { data, usage } = await callGroqJson<{
         paraphrases: string[];

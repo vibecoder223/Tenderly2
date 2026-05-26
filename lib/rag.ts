@@ -136,27 +136,34 @@ export async function generateAndPersistAnswer(
   const cited = extractCitations(rawAnswer, retrieval.candidates);
   const clean = stripMarkers(rawAnswer);
 
-  // 7. Confidence pass (Haiku)
-  let confidence = 0.5;
-  try {
-    const { text, usage } = await callGroqText({
-      system: PROMPTS.confidence_system_v1,
-      user: `<answer>
+  // 7. Confidence — heuristic from citation count, not a second LLM call.
+  // The dedicated scorer added ~3-5s per question and a full extra request to
+  // Cerebras's 30 RPM budget. With Cerebras free tier that doubled total time
+  // for diminishing quality signal. Set RAG_USE_CONFIDENCE_LLM=1 to opt back
+  // into the LLM-scored path.
+  let confidence = cited.length === 0 ? 0.2 : cited.length >= 2 ? 0.7 : 0.5;
+
+  if (process.env.RAG_USE_CONFIDENCE_LLM === "1") {
+    try {
+      const { text, usage } = await callGroqText({
+        system: PROMPTS.confidence_system_v1,
+        user: `<answer>
 ${rawAnswer}
 </answer>
 
 <sources>
 ${retrieval.candidates.map((c) => `<chunk id="${c.chunk_id}">${c.text}</chunk>`).join("\n")}
 </sources>`,
-      maxTokens: 16,
-      model: MODEL_FAST,
-    });
-    totalIn += usage.input_tokens;
-    totalOut += usage.output_tokens;
-    const m = text.match(/[01](?:\.\d+)?/);
-    if (m) confidence = Math.max(0, Math.min(1, parseFloat(m[0])));
-  } catch {
-    // Leave 0.5 if scorer fails — gap_flag below still drives review.
+        maxTokens: 16,
+        model: MODEL_FAST,
+      });
+      totalIn += usage.input_tokens;
+      totalOut += usage.output_tokens;
+      const m = text.match(/[01](?:\.\d+)?/);
+      if (m) confidence = Math.max(0, Math.min(1, parseFloat(m[0])));
+    } catch {
+      // Leave heuristic confidence if scorer fails.
+    }
   }
 
   const gap_flag: "ok" | "partial" | "no_source" =
