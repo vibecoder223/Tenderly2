@@ -45,6 +45,7 @@ function getKey(): string {
 // Anything longer bubbles as RateLimitError so the caller can mark the doc
 // failed and the UI can surface a Retry button.
 const MAX_RETRY_WAIT_MS = 65_000;
+const MAX_RETRIES = 3;
 
 async function call(opts: {
   system: string;
@@ -87,21 +88,19 @@ async function call(opts: {
 
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get("retry-after") ?? "5");
-      const retryAfterMs = Math.max(1_000, retryAfter * 1000);
+      const base = Math.max(1_000, retryAfter * 1000);
 
-      // Two attempts max. Wait only if the upstream wait is short enough that
-      // a retry can actually help; otherwise bubble out so the caller marks
-      // the work as rate-limited and the UI can show retry.
-      if (attempt < 1 && retryAfterMs <= MAX_RETRY_WAIT_MS) {
-        const jitter = retryAfterMs * (0.9 + Math.random() * 0.2);
-        console.warn(`[cerebras] 429 — retrying in ${Math.round(jitter / 1000)}s`);
+      if (attempt < MAX_RETRIES && base <= MAX_RETRY_WAIT_MS) {
+        // Jitter so parallel callers don't all retry on the same tick.
+        const jitter = base * (0.7 + Math.random() * 0.6);
+        console.warn(`[cerebras] 429 on ${model} (attempt ${attempt + 1}) — retrying in ${Math.round(jitter / 1000)}s`);
         await new Promise((r) => setTimeout(r, jitter));
         attempt++;
         continue;
       }
       throw new RateLimitError(
-        `Cerebras 429 on ${model} — retry-after ${Math.round(retryAfterMs / 1000)}s`,
-        retryAfterMs,
+        `Cerebras 429 on ${model} after ${MAX_RETRIES} retries — last retry-after ${Math.round(base / 1000)}s`,
+        base,
       );
     }
 

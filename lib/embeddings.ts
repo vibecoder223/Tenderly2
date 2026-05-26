@@ -17,7 +17,8 @@ const JINA_RERANK_MODEL = process.env.JINA_RERANK_MODEL || "jina-reranker-v2-bas
 export const EMBED_DIMS = 1024;
 
 const JINA_BATCH_SIZE = 100;
-const MAX_RETRY_WAIT_MS = 15_000;
+const MAX_RETRY_WAIT_MS = 30_000;
+const MAX_RETRIES = 3;
 
 function hasJina() { return !!process.env.JINA_API_KEY; }
 
@@ -48,17 +49,20 @@ async function jinaFetch(path: string, body: any): Promise<Response> {
 
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get("retry-after") ?? "5");
-      const retryAfterMs = Math.max(1_000, retryAfter * 1000);
-      if (attempt < 1 && retryAfterMs <= MAX_RETRY_WAIT_MS) {
-        const jitter = retryAfterMs * (0.9 + Math.random() * 0.2);
-        console.warn(`[jina] 429 on ${path} — retrying in ${Math.round(jitter / 1000)}s`);
+      // Back off with exponential growth so a thundering herd of parallel
+      // batches doesn't all retry on the same tick.
+      const base = Math.max(1_000, retryAfter * 1000);
+      const backoff = Math.min(MAX_RETRY_WAIT_MS, base * Math.pow(2, attempt));
+      if (attempt < MAX_RETRIES) {
+        const jitter = backoff * (0.7 + Math.random() * 0.6);
+        console.warn(`[jina] 429 on ${path} (attempt ${attempt + 1}) — retrying in ${Math.round(jitter / 1000)}s`);
         await new Promise((r) => setTimeout(r, jitter));
         attempt++;
         continue;
       }
       throw new JinaRateLimitError(
-        `Jina 429 on ${path} — retry-after ${Math.round(retryAfterMs / 1000)}s`,
-        retryAfterMs,
+        `Jina 429 on ${path} after ${MAX_RETRIES} retries`,
+        base,
       );
     }
 
