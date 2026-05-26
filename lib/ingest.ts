@@ -73,17 +73,19 @@ export async function ingestKnowledgeDocument(
     .neq("id", doc.id)
     .maybeSingle();
   if (existing && existing.ingestion_status === "ready") {
-    // Mark current as ready and link to the existing chunks logically by hash.
-    // (We don't try to literally re-point — the user has two rows, which is fine.)
-    await supabase
+    // Mark current as ready WITHOUT writing text_hash — there is a unique
+    // constraint on (org_id, text_hash) and the existing "ready" row already
+    // holds the hash. We just point the user at the existing ingest via the
+    // error_message and skip chunk insertion.
+    const { error: updErr } = await supabase
       .from("knowledge_documents")
       .update({
         ingestion_status: "ready",
-        text_hash: textHash,
         page_count: parsed.page_count,
         error_message: "Deduplicated against a previously ingested document with identical text.",
       })
       .eq("id", doc.id);
+    if (updErr) throw new Error(`Dedup status update failed: ${updErr.message}`);
     return { chunk_count: 0, page_count: parsed.page_count, dedup: true };
   }
 

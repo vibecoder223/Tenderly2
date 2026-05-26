@@ -118,6 +118,22 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
     router.refresh();
   }
 
+  async function reingest(id: string) {
+    const res = await fetch(`/api/knowledge/${id}/reingest`, { method: "POST" });
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({ error: "Retry failed" }));
+      setErr(error || "Retry failed");
+      return;
+    }
+    // Optimistic: flip to "pending" locally so the badge moves immediately.
+    setItems((xs) =>
+      xs.map((x) =>
+        x.id === id ? { ...x, ingestion_status: "pending", error_message: null } : x,
+      ),
+    );
+    router.refresh();
+  }
+
   return (
     <div className="space-y-6">
       <div className="card p-5 space-y-3">
@@ -337,9 +353,16 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                     {formatDate(d.created_at)}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <button onClick={() => remove(d.id)} className="btn btn-danger">
-                      Delete
-                    </button>
+                    <span className="inline-flex items-center gap-2">
+                      {d.ingestion_status === "failed" && (
+                        <button onClick={() => reingest(d.id)} className="btn">
+                          Retry
+                        </button>
+                      )}
+                      <button onClick={() => remove(d.id)} className="btn btn-danger">
+                        Delete
+                      </button>
+                    </span>
                   </td>
                 </tr>
               ))}
