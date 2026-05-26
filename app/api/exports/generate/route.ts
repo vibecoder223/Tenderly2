@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     const r = await supabase
       .from("deals")
       .select(
-        "id, name, client_name, value, due_date, bid_reference, bid_type, sector, region, contract_type, contract_duration, submission_method, win_probability, competitors, notes, owner_id, organizations(name)"
+        "id, name, client_name, value, due_date, bid_reference, bid_type, sector, region, contract_type, contract_duration, submission_method, win_probability, competitors, notes, owner_id, org_id, organizations(name)"
       )
       .eq("id", deal_id)
       .maybeSingle();
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
   } catch {
     const r2 = await supabase
       .from("deals")
-      .select("id, name, client_name, due_date, owner_id, organizations(name)")
+      .select("id, name, client_name, due_date, owner_id, org_id, organizations(name)")
       .eq("id", deal_id)
       .maybeSingle();
     deal = r2.data;
@@ -210,19 +210,27 @@ export async function POST(req: Request) {
   let template:
     | { id: string; name: string; kind: string | null; file_path: string | null; intro?: string | null; accent_color?: string | null; logo_path?: string | null }
     | null = null;
+  // Scope template lookup to the deal's org so a user can't reference another
+  // tenant's template (or pick up a foreign default) via the template_id body
+  // field. proposal_templates is not defined in this repo's migrations, so we
+  // cannot rely on RLS being enabled; the explicit org_id filter is the only
+  // authoritative isolation here.
+  const dealOrgId = (deal as any).org_id as string | undefined;
   try {
-    if (body.template_id) {
+    if (body.template_id && dealOrgId) {
       const { data } = await supabase
         .from("proposal_templates")
         .select("id, name, kind, file_path, intro, accent_color, logo_path")
         .eq("id", body.template_id)
+        .eq("org_id", dealOrgId)
         .maybeSingle();
       template = data ?? null;
-    } else if (body.template_id === undefined) {
+    } else if (body.template_id === undefined && dealOrgId) {
       const { data } = await supabase
         .from("proposal_templates")
         .select("id, name, kind, file_path, intro, accent_color, logo_path")
         .eq("is_default", true)
+        .eq("org_id", dealOrgId)
         .maybeSingle();
       template = data ?? null;
     }
