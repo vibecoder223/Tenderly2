@@ -40,12 +40,12 @@ function getKey(): string {
   return k;
 }
 
-// Max wait the inline retry will tolerate. Cerebras free tier 429s typically
-// resolve within a minute, so we wait through them rather than failing fast.
-// Anything longer bubbles as RateLimitError so the caller can mark the doc
-// failed and the UI can surface a Retry button.
-const MAX_RETRY_WAIT_MS = 65_000;
-const MAX_RETRIES = 3;
+// Cerebras calls drive the Deals pipeline (extraction + response gen). We
+// fail fast on 429 instead of waiting — the doc lands in *_failed and the UI
+// Retry button drives the recovery. KB ingestion uses Jina, which keeps its
+// own retry budget in lib/embeddings.ts.
+const MAX_RETRY_WAIT_MS = 0;
+const MAX_RETRIES = 0;
 
 async function call(opts: {
   system: string;
