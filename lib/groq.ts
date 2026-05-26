@@ -59,8 +59,9 @@ async function call(opts: {
   };
   if (opts.json) body.response_format = { type: "json_object" };
 
-  // Pre-call estimate: input prompt tokens + worst-case output.
-  const estimate = estimateTokens(opts.system) + estimateTokens(opts.user) + maxTokens;
+  // Pre-call estimate. Use half of maxTokens since most responses don't use
+  // the full budget — the limiter corrects with the real usage on release().
+  const estimate = estimateTokens(opts.system) + estimateTokens(opts.user) + Math.ceil(maxTokens / 2);
 
   return await withRateLimit(bucketKey(model), estimate, async () => {
     const ctrl  = new AbortController();
@@ -136,10 +137,11 @@ export async function callGroqJson<T = unknown>(opts: {
     parsed = JSON.parse(m[0]);
   }
 
-  // Unwrap single-key object wrapping an array: { "items": [...] } → [...]
+  // Unwrap object → array. Cerebras often returns { "type": "object",
+  // "requirements": [...] } or similar. Find the first array value and use it.
   if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-    const values = Object.values(parsed);
-    if (values.length === 1 && Array.isArray(values[0])) parsed = values[0];
+    const arrayValues = Object.values(parsed).filter((v) => Array.isArray(v));
+    if (arrayValues.length === 1) parsed = arrayValues[0];
   }
 
   return { data: parsed as T, usage, raw };

@@ -186,15 +186,40 @@ export async function runChunkingAgent(
 // ============================================================
 // Agent 3: Requirement extraction (LLM, zod-validated, with retry).
 // ============================================================
+// requirement_id / section accept numbers from less-careful LLMs and coerce
+// to strings. Some smaller models also return "must-have", "high", etc. for
+// classification — preprocess() normalises common variants.
+const ClassificationSchema = z.preprocess((v) => {
+  if (typeof v !== "string") return v;
+  const s = v.toLowerCase();
+  if (s === "must" || s === "must-have" || s === "mandatory" || s === "required" || s === "high") return "must";
+  if (s === "should" || s === "should-have" || s === "desired" || s === "medium") return "should";
+  if (s === "info" || s === "informational" || s === "optional" || s === "low") return "info";
+  return v;
+}, z.enum(["must", "should", "info"]).default("must"));
+
+const TopicSchema = z.preprocess((v) => {
+  if (typeof v !== "string") return v;
+  const s = v.toLowerCase();
+  if (["security", "legal", "pricing", "technical", "commercial"].includes(s)) return s;
+  if (s.includes("secur")) return "security";
+  if (s.includes("legal") || s.includes("compli")) return "legal";
+  if (s.includes("price") || s.includes("cost")) return "pricing";
+  if (s.includes("tech")) return "technical";
+  return "technical";
+}, z.enum(["security", "legal", "pricing", "technical", "commercial"]).default("technical"));
+
 const RequirementSchema = z.object({
-  requirement_id: z.string().min(1),
-  section: z.string().optional().nullable(),
+  requirement_id: z.coerce.string().min(1),
+  section: z.union([z.string(), z.number()]).optional().nullable().transform((v) => v == null ? null : String(v)),
   text: z.string().min(1),
-  classification: z.enum(["must", "should", "info"]).default("must"),
-  topic: z
-    .enum(["security", "legal", "pricing", "technical", "commercial"])
-    .default("technical"),
-  source_page: z.number().int().nullable().optional(),
+  classification: ClassificationSchema,
+  topic: TopicSchema,
+  source_page: z.union([z.number().int(), z.string()]).nullable().optional().transform((v) => {
+    if (v == null || v === "") return null;
+    const n = typeof v === "number" ? v : parseInt(v, 10);
+    return Number.isFinite(n) ? n : null;
+  }),
 });
 const RequirementArraySchema = z.array(RequirementSchema);
 
