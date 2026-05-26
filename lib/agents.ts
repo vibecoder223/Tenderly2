@@ -11,7 +11,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { callGroqJson, callGroqText, estimateCost, MODEL_FAST } from "./groq";
+import { callGroqJson, callGroqText, estimateCost, MODEL, MODEL_FAST } from "./groq";
 import { parseDocument, type ParsedDoc } from "./parse";
 import { chunkBlocks, type ProducedChunk } from "./chunk";
 import { embedTexts, hasEmbeddings } from "./embeddings";
@@ -278,7 +278,13 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
                 ? user
                 : `${user}\n\n[Previous attempt failed: ${lastErr}. Return ONLY a JSON array.]`,
             maxTokens: 4096,
-            model: MODEL_FAST, // 8B instant: 131K TPM — avoids free-tier throttle on 70B (6K TPM)
+            model: MODEL,
+            // response_format=json_object forces the model to return a single
+            // top-level object; gpt-oss-120b and llama3.1-8b on Cerebras both
+            // misbehave with that and return either a schema descriptor or a
+            // lone item. Use text mode so the model can return a real array
+            // and let the loose parser extract it from the response.
+            mode: "text",
           });
           inTok += usage.input_tokens;
           outTok += usage.output_tokens;

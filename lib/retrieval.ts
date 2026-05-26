@@ -5,7 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callGroqJson, MODEL_FAST } from "./groq";
+import { callGroqJson, MODEL, MODEL_FAST } from "./groq";
 import { embedTexts, hasEmbeddings, rerank } from "./embeddings";
 
 export type Candidate = {
@@ -51,7 +51,9 @@ Return JSON:
 No prose, no fences.`,
         user: opts.query,
         maxTokens: 400,
-        model: MODEL_FAST,
+        // Use the quality model — llama3.1-8b returns {"type":"object"}
+        // schema descriptors instead of real data under json_object mode.
+        model: MODEL,
       });
       if (Array.isArray(data?.paraphrases) && Array.isArray(data?.keywords)) {
         expansion = {

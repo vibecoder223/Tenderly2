@@ -111,7 +111,16 @@ export async function callGroqJson<T = unknown>(opts: {
   user: string;
   maxTokens?: number;
   model?: string;
+  /**
+   * Output mode. Default "json_object" forces `response_format` so the model
+   * returns a top-level object. Use "text" when you want an array — some
+   * models (notably gpt-oss-120b and llama3.1-8b on Cerebras) misbehave under
+   * json_object mode for arrays, returning either a schema descriptor like
+   * {"type":"object"} or a single object instead of the requested array.
+   */
+  mode?: "json_object" | "text";
 }): Promise<{ data: T; usage: Usage; raw: string }> {
+  const mode = opts.mode ?? "json_object";
   const sys = /json/i.test(opts.system)
     ? opts.system
     : `${opts.system}\n\nReturn valid JSON.`;
@@ -119,7 +128,7 @@ export async function callGroqJson<T = unknown>(opts: {
   const { raw, usage } = await call({
     ...opts,
     system:    sys,
-    json:      true,
+    json:      mode === "json_object",
     maxTokens: opts.maxTokens ?? 4096,
   });
 
@@ -132,6 +141,7 @@ export async function callGroqJson<T = unknown>(opts: {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    // Extract the largest [...] or {...} block from the response text.
     const m = cleaned.match(/[\[{][\s\S]*[\]}]/);
     if (!m) throw new Error(`Cerebras response not valid JSON: ${cleaned.slice(0, 200)}`);
     parsed = JSON.parse(m[0]);
