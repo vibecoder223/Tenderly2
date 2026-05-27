@@ -60,7 +60,7 @@ export default async function DealDocumentsPage({
                     style={{ borderColor: "var(--divider)" }}
                   >
                     {/* Left — file info */}
-                    <div className="min-w-0 sm:basis-[420px] sm:flex-none">
+                    <div className="min-w-0 sm:basis-[260px] sm:flex-none">
                       <div className="font-medium text-[14px] truncate" style={{ color: "var(--fg)" }} title={d.filename}>
                         {d.filename}
                       </div>
