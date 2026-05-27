@@ -55,7 +55,7 @@ export default function DeleteDocumentButton({
     <button
       className="btn"
       onClick={() => setConfirming(true)}
-      style={{ color: "var(--err)" }}
+      style={{ color: "var(--err)", padding: "4px 10px" }}
       title="Delete this document and its questions"
     >
       Delete
