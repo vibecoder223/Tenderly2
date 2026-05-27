@@ -306,20 +306,12 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
           No templates in this category yet.
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          {/* Column headers */}
-          <div
-            className="flex items-center gap-5 px-5 py-2.5"
-            style={{ borderBottom: "1px solid var(--divider)", background: "var(--bg-2)" }}
-          >
-            <span style={{ width: 34, flexShrink: 0 }} />
-            <span className="text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--fg-5)", width: 200, flexShrink: 0 }}>Name</span>
-            <span className="flex-1 text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--fg-5)" }}>Sections</span>
-            <span className="text-[10.5px] font-semibold uppercase tracking-wider" style={{ color: "var(--fg-5)", flexShrink: 0 }}>Updated</span>
-            <span style={{ width: 28, flexShrink: 0 }} />
-          </div>
+        <div
+          className="grid gap-4"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}
+        >
           {visible.map((t) => (
-            <TemplateRow
+            <TemplateCard
               key={t.id}
               t={t}
               onEdit={() => openEditor(t)}
@@ -387,16 +379,7 @@ const KIND_META: Record<TemplateKind, { label: string; color: string }> = {
   docx: { label: "Word", color: "oklch(0.50 0.18 250)" },
 };
 
-function rowSummary(t: T, kind: TemplateKind): string {
-  if (kind === "ai") {
-    const secs = introToSections(t.intro);
-    if (secs) return secs.map((s) => s.type === "qa" ? "Q&A" : s.name).join("  ·  ");
-  }
-  if (kind === "docx") return t.file_name || "uploaded.docx";
-  return t.intro ? t.intro.replace(/\n+/g, " ").slice(0, 160) : "No intro text";
-}
-
-function TemplateRow({
+function TemplateCard({
   t,
   onEdit,
   onDelete,
@@ -411,87 +394,181 @@ function TemplateRow({
 }) {
   const kind = classifyTemplate(t);
   const { label: kindLabel, color: kindColor } = KIND_META[kind];
-  const summary = rowSummary(t, kind);
+  const accent = t.accent_color || kindColor;
   const updated = formatUpdated(t.updated_at ?? t.created_at ?? null);
+  const sections = kind === "ai" ? introToSections(t.intro) : null;
+
+  // Body preview text — for AI it's the section count; for text it's the intro
+  // first line; for docx it's the filename.
+  const subline: string =
+    kind === "docx"
+      ? (t.file_name || "uploaded.docx")
+      : kind === "text"
+      ? (t.intro ? t.intro.replace(/\n+/g, " ").slice(0, 110) : "No intro text yet")
+      : `${sections?.length ?? 0} section${sections?.length === 1 ? "" : "s"}`;
+
+  const canEdit = kind !== "docx";
 
   return (
     <div
-      className="flex items-center gap-5 px-5 py-4 border-t"
-      style={{ borderColor: "var(--divider)" }}
+      className="card"
+      style={{
+        position: "relative",
+        padding: 0,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        cursor: canEdit ? "pointer" : "default",
+        transition: "border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)",
+      }}
+      onClick={(e) => {
+        // Don't open the editor when the click originates inside the kebab menu.
+        if ((e.target as HTMLElement).closest("[data-card-menu]")) return;
+        if (canEdit) onEdit();
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--border-strong)";
+        e.currentTarget.style.boxShadow = "var(--shadow-2)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--border)";
+        e.currentTarget.style.boxShadow = "";
+      }}
     >
-      {/* Kind label — fixed width, uppercase, colored */}
-      <span
-        style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
-          textTransform: "uppercase", color: kindColor,
-          flexShrink: 0, width: 34,
-        }}
-      >
-        {kindLabel}
-      </span>
+      {/* Accent strip */}
+      <div style={{ height: 4, background: accent }} />
 
-      {/* Name + default indicator */}
-      <div style={{ flexShrink: 0, width: 200, minWidth: 0 }}>
-        <div
-          className="text-[13.5px] font-semibold truncate"
-          style={{ color: "var(--fg)", lineHeight: 1.3 }}
+      {/* Header — kind chip, default star, kebab */}
+      <div className="flex items-start justify-between gap-2 px-5 pt-4">
+        <span
+          className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider"
+          style={{
+            color: kindColor,
+            background: `color-mix(in srgb, ${kindColor} 12%, white)`,
+            padding: "3px 8px",
+            borderRadius: 999,
+            letterSpacing: "0.08em",
+          }}
         >
-          {t.name}
-        </div>
-        {t.is_default && (
-          <div
-            className="text-[10.5px] font-semibold mt-0.5"
-            style={{ color: "var(--ok)", letterSpacing: "0.02em" }}
-          >
-            Default
-          </div>
-        )}
-        {t.description && !t.is_default && (
-          <div className="text-[11px] truncate mt-0.5" style={{ color: "var(--fg-5)" }}>
-            {t.description}
-          </div>
-        )}
-      </div>
+          {kindLabel}
+        </span>
 
-      {/* Section sequence / summary — takes remaining space */}
-      <div
-        className="flex-1 min-w-0 text-[12px] truncate"
-        style={{ color: "var(--fg-4)" }}
-        title={summary}
-      >
-        {kind === "ai" ? (
-          summary.split("  ·  ").map((name, i, arr) => (
-            <span key={i}>
-              <span style={{ color: i % 2 === 0 ? "var(--fg-3)" : "var(--fg-4)" }}>
-                {name}
-              </span>
-              {i < arr.length - 1 && (
-                <span style={{ color: "var(--fg-5)", margin: "0 5px" }}>·</span>
-              )}
+        <div className="flex items-center gap-1.5">
+          {t.is_default && (
+            <span
+              className="inline-flex items-center gap-1 text-[10.5px] font-semibold"
+              style={{ color: "var(--ok)" }}
+              title="Used by default when exporting deals"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2 L14 8 L20 8 L15 12 L17 18 L12 14.5 L7 18 L9 12 L4 8 L10 8 Z" />
+              </svg>
+              Default
             </span>
-          ))
+          )}
+          <div data-card-menu>
+            <CardMenu
+              isDefault={t.is_default}
+              onEdit={canEdit ? onEdit : null}
+              onDuplicate={onDuplicate}
+              onSetDefault={onSetDefault}
+              onDelete={onDelete}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Title + description */}
+      <div className="px-5 pt-3 pb-2">
+        <h3 className="text-[15px] font-semibold leading-tight" style={{ color: "var(--fg)" }}>
+          {t.name || "Untitled template"}
+        </h3>
+        {t.description ? (
+          <p className="text-[12px] mt-1 line-clamp-2" style={{ color: "var(--fg-4)" }}>
+            {t.description}
+          </p>
         ) : (
-          summary
+          <p className="text-[12px] mt-1" style={{ color: "var(--fg-5)" }}>
+            {subline}
+          </p>
         )}
       </div>
 
-      {/* Updated */}
-      <span
-        className="text-[11px] num"
-        style={{ color: "var(--fg-5)", flexShrink: 0 }}
-      >
-        {updated}
-      </span>
+      {/* Section visualisation (AI only) */}
+      {kind === "ai" && sections && sections.length > 0 && (
+        <div className="px-5 pb-2">
+          <SectionPreview sections={sections} />
+        </div>
+      )}
 
-      {/* Actions */}
-      <CardMenu
-        isDefault={t.is_default}
-        onEdit={kind === "docx" ? null : onEdit}
-        onDuplicate={onDuplicate}
-        onSetDefault={onSetDefault}
-        onDelete={onDelete}
-      />
+      {/* Docx preview */}
+      {kind === "docx" && (
+        <div className="px-5 pb-2">
+          <div
+            className="flex items-center gap-2 text-[11.5px] mono"
+            style={{ color: "var(--fg-4)" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span className="truncate">{t.file_name || "uploaded.docx"}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div
+        className="flex items-center justify-between px-5 py-3 mt-auto text-[11px]"
+        style={{ color: "var(--fg-5)", borderTop: "1px solid var(--divider)" }}
+      >
+        <span>Updated {updated}</span>
+        {canEdit && (
+          <span style={{ color: "var(--accent)" }}>Edit →</span>
+        )}
+      </div>
     </div>
+  );
+}
+
+// Compact horizontal preview of the section sequence. AI sections render with
+// the accent color, static with foreground tint, qa with green so the user can
+// see the structure at a glance without opening the editor.
+function SectionPreview({ sections }: { sections: TemplateSection[] }) {
+  return (
+    <ol className="space-y-1.5 mt-1">
+      {sections.slice(0, 6).map((s, i) => (
+        <li key={s.id} className="flex items-center gap-2 text-[11.5px]">
+          <span
+            className="mono"
+            style={{
+              width: 14,
+              color: "var(--fg-5)",
+              textAlign: "right",
+            }}
+          >
+            {i + 1}
+          </span>
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: TYPE_COLORS[s.type],
+              flexShrink: 0,
+            }}
+          />
+          <span className="truncate" style={{ color: "var(--fg-3)" }}>
+            {s.type === "qa" ? "Questions and Answers" : s.name}
+          </span>
+        </li>
+      ))}
+      {sections.length > 6 && (
+        <li className="text-[11px]" style={{ color: "var(--fg-5)", paddingLeft: 24 }}>
+          + {sections.length - 6} more
+        </li>
+      )}
+    </ol>
   );
 }
 

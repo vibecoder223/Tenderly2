@@ -42,7 +42,7 @@ export default async function TemplatesPage() {
           </>
         }
       />
-      <div className="p-7 max-w-[1000px]">
+      <div className="p-7 max-w-[1400px]">
         {migrationMissing ? (
           <div className="card p-8">
             <h2 className="text-base font-semibold mb-1" style={{ color: "var(--fg)" }}>Run migration first</h2>
