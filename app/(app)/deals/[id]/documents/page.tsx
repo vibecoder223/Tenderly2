@@ -56,11 +56,11 @@ export default async function DealDocumentsPage({
                 return (
                   <li
                     key={d.id}
-                    className="p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-5"
+                    className="p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5"
                     style={{ borderColor: "var(--divider)" }}
                   >
                     {/* Left — file info */}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 sm:basis-[420px] sm:flex-none">
                       <div className="font-medium text-[14px] truncate" style={{ color: "var(--fg)" }} title={d.filename}>
                         {d.filename}
                       </div>
@@ -84,7 +84,7 @@ export default async function DealDocumentsPage({
                     </div>
 
                     {/* Right — actions */}
-                    <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:justify-end">
+                    <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:flex-1 sm:justify-end">
                       {isFailed && <RetryDocumentButton documentId={d.id} />}
                       <Link
                         href={`/deals/${id}/questions?doc=${d.id}`}
