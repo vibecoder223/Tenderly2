@@ -203,6 +203,27 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
 
   function cancel() { setEditing(null); setCreating(false); setMode("list"); }
 
+  // Hooks must run unconditionally on every render — declaring useMemo after
+  // the early-return branches below caused "Rendered fewer hooks than
+  // expected" when the user opened an editor.
+  const counts = useMemo(() => {
+    const c = { all: templates.length, ai: 0, text: 0, docx: 0 };
+    for (const t of templates) c[classifyTemplate(t)]++;
+    return c;
+  }, [templates]);
+
+  const visible = useMemo(() => {
+    if (tab === "all") return templates;
+    return templates.filter((t) => classifyTemplate(t) === tab);
+  }, [templates, tab]);
+
+  function openEditor(t: T) {
+    const sections = introToSections(t.intro);
+    setEditing(t);
+    setCreating(false);
+    setMode(sections ? "sections" : "text");
+  }
+
   if (editing && mode === "sections") {
     return <SectionBuilderForm t={editing} isNew={creating} onCancel={cancel} onSave={save} />;
   }
@@ -221,25 +242,6 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
         }}
       />
     );
-  }
-
-  // ---- Template list ----
-  const counts = useMemo(() => {
-    const c = { all: templates.length, ai: 0, text: 0, docx: 0 };
-    for (const t of templates) c[classifyTemplate(t)]++;
-    return c;
-  }, [templates]);
-
-  const visible = useMemo(() => {
-    if (tab === "all") return templates;
-    return templates.filter((t) => classifyTemplate(t) === tab);
-  }, [templates, tab]);
-
-  function openEditor(t: T) {
-    const sections = introToSections(t.intro);
-    setEditing(t);
-    setCreating(false);
-    setMode(sections ? "sections" : "text");
   }
 
   return (
