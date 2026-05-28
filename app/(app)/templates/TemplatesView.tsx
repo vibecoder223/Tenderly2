@@ -246,51 +246,49 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
 
   return (
     <div className="space-y-4">
-      {/* Page header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-lg font-semibold" style={{ color: "var(--fg)" }}>Proposal templates</h1>
-          <p className="text-[13px]" style={{ color: "var(--fg-4)" }}>
-            AI-native, structured, and Word templates for your deal exports.
-          </p>
-        </div>
-        <AddTemplateMenu onSelect={openNew} />
-      </div>
-
-      {/* Tabs */}
-      {templates.length > 0 && (
-        <div className="flex items-center gap-1 border-b" style={{ borderColor: "var(--divider)" }}>
-          {([
-            { key: "all", label: "All" },
-            { key: "ai", label: "AI Templates" },
-            { key: "text", label: "Text Templates" },
-            { key: "docx", label: "Word Templates" },
-          ] as const).map((opt) => {
+      {/* Tabs + New template button row */}
+      <div className="flex items-center justify-between gap-3 border-b" style={{ borderColor: "var(--divider)" }}>
+        <div className="flex items-center gap-0 flex-1 flex-wrap" style={{ minWidth: 0 }}>
+          {templates.length > 0 && [
+            { key: "all"  as const, label: "All" },
+            { key: "ai"   as const, label: "AI" },
+            { key: "text" as const, label: "Text" },
+            { key: "docx" as const, label: "Word" },
+          ].map((opt) => {
             const active = tab === opt.key;
             const count = counts[opt.key];
             return (
               <button
                 key={opt.key}
                 onClick={() => setTab(opt.key)}
-                className="text-[12.5px] font-medium"
                 style={{
-                  padding: "8px 12px",
+                  fontSize: 12.5,
+                  fontWeight: active ? 600 : 500,
+                  padding: "9px 12px",
                   marginBottom: -1,
                   borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
                   color: active ? "var(--fg)" : "var(--fg-4)",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  letterSpacing: "-0.005em",
                 }}
               >
                 {opt.label}
                 <span
-                  className="text-[11px] num"
                   style={{
+                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    fontSize: 10.5,
+                    color: active ? "var(--accent-3)" : "var(--fg-5)",
                     background: active ? "var(--accent-tint)" : "var(--bg-2)",
-                    color: active ? "var(--accent)" : "var(--fg-4)",
                     padding: "1px 6px",
-                    borderRadius: 999,
+                    borderRadius: 4,
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   {count}
@@ -299,7 +297,8 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
             );
           })}
         </div>
-      )}
+        <AddTemplateMenu onSelect={openNew} />
+      </div>
 
       {templates.length === 0 ? (
         <EmptyState onAI={() => openNew("sections")} onWord={() => openNew("docx")} />
@@ -376,9 +375,9 @@ function EmptyState({ onAI, onWord }: { onAI: () => void; onWord: () => void }) 
 // ---- Template row (list view) ----
 
 const KIND_META: Record<TemplateKind, { label: string; color: string }> = {
-  ai:   { label: "AI",   color: "var(--accent)" },
-  text: { label: "Text", color: "var(--fg-4)" },
-  docx: { label: "Word", color: "oklch(0.50 0.18 250)" },
+  ai:   { label: "ai",   color: "var(--accent)" },
+  text: { label: "text", color: "var(--fg-3)" },
+  docx: { label: "docx", color: "var(--fg-3)" },
 };
 
 function TemplateCard({
@@ -437,19 +436,18 @@ function TemplateCard({
         e.currentTarget.style.boxShadow = "";
       }}
     >
-      {/* Accent strip */}
-      <div style={{ height: 4, background: accent }} />
-
-      {/* Header — kind chip, default star, kebab */}
+      {/* Header — kind tag, default star, kebab */}
       <div className="flex items-start justify-between gap-2 px-5 pt-4">
         <span
-          className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider"
           style={{
-            color: kindColor,
-            background: `color-mix(in srgb, ${kindColor} 12%, white)`,
-            padding: "3px 8px",
-            borderRadius: 999,
-            letterSpacing: "0.08em",
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 11,
+            color: kind === "ai" ? "var(--accent-3)" : "var(--fg-4)",
+            background: kind === "ai" ? "var(--accent-tint)" : "var(--bg-2)",
+            padding: "2px 8px",
+            borderRadius: 4,
+            letterSpacing: "0.02em",
+            fontWeight: 500,
           }}
         >
           {kindLabel}
@@ -739,7 +737,7 @@ function AddTemplateMenu({ onSelect }: { onSelect: (type: "sections" | "text" | 
                 <polyline points="14 2 14 8 20 8" />
               </svg>
             }
-            accent="oklch(0.50 0.18 250)"
+            accent="var(--fg-3)"
             title="Import Word template"
             description="Upload an existing .docx. AI fills placeholders while preserving structure."
             onClick={() => { setOpen(false); onSelect("docx"); }}

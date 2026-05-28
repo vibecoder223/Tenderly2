@@ -1,8 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  BarChart, Bar, Cell,
 } from "recharts";
 
 /* ─── Time range filter ─────────────────────────────────────────────────── */
@@ -18,18 +20,13 @@ export function TimeRangeFilter({ from, to }: { from: string | null; to: string 
   const router = useRouter();
 
   function applyPreset(days: number | null) {
-    if (days == null) {
-      router.push("?");
-      return;
-    }
+    if (days == null) { router.push("?"); return; }
     const t = new Date();
     const f = new Date(Date.now() - days * 86400_000);
     router.push(`?from=${fmt(f)}&to=${fmt(t)}`);
   }
 
-  function fmt(d: Date) {
-    return d.toISOString().slice(0, 10);
-  }
+  function fmt(d: Date) { return d.toISOString().slice(0, 10); }
 
   function isActive(days: number | null) {
     if (days == null) return !from && !to;
@@ -54,7 +51,219 @@ export function TimeRangeFilter({ from, to }: { from: string | null; to: string 
   );
 }
 
-/* ─── Trend charts ──────────────────────────────────────────────────────── */
+/* ─── KPI card with optional sparkline ─────────────────────────────────── */
+
+type SparkPoint = { v: number | null };
+
+export function KpiCard({
+  label,
+  value,
+  sub,
+  tone,
+  sparkData,
+  sparkColor,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  tone?: "ok" | "err" | "warn";
+  sparkData?: SparkPoint[];
+  sparkColor?: string;
+}) {
+  const fgColor =
+    tone === "ok" ? "var(--ok)" :
+    tone === "err" ? "var(--err)" :
+    tone === "warn" ? "var(--warn)" :
+    "var(--fg)";
+
+  return (
+    <div className="card" style={{ padding: "12px 14px", minWidth: 0, overflow: "hidden" }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
+        <div>
+          <div className="num" style={{ fontSize: 22, fontWeight: 600, color: fgColor, lineHeight: 1.1 }}>
+            {value}
+          </div>
+          {sub && (
+            <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 3 }}>{sub}</div>
+          )}
+        </div>
+        {sparkData && sparkData.length > 1 && (
+          <div style={{ width: 72, height: 36, flexShrink: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                <Line
+                  type="monotone"
+                  dataKey="v"
+                  stroke={sparkColor ?? fgColor}
+                  strokeWidth={1.5}
+                  dot={false}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Deals at risk ─────────────────────────────────────────────────────── */
+
+export type DealRiskRow = {
+  id: string;
+  name: string;
+  dueDate: string | null;
+  pctDone: number;
+  total: number;
+  approved: number;
+  daysLeft: number | null;
+  risk: "red" | "amber" | "green" | "none";
+};
+
+export function DealsAtRisk({ rows }: { rows: DealRiskRow[] }) {
+  if (rows.length === 0) {
+    return <div style={{ fontSize: 13, color: "var(--fg-5)", padding: "8px 0" }}>No active deals</div>;
+  }
+
+  const riskColor = {
+    red: "var(--err)",
+    amber: "var(--warn)",
+    green: "var(--ok)",
+    none: "var(--fg-4)",
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {rows.map((row) => {
+        const barFill = row.pctDone >= 0.8 ? "var(--ok)" : row.pctDone >= 0.5 ? "var(--accent)" : "var(--fg-5)";
+        const daysLabel =
+          row.daysLeft == null ? null :
+          row.daysLeft < 0 ? `${Math.abs(row.daysLeft)}d overdue` :
+          row.daysLeft === 0 ? "due today" :
+          `${row.daysLeft}d left`;
+
+        return (
+          <div
+            key={row.id}
+            style={{ padding: "10px 0", borderBottom: "1px solid var(--divider)" }}
+          >
+            {/* Top row: name + action */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}>
+                {row.name}
+              </div>
+              <a
+                href={`/deals/${row.id}/questions`}
+                style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none", flexShrink: 0 }}
+              >
+                Open →
+              </a>
+            </div>
+            {/* Progress bar */}
+            <div style={{ height: 4, borderRadius: 2, background: "var(--border)", overflow: "hidden", marginBottom: 5 }}>
+              <div style={{ width: `${Math.round(row.pctDone * 100)}%`, height: "100%", background: barFill, borderRadius: 2 }} />
+            </div>
+            {/* Stats row */}
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <span className="num" style={{ fontSize: 12, color: "var(--fg-4)" }}>
+                {Math.round(row.pctDone * 100)}% done
+              </span>
+              {daysLabel && (
+                <span style={{ fontSize: 12, color: riskColor[row.risk], fontWeight: row.risk === "red" ? 600 : 400 }}>
+                  {daysLabel}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Funnel section ─────────────────────────────────────────────────────── */
+
+export type FunnelStep = { label: string; count: number; pctOfPrev: number | null };
+export type DwellBar = { label: string; days: number };
+
+export function FunnelSection({
+  steps,
+  dwellData,
+}: {
+  steps: FunnelStep[];
+  dwellData: DwellBar[];
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+      {/* Funnel steps */}
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>
+          Conversion funnel
+        </div>
+        <div>
+          {steps.map((step, i) => {
+            const maxCount = steps[0]?.count ?? 1;
+            const barW = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
+            return (
+              <div key={step.label} style={{ paddingBottom: 7, borderBottom: i < steps.length - 1 ? "1px solid var(--divider)" : "none", marginBottom: i < steps.length - 1 ? 7 : 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: "var(--fg-3)" }}>{step.label}</span>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <span className="num" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{step.count.toLocaleString()}</span>
+                    {step.pctOfPrev != null && (
+                      <span style={{ fontSize: 11, color: step.pctOfPrev >= 70 ? "var(--ok)" : step.pctOfPrev >= 40 ? "var(--warn)" : "var(--err)" }}>
+                        {step.pctOfPrev}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ height: 4, borderRadius: 2, background: "var(--border)", overflow: "hidden" }}>
+                  <div style={{ width: `${barW}%`, height: "100%", background: i === steps.length - 1 ? "var(--ok)" : "var(--accent)", borderRadius: 2 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Dwell times — hidden on mobile to save vertical space */}
+      <div className="hidden sm:block">
+        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>
+          Avg days per stage
+        </div>
+        {dwellData.length === 0 ? (
+          <div style={{ fontSize: 13, color: "var(--fg-5)" }}>No data</div>
+        ) : (
+          <div style={{ height: 120 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dwellData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={18}>
+                <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}d`} />
+                <Tooltip
+                  contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
+                  formatter={(v: unknown) => [`${v}d`, "avg days"]}
+                  labelStyle={{ color: "var(--fg-4)", marginBottom: 4 }}
+                />
+                <Bar dataKey="days" radius={[3, 3, 0, 0]}>
+                  {dwellData.map((_, idx) => (
+                    <Cell key={idx} fill={idx === dwellData.length - 1 ? "var(--ok)" : "var(--accent)"} fillOpacity={0.75} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Trend chart ────────────────────────────────────────────────────────── */
 
 type TrendPoint = { month: string; value: number | null };
 
@@ -62,111 +271,33 @@ export function TrendChart({
   data,
   label,
   color,
-  format,
+  unit,
 }: {
   data: TrendPoint[];
   label: string;
   color: string;
-  format: (v: number) => string;
+  /** Suffix appended to values (e.g. "%" or "d"). Server-safe (no function prop). */
+  unit: string;
 }) {
+  const format = (v: number) => `${v}${unit}`;
   return (
-    <div className="card" style={{ padding: "18px 20px" }}>
+    <div className="card" style={{ padding: "18px 20px", minWidth: 0, overflow: "hidden" }}>
       <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--fg-3)", marginBottom: 16 }}>
         {label}
       </div>
       <ResponsiveContainer width="100%" height={160}>
         <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="month"
-            tick={{ fontSize: 11, fill: "var(--fg-5)" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: "var(--fg-5)" }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={format}
-          />
+          <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} tickFormatter={format} />
           <Tooltip
-            contentStyle={{
-              background: "var(--elevated)",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              fontSize: 12,
-              boxShadow: "var(--shadow-2)",
-            }}
+            contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12, boxShadow: "var(--shadow-2)" }}
             formatter={(v: unknown) => [format(v as number), label]}
             labelStyle={{ color: "var(--fg-4)", marginBottom: 4 }}
           />
-          <Line
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: color }}
-            connectNulls
-          />
+          <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: color }} connectNulls />
         </LineChart>
       </ResponsiveContainer>
-    </div>
-  );
-}
-
-/* ─── Pipeline stacked bar ──────────────────────────────────────────────── */
-
-type DealStatus = { unanswered: number; drafting: number; review: number; approved: number; total: number };
-
-export function PipelineBar({
-  name,
-  dueDate,
-  counts,
-}: {
-  name: string;
-  dueDate: string | null;
-  counts: DealStatus;
-}) {
-  const { unanswered, drafting, review, approved, total } = counts;
-  if (total === 0) return null;
-
-  const pct = (n: number) => `${((n / total) * 100).toFixed(1)}%`;
-  const overdue = dueDate && new Date(dueDate) < new Date();
-
-  const segments = [
-    { key: "unanswered", count: unanswered, color: "var(--fg-5)" },
-    { key: "drafting",   count: drafting,   color: "var(--accent)" },
-    { key: "review",     count: review,     color: "var(--warn)" },
-    { key: "approved",   count: approved,   color: "var(--ok)" },
-  ];
-
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--divider)" }}>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)" }}>{name}</span>
-          {dueDate && (
-            <span style={{ fontSize: 11, color: overdue ? "var(--err)" : "var(--fg-4)" }}>
-              {overdue ? "overdue" : `due ${dueDate}`}
-            </span>
-          )}
-        </div>
-        <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", gap: 1 }}>
-          {segments.map((s) =>
-            s.count > 0 ? (
-              <div
-                key={s.key}
-                title={`${s.key}: ${s.count}`}
-                style={{ width: pct(s.count), background: s.color, minWidth: 2 }}
-              />
-            ) : null
-          )}
-        </div>
-      </div>
-      <div style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "right", whiteSpace: "nowrap" }}>
-        {approved}/{total} approved
-      </div>
     </div>
   );
 }

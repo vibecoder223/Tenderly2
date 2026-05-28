@@ -21,6 +21,12 @@ export default async function SettingsPage() {
         }
       />
       <div className="p-7 max-w-[680px]">
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1 className="page-title">Settings</h1>
+          </div>
+          <p className="page-sub">Workspace defaults — AI tone, model, monthly token budget.</p>
+        </div>
         <SettingsForm
           orgName={member.organizations?.name ?? ""}
           settings={

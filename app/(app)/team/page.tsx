@@ -31,6 +31,13 @@ export default async function TeamPage() {
         }
       />
       <div className="p-7 max-w-[920px]">
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1 className="page-title">Team</h1>
+            <span className="page-meta">{(members ?? []).length} members{(invites ?? []).length > 0 ? ` · ${(invites ?? []).length} pending` : ""}</span>
+          </div>
+          <p className="page-sub">Invite teammates as reviewers, contributors, or admins. Roles control approval rights and visibility.</p>
+        </div>
         <TeamView
           members={(members ?? []) as any[]}
           invites={(invites ?? []) as any[]}

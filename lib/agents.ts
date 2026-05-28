@@ -555,8 +555,8 @@ export async function runFullPipeline(
   try {
     chunks = await runChunkingAgent(supabase, doc, parsed);
   } catch (e: any) {
-    // Chunking embeds inline — if Jina is the cause, mark embedding_failed.
-    const status = /jina|embed/i.test(e.message) ? "embedding_failed" : "failed";
+    // Chunking embeds inline — if the embedder is the cause, mark embedding_failed.
+    const status = /voyage|jina|embed/i.test(e.message) ? "embedding_failed" : "failed";
     await setStatus(supabase, documentId, status, e.message);
     throw e;
   }

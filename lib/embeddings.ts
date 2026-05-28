@@ -1,67 +1,93 @@
 /**
- * Embeddings + reranking — Jina AI only.
+ * Embeddings + reranking — Voyage AI.
  *
- * Embedding model: jina-embeddings-v3 @ 1024 dimensions. Matches our DB column.
- * Rerank model:    jina-reranker-v2-base-multilingual.
+ * Embedding model: voyage-3 @ 1024 dimensions. Matches our DB pgvector column.
+ * Rerank model:    rerank-2 (multilingual).
  *
- * Calls fire without artificial throttling. On a real 429 we honour the
- * `retry-after` header and retry once. Persistent 429 bubbles a real error
- * so callers can mark the document failed instead of waiting forever.
+ * Voyage free tier: 200M tokens/month. Plenty of headroom for solo dev.
+ * On a real 429 we honour `retry-after` with exponential backoff before
+ * surfacing a hard failure to callers.
  */
 
-const JINA_URL = "https://api.jina.ai/v1";
+const VOYAGE_URL = "https://api.voyageai.com/v1";
 
-const JINA_EMBED_MODEL  = process.env.JINA_EMBED_MODEL  || "jina-embeddings-v3";
-const JINA_RERANK_MODEL = process.env.JINA_RERANK_MODEL || "jina-reranker-v2-base-multilingual";
+const VOYAGE_EMBED_MODEL  = process.env.VOYAGE_EMBED_MODEL  || "voyage-3";
+const VOYAGE_RERANK_MODEL = process.env.VOYAGE_RERANK_MODEL || "rerank-2";
 
 export const EMBED_DIMS = 1024;
 
-const JINA_BATCH_SIZE = 100;
-const MAX_RETRY_WAIT_MS = 30_000;
-const MAX_RETRIES = 3;
+const VOYAGE_BATCH_SIZE = 128;        // max inputs per call
+const MAX_RETRY_WAIT_MS = 60_000;
+const MAX_RETRIES = 8;
+// Voyage free tier = 3 RPM. Space serial calls ~20s apart to stay under.
+// Paid tier raises this to 2000 RPM; reduce/eliminate via VOYAGE_MIN_GAP_MS env.
+const MIN_REQUEST_GAP_MS = Number(process.env.VOYAGE_MIN_GAP_MS ?? 21_000);
 
-function hasJina() { return !!process.env.JINA_API_KEY; }
+function hasVoyageKey() { return !!process.env.VOYAGE_API_KEY; }
 
 /** True if any embedding provider is available. */
-export function hasEmbeddings() { return hasJina(); }
+export function hasEmbeddings() { return hasVoyageKey(); }
 
-/** Legacy alias — kept so older callers compile. Routes to hasJina. */
-export const hasVoyage = hasJina;
+/** Legacy alias — kept so older callers compile. */
+export const hasVoyage = hasVoyageKey;
 
-export class JinaRateLimitError extends Error {
+export class VoyageRateLimitError extends Error {
   constructor(message: string, public retryAfterMs: number) {
     super(message);
-    this.name = "JinaRateLimitError";
+    this.name = "VoyageRateLimitError";
   }
 }
 
-async function jinaFetch(path: string, body: any): Promise<Response> {
+/** Back-compat alias for any code that still imports the old name. */
+export const JinaRateLimitError = VoyageRateLimitError;
+
+// Module-level promise chain serializes ALL Voyage calls process-wide so
+// we never exceed the per-minute RPM budget. Each call waits for the prior
+// to complete + a minimum gap before firing.
+let lastCallAt = 0;
+let inFlight: Promise<unknown> = Promise.resolve();
+
+async function throttle(): Promise<void> {
+  // Chain on prior call so concurrent callers serialize.
+  const prior = inFlight;
+  let release!: () => void;
+  inFlight = new Promise<void>((r) => { release = r; });
+  try {
+    await prior;
+    const wait = Math.max(0, lastCallAt + MIN_REQUEST_GAP_MS - Date.now());
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    lastCallAt = Date.now();
+  } finally {
+    release();
+  }
+}
+
+async function voyageFetch(path: string, body: any): Promise<Response> {
+  await throttle();
   let attempt = 0;
   while (true) {
-    const res = await fetch(`${JINA_URL}${path}`, {
+    const res = await fetch(`${VOYAGE_URL}${path}`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${process.env.JINA_API_KEY}`,
+        authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
       },
       body: JSON.stringify(body),
     });
 
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get("retry-after") ?? "5");
-      // Back off with exponential growth so a thundering herd of parallel
-      // batches doesn't all retry on the same tick.
       const base = Math.max(1_000, retryAfter * 1000);
       const backoff = Math.min(MAX_RETRY_WAIT_MS, base * Math.pow(2, attempt));
       if (attempt < MAX_RETRIES) {
         const jitter = backoff * (0.7 + Math.random() * 0.6);
-        console.warn(`[jina] 429 on ${path} (attempt ${attempt + 1}) — retrying in ${Math.round(jitter / 1000)}s`);
+        console.warn(`[voyage] 429 on ${path} (attempt ${attempt + 1}) — retrying in ${Math.round(jitter / 1000)}s`);
         await new Promise((r) => setTimeout(r, jitter));
         attempt++;
         continue;
       }
-      throw new JinaRateLimitError(
-        `Jina 429 on ${path} after ${MAX_RETRIES} retries`,
+      throw new VoyageRateLimitError(
+        `Voyage 429 on ${path} after ${MAX_RETRIES} retries`,
         base,
       );
     }
@@ -72,23 +98,20 @@ async function jinaFetch(path: string, body: any): Promise<Response> {
 
 // ─── Embeddings ──────────────────────────────────────────────
 
-async function embedJinaBatch(
+async function embedVoyageBatch(
   batch: string[],
   inputType: "document" | "query"
 ): Promise<number[][]> {
-  const task = inputType === "query" ? "retrieval.query" : "retrieval.passage";
-
-  const res = await jinaFetch("/embeddings", {
-    model: JINA_EMBED_MODEL,
+  const res = await voyageFetch("/embeddings", {
+    model: VOYAGE_EMBED_MODEL,
     input: batch,
-    task,
-    dimensions: EMBED_DIMS,
-    embedding_type: "float",
+    input_type: inputType,
+    output_dimension: EMBED_DIMS,
   });
 
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`Jina embed failed: ${res.status} ${t.slice(0, 300)}`);
+    throw new Error(`Voyage embed failed: ${res.status} ${t.slice(0, 300)}`);
   }
 
   const j = (await res.json()) as {
@@ -105,7 +128,7 @@ async function embedJinaBatch(
 
 /**
  * Embed a list of texts.
- * Throws if Jina is not configured or the call fails. Callers must catch
+ * Throws if Voyage is not configured or the call fails. Callers must catch
  * and mark the document/chunk as failed.
  */
 export async function embedTexts(
@@ -113,21 +136,21 @@ export async function embedTexts(
   inputType: "document" | "query" = "document"
 ): Promise<number[][]> {
   if (texts.length === 0) return [];
-  if (!hasJina()) {
-    throw new Error("Embeddings unavailable: JINA_API_KEY not set in .env.local.");
+  if (!hasVoyageKey()) {
+    throw new Error("Embeddings unavailable: VOYAGE_API_KEY not set in .env.local.");
   }
 
   const out: number[][] = new Array(texts.length);
   const batches: { start: number; texts: string[] }[] = [];
-  for (let i = 0; i < texts.length; i += JINA_BATCH_SIZE) {
-    batches.push({ start: i, texts: texts.slice(i, i + JINA_BATCH_SIZE) });
+  for (let i = 0; i < texts.length; i += VOYAGE_BATCH_SIZE) {
+    batches.push({ start: i, texts: texts.slice(i, i + VOYAGE_BATCH_SIZE) });
   }
 
-  // Batches run in parallel — Jina free tier is generous (500 RPM, 1M
-  // tokens/month) and we rarely send more than a few batches per doc.
+  // Batches run in parallel — Voyage free tier (200M tokens/mo, 2000 RPM)
+  // tolerates this comfortably for solo workloads.
   await Promise.all(
     batches.map(async ({ start, texts: batch }) => {
-      const embs = await embedJinaBatch(batch, inputType);
+      const embs = await embedVoyageBatch(batch, inputType);
       embs.forEach((e, i) => {
         out[start + i] = e;
       });
@@ -141,31 +164,31 @@ export async function embedTexts(
 
 export type RerankResult = { index: number; score: number };
 
-async function rerankJina(opts: {
+async function rerankVoyage(opts: {
   query: string;
   documents: string[];
   topK: number;
 }): Promise<RerankResult[]> {
-  const res = await jinaFetch("/rerank", {
-    model: JINA_RERANK_MODEL,
+  const res = await voyageFetch("/rerank", {
+    model: VOYAGE_RERANK_MODEL,
     query: opts.query,
     documents: opts.documents,
-    top_n: opts.topK,
+    top_k: opts.topK,
   });
 
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`Jina rerank failed: ${res.status} ${t.slice(0, 300)}`);
+    throw new Error(`Voyage rerank failed: ${res.status} ${t.slice(0, 300)}`);
   }
 
   const j = (await res.json()) as {
-    results: { index: number; relevance_score: number }[];
+    data: { index: number; relevance_score: number }[];
   };
-  return j.results.map((d) => ({ index: d.index, score: d.relevance_score }));
+  return j.data.map((d) => ({ index: d.index, score: d.relevance_score }));
 }
 
 /**
- * Rerank documents. Returns identity ordering with score 0.5 if Jina is
+ * Rerank documents. Returns identity ordering with score 0.5 if Voyage is
  * unavailable — rerank is a quality boost, not a hard requirement, so we
  * degrade rather than fail the whole request.
  */
@@ -177,11 +200,11 @@ export async function rerank(opts: {
   if (opts.documents.length === 0) return [];
   const topK = opts.topK ?? Math.min(opts.documents.length, 10);
 
-  if (hasJina()) {
+  if (hasVoyageKey()) {
     try {
-      return await rerankJina({ ...opts, topK });
+      return await rerankVoyage({ ...opts, topK });
     } catch (e: any) {
-      console.warn(`[embeddings] Jina rerank failed: ${e.message}`);
+      console.warn(`[embeddings] Voyage rerank failed: ${e.message}`);
     }
   }
 

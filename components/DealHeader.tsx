@@ -25,18 +25,19 @@ export default function DealHeader({
 
   return (
     <header
-      className="px-7 py-5 border-b flex items-start gap-6"
+      className="px-7 py-4 border-b flex items-start gap-6"
       style={{ background: "var(--surface)", borderColor: "var(--divider)" }}
     >
       <div className="flex-1 min-w-0">
-        <div className="text-[12px] mb-1" style={{ color: "var(--fg-4)" }}>
-          <Link href="/deals" style={{ color: "var(--fg-4)" }}>Deals</Link> ›{" "}
-          <span>{deal.client_name ?? "—"}</span>
+        <div className="crumbs" style={{ marginBottom: 4 }}>
+          <Link href="/deals" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Deals</Link>
+          <span className="sep">/</span>
+          <span className="curr" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5 }}>
+            {deal.client_name ?? "—"}
+          </span>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-[20px] font-semibold tracking-tight" style={{ color: "var(--fg)" }}>
-            {deal.name}
-          </h1>
+        <div className="page-title-row" style={{ gap: 10 }}>
+          <h1 className="page-title">{deal.name}</h1>
           <StatusBadge
             status={deal.status}
             label={dealStatusLabels[deal.status] ?? deal.status}
@@ -44,40 +45,44 @@ export default function DealHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-3 self-start">
+      <div className="flex items-center gap-3 self-start" style={{ marginTop: 4 }}>
         <CloneDealButton dealId={deal.id} />
       </div>
 
-      <div className="flex items-stretch gap-5 text-[12px]" style={{ color: "var(--fg-4)" }}>
-        <Meta label="Value">
-          {deal.value
-            ? `$${Number(deal.value).toLocaleString()}`
-            : "—"}
+      <div style={{ display: "flex", alignItems: "stretch", gap: 24 }}>
+        <Meta label="value">
+          <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 700, letterSpacing: "-0.022em", fontSize: 17, color: "var(--fg)" }}>
+            {deal.value ? (
+              <>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
+                {Number(deal.value).toLocaleString()}
+              </>
+            ) : "—"}
+          </span>
         </Meta>
-        <Meta label="Due">
-          <span style={{ color: dueSoon ? "var(--warn)" : "var(--fg)" }}>
+        <Meta label="due">
+          <span
+            className="mono"
+            style={{ color: dueSoon ? "var(--warn)" : "var(--fg-2)", fontSize: 13, fontWeight: dueSoon ? 600 : 500 }}
+          >
             {deal.due_date ? deal.due_date.slice(0, 10) : "—"}
           </span>
         </Meta>
-        <Meta label="Completion">
+        <Meta label="completion">
           {pct == null ? (
-            "—"
+            <span className="mono" style={{ fontSize: 13, color: "var(--fg-4)" }}>—</span>
           ) : (
             <div className="flex items-center gap-2">
-              <div
-                className="rounded-full"
-                style={{ width: 80, height: 6, background: "var(--bg-2)" }}
-              >
+              <div style={{ width: 72, height: 4, background: "var(--bg-2)", borderRadius: 2, overflow: "hidden" }}>
                 <div
                   style={{
                     width: `${pct}%`,
                     height: "100%",
                     background: pct >= 100 ? "var(--ok)" : "var(--accent)",
-                    borderRadius: 999,
                   }}
                 />
               </div>
-              <span className="num text-[12.5px]" style={{ color: "var(--fg)" }}>{pct}%</span>
+              <span className="mono num" style={{ fontSize: 12, color: "var(--fg-3)" }}>{pct}%</span>
             </div>
           )}
         </Meta>
@@ -88,13 +93,20 @@ export default function DealHeader({
 
 function Meta({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="min-w-[120px]">
-      <div className="text-[10.5px] uppercase tracking-wider font-semibold" style={{ color: "var(--fg-5)" }}>
+    <div style={{ minWidth: 112 }}>
+      <div
+        style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 10,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "var(--fg-5)",
+          marginBottom: 3,
+        }}
+      >
         {label}
       </div>
-      <div className="text-[13.5px] font-medium mt-0.5" style={{ color: "var(--fg)" }}>
-        {children}
-      </div>
+      <div>{children}</div>
     </div>
   );
 }

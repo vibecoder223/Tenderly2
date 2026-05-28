@@ -21,33 +21,52 @@ export default async function LibraryPage() {
         }
       />
       <div className="p-7 max-w-[920px] space-y-6">
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--fg)" }}>Add a reusable response</h2>
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1 className="page-title">Reusable answers</h1>
+            <span className="page-meta">{items?.length ?? 0} saved</span>
+          </div>
+          <p className="page-sub">Approved answers, ready to drop into new RFPs.</p>
+        </div>
+
+        <div className="section-card" style={{ padding: 18 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", marginBottom: 12, fontFamily: "'Cabinet Grotesk', sans-serif", letterSpacing: "-0.012em" }}>
+            Add manually
+          </h2>
           <LibraryForm />
         </div>
 
-        <div className="card overflow-hidden">
-          <div className="px-5 py-3.5 border-b" style={{ borderColor: "var(--divider)" }}>
-            <h3 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>
-              Library ({items?.length ?? 0})
-            </h3>
+        <div className="section-card">
+          <div className="section-card-head">
+            <div>
+              <span className="section-card-title">Library</span>
+              <span className="section-card-count">{items?.length ?? 0}</span>
+            </div>
           </div>
           {!items || items.length === 0 ? (
             <div className="p-8 text-center text-sm" style={{ color: "var(--fg-4)" }}>
               No saved responses yet.
             </div>
           ) : (
-            <div className="divide-y" style={{ borderColor: "var(--divider)" }}>
-              {items.map((it) => (
-                <div key={it.id} className="px-5 py-4 border-t" style={{ borderColor: "var(--divider)" }}>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="badge badge-accent">{it.category ?? "general"}</span>
-                    {it.keyword && <span className="mono text-[11.5px]" style={{ color: "var(--fg-4)" }}>{it.keyword}</span>}
-                    <span className="ml-auto text-[11.5px]" style={{ color: "var(--fg-4)" }}>
-                      Used {it.usage_count} times
+            <div>
+              {items.map((it, i) => (
+                <div
+                  key={it.id}
+                  style={{
+                    padding: "12px 16px",
+                    borderTop: i === 0 ? "none" : "1px solid var(--divider)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span className="type-tag mono" style={{ fontSize: 11, color: "var(--accent-3)", background: "var(--accent-tint)", padding: "2px 7px", borderRadius: 4 }}>
+                      {it.category ?? "general"}
+                    </span>
+                    {it.keyword && <span className="meta-mono">{it.keyword}</span>}
+                    <span className="meta-mono" style={{ marginLeft: "auto" }}>
+                      used {it.usage_count}×
                     </span>
                   </div>
-                  <div className="text-[13px] whitespace-pre-wrap" style={{ color: "var(--fg-2)" }}>
+                  <div style={{ fontSize: 13, color: "var(--fg-2)", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>
                     {it.response_text}
                   </div>
                 </div>

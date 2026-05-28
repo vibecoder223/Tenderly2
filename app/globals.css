@@ -4,78 +4,84 @@
 
 /* ──────────────────────────────────────────────────────────────
  * Tenderly — design tokens
- * Restrained palette. Neutrals tinted toward the indigo brand hue.
- * OKLCH so saturation stays consistent across lightness.
+ * Brand identity: forest green accent (hue 150) on near-pure white canvas.
+ * Stripe-clean direction: faintest warm bias (hue 90 chroma 0.002), pure white cards.
+ * Canvas disappears, forest accent carries the brand alone.
+ * OKLCH for consistent saturation across lightness.
  * ──────────────────────────────────────────────────────────── */
 
 :root {
-  /* Surfaces — three-tier depth (bg → surface → elevated) */
-  --bg:           oklch(0.984 0.004 264);
-  --bg-2:         oklch(0.965 0.006 264);
-  --surface:      oklch(0.999 0.002 264);   /* card / panel */
-  --elevated:     oklch(1     0     0  );   /* popovers, dropdowns — pure white lifts off surface */
+  /* Stripe-clean canvas — exact match to /tmp/tenderly-revamp.html (option A).
+   * Near-pure white with faintest warm bias (hue 90 chroma 0.002).
+   * Pure white cards on barely-off-white page. */
+  --bg:        oklch(0.992 0.002 90);
+  --bg-2:      oklch(0.970 0.004 90);
+  --surface:   oklch(1     0     0  );
+  --elevated:  oklch(1     0     0  );
 
-  /* Borders and dividers — tinted, never neutral gray */
-  --border:        oklch(0.918 0.008 264);
-  --border-strong: oklch(0.852 0.012 264);
-  --divider:       oklch(0.945 0.006 264);
+  /* Hairline borders */
+  --border:        oklch(0.910 0.005 90);
+  --border-strong: oklch(0.820 0.008 90);
+  --divider:       oklch(0.945 0.004 90);
 
-  /* Foreground scale */
-  --fg:   oklch(0.20  0.025 264);
-  --fg-2: oklch(0.30  0.022 264);
-  --fg-3: oklch(0.46  0.020 264);
-  --fg-4: oklch(0.62  0.018 264);
-  --fg-5: oklch(0.78  0.012 264);
+  /* Ink — warm-neutral, no green cast */
+  --fg:   oklch(0.15 0.012 90);
+  --fg-2: oklch(0.28 0.010 90);
+  --fg-3: oklch(0.44 0.009 90);
+  --fg-4: oklch(0.60 0.008 90);
+  --fg-5: oklch(0.76 0.006 90);
 
-  /* Accent — indigo */
-  --accent:        oklch(0.50 0.20 264);
-  --accent-2:      oklch(0.42 0.21 264);
-  --accent-tint:   oklch(0.96 0.04 264);
-  --accent-line:   oklch(0.85 0.10 264);
-  --accent-soft:   oklch(0.92 0.06 264);
+  /* Accent — deep forest, visible on light canvas */
+  --accent:        oklch(0.42 0.13 150);
+  --accent-2:      oklch(0.34 0.14 150);
+  --accent-3:      oklch(0.26 0.12 150);
+  --accent-tint:   oklch(0.955 0.040 150);
+  --accent-soft:   oklch(0.88 0.07 150);
+  --accent-line:   oklch(0.78 0.10 150);
+  --accent-glow:   oklch(0.42 0.13 150 / 0.18);
 
-  /* Status — desaturated, never primary-saturation */
-  --ok:        oklch(0.55 0.13 152);
-  --ok-tint:   oklch(0.96 0.04 152);
+  /* Status — light-canvas-calibrated */
+  --ok:        oklch(0.55 0.13 162);
+  --ok-tint:   oklch(0.96 0.04 162);
   --warn:      oklch(0.62 0.14 71);
   --warn-tint: oklch(0.97 0.04 71);
   --err:       oklch(0.56 0.18 25);
   --err-tint:  oklch(0.96 0.04 25);
 
-  /* Type scale — 1.25 ratio */
-  --text-2xs: 10.5px;
-  --text-xs:  11.5px;
-  --text-sm:  12.5px;
-  --text-base:14px;
-  --text-md:  15.5px;
-  --text-lg:  17.5px;
-  --text-xl:  22px;
-  --text-2xl: 28px;
+  /* Type scale — denser, premium-product sizing */
+  --text-2xs: 10px;
+  --text-xs:  11px;
+  --text-sm:  12px;
+  --text-base:13.5px;
+  --text-md:  15px;
+  --text-lg:  17px;
+  --text-xl:  20px;
+  --text-2xl: 26px;
 
-  /* Radius scale */
-  --r-sm: 5px;
-  --r:    7px;
-  --r-md: 9px;
-  --r-lg: 14px;
+  /* Radius — sharper, precise */
+  --r-sm: 4px;
+  --r:    6px;
+  --r-md: 8px;
+  --r-lg: 10px;
 
-  /* Motion — ease-out-quart, single source of truth */
+  /* Motion */
   --ease:        cubic-bezier(0.16, 1, 0.3, 1);
   --ease-quint:  cubic-bezier(0.22, 1, 0.36, 1);
-  --dur-fast:    120ms;
-  --dur:         180ms;
-  --dur-slow:    280ms;
+  --dur-fast:    100ms;
+  --dur:         150ms;
+  --dur-slow:    240ms;
 
-  /* Elevation */
-  --shadow-1:  0 1px 1px oklch(0.20 0.025 264 / 0.04),
-               0 0 0 1px oklch(0.20 0.025 264 / 0.04);
-  --shadow-2:  0 4px 12px oklch(0.20 0.025 264 / 0.06),
-               0 0 0 1px oklch(0.20 0.025 264 / 0.05);
-  --shadow-3:  0 12px 32px oklch(0.20 0.025 264 / 0.10),
-               0 0 0 1px oklch(0.20 0.025 264 / 0.06);
+  /* Elevation — components use their own 1px border. Shadows add lift only,
+   * never an outline ring (would double up on already-bordered elements). */
+  --shadow-1:  none;
+  --shadow-2:  0 2px 8px oklch(0.15 0.012 90 / 0.05);
+  --shadow-3:  0 8px 24px oklch(0.15 0.012 90 / 0.10);
+  --shadow-accent: 0 1px 0 oklch(1 0 0 / 0.18) inset,
+                   0 2px 6px var(--accent-glow);
 
   /* Shell */
-  --sidebar: 240px;
-  --topbar:  56px;
+  --sidebar: 224px;
+  --topbar:  44px;
 }
 
 /* ──────────────── Base */
@@ -84,25 +90,292 @@ html, body {
   margin: 0; padding: 0; min-height: 100%;
   background: var(--bg);
   color: var(--fg-2);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  /* Body + UI: Switzer (humanist sans, warm, readable for long-form RFP work) */
+  font-family: 'Switzer', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-size: var(--text-base);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'cv02','cv03','cv11','ss01';
   text-rendering: optimizeLegibility;
+  font-feature-settings: 'ss01', 'ss03';
 }
 
-::selection { background: var(--accent-soft); color: var(--accent-2); }
+::selection { background: var(--accent-soft); color: var(--accent-3); }
 
 .num { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-feature-settings: 'ss01'; }
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 
-/* ──────────────── Headings — opinionated scale */
+/* ──────────────── Premium-execution utilities (additive)
+ * .kbd        — keyboard shortcut chip (⌘K, /, U)
+ * .status     — status indicator with leading dot
+ * .meta-mono  — inline monospace metadata (file size, dates)
+ * ──────────────────────────────────────────────────────── */
 
-h1 { font-size: var(--text-xl); line-height: 1.2; font-weight: 600; letter-spacing: -0.018em; color: var(--fg); }
-h2 { font-size: var(--text-lg); line-height: 1.3; font-weight: 600; letter-spacing: -0.012em; color: var(--fg); }
-h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(--fg); }
+.kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--fg-5);
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--divider);
+  line-height: 1.4;
+}
+
+.status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--fg-3);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.01em;
+}
+.status::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--fg-5);
+}
+.status.ok::before     { background: var(--ok);     box-shadow: 0 0 0 2px oklch(0.55 0.13 162 / 0.22); }
+.status.warn::before   { background: var(--warn);   box-shadow: 0 0 0 2px oklch(0.62 0.14 71 / 0.22); }
+.status.err::before    { background: var(--err);    box-shadow: 0 0 0 2px oklch(0.56 0.18 25 / 0.22); }
+.status.pending::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+  animation: statusPulse 1.6s infinite ease-in-out;
+}
+@keyframes statusPulse {
+  0%,100% { opacity: 1; box-shadow: 0 0 0 2px var(--accent-glow); }
+  50%     { opacity: 0.55; box-shadow: 0 0 0 4px var(--accent-glow); }
+}
+
+.meta-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--fg-5);
+  letter-spacing: 0.02em;
+}
+
+/* ──────────────── Headings — Cabinet Grotesk for editorial display weight.
+ * Tighter tracking, slightly larger scale than the old Inter setup so
+ * the display family's character carries. */
+
+h1, h2, h3 {
+  font-family: 'Cabinet Grotesk', 'Switzer', 'Inter', system-ui, sans-serif;
+  color: var(--fg);
+}
+h1 { font-size: 22px; line-height: 1.15; font-weight: 700; letter-spacing: -0.025em; }
+h2 { font-size: 16px; line-height: 1.25; font-weight: 600; letter-spacing: -0.018em; }
+h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.012em; }
+
+/* Display class for hero moments where Cabinet Grotesk gets to breathe */
+.display {
+  font-family: 'Cabinet Grotesk', 'Switzer', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  color: var(--fg);
+}
+
+/* ──────────────── Page-level layout primitives (used across all pages)
+ *
+ *   <div class="page-header">
+ *     <div class="page-title-row">
+ *       <h1 class="page-title">…</h1>
+ *       <span class="page-meta">142 docs · 3,487 pages</span>
+ *     </div>
+ *     <p class="page-sub">…</p>
+ *   </div>
+ *
+ *   <div class="inline-stats">
+ *     <div class="inline-stat">
+ *       <div class="inline-stat-row">
+ *         <span class="stat-val">$4.8M</span>
+ *         <span class="stat-delta">+38%</span>
+ *       </div>
+ *       <span class="stat-label">won this quarter</span>
+ *     </div>
+ *   </div>
+ * ──────────────────────────────────────────────────────── */
+
+.page-header {
+  margin-bottom: 18px;
+}
+.page-title-row {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.page-title {
+  font-family: 'Cabinet Grotesk', 'Switzer', sans-serif;
+  font-size: 22px; font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--fg);
+  margin: 0;
+}
+.page-meta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--fg-4);
+  letter-spacing: 0.02em;
+}
+.page-sub {
+  font-size: 13.5px;
+  color: var(--fg-4);
+  margin: 6px 0 0;
+  max-width: 64ch;
+  line-height: 1.55;
+}
+
+/* Inline stats — replaces hero-metric card-bingo. Dense data row. */
+.inline-stats {
+  display: flex; gap: 26px; align-items: baseline; flex-wrap: wrap;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--divider);
+  margin-bottom: 18px;
+}
+.inline-stat { display: flex; flex-direction: column; gap: 2px; }
+.inline-stat-row { display: flex; align-items: baseline; gap: 7px; }
+.stat-val {
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.022em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.stat-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--fg-4);
+  letter-spacing: 0.04em;
+}
+.stat-delta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--accent);
+}
+.stat-delta.muted { color: var(--fg-4); }
+.stat-delta.warn  { color: var(--warn); }
+.stat-delta.err   { color: var(--err); }
+
+/* Filter chip — toolbar control */
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font: inherit; font-size: 12px; font-weight: 500;
+  color: var(--fg-3);
+  cursor: pointer;
+  transition: all 100ms var(--ease);
+  white-space: nowrap;
+}
+.filter-chip:hover { background: var(--bg-2); border-color: var(--border-strong); color: var(--fg); }
+.filter-chip.active {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-3);
+}
+.filter-chip svg { color: var(--fg-5); flex-shrink: 0; }
+.filter-chip.active svg { color: var(--accent); }
+
+/* Toolbar — wraps filter chips, search, view toggle */
+.toolbar {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+/* Section card — bordered container for tables / grouped content.
+ * Replaces .card pattern when you want hairline elevation and zero shadow. */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.section-card-head {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--bg-2);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.section-card-title {
+  font-family: 'Cabinet Grotesk', 'Switzer', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.012em;
+}
+.section-card-count {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--fg-4);
+  margin-left: 8px;
+}
+
+/* Data table — mono uppercase column headers, hairline dividers, dense rows */
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12.5px;
+}
+.data-table thead th {
+  text-align: left; font-weight: 500;
+  padding: 8px 16px;
+  color: var(--fg-5);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--divider);
+  background: var(--bg-2);
+}
+.data-table tbody tr {
+  border-bottom: 1px solid var(--divider);
+  transition: background 80ms var(--ease);
+}
+.data-table tbody tr:hover { background: var(--bg-2); }
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody td {
+  padding: 10px 16px;
+  color: var(--fg-2);
+  vertical-align: middle;
+}
+
+/* Search input — toolbar pill */
+.search-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  min-width: 220px;
+  flex: 1;
+  max-width: 320px;
+  transition: border-color 100ms var(--ease);
+}
+.search-pill:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.search-pill svg { color: var(--fg-5); flex-shrink: 0; }
+.search-pill input {
+  flex: 1; min-width: 0;
+  border: none; background: transparent;
+  font: inherit; font-size: 12.5px; color: var(--fg);
+  outline: none;
+}
+.search-pill input::placeholder { color: var(--fg-5); }
+
+/* Crumbs — breadcrumb trail used in topbar */
+.crumbs {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--fg-4);
+}
+.crumbs .sep { color: var(--fg-5); }
+.crumbs .curr { color: var(--fg); font-weight: 500; }
 
 /* ──────────────── Focus — accessible, brand-tinted */
 
@@ -122,8 +395,8 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 6px 12px;
-  height: 30px;
+  padding: 5px 11px;
+  height: 28px;
   border-radius: var(--r);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -134,23 +407,23 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease),
               border-color var(--dur-fast) var(--ease),
-              color var(--dur-fast) var(--ease),
-              transform var(--dur-fast) var(--ease);
+              color var(--dur-fast) var(--ease);
   user-select: none;
   white-space: nowrap;
 }
-.btn:hover { background: var(--bg-2); border-color: var(--border-strong); }
-.btn:active { transform: translateY(0.5px); }
+.btn:hover { background: var(--bg-2); border-color: var(--border-strong); color: var(--fg); }
+.btn:active { background: var(--bg); }
 
 .btn-primary {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.18), 0 1px 2px oklch(0.20 0.025 264 / 0.10);
+  font-weight: 600;
 }
 .btn-primary:hover {
   background: var(--accent-2);
   border-color: var(--accent-2);
+  color: white;
 }
 
 .btn-ghost {
@@ -176,20 +449,22 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
 .input, .textarea, .select {
   width: 100%;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--bg-2);
   border-radius: var(--r);
-  padding: 8px 11px;
+  padding: 7px 10px;
   font-size: var(--text-sm);
   color: var(--fg);
   outline: none;
   transition: border-color var(--dur-fast) var(--ease),
-              box-shadow var(--dur-fast) var(--ease);
+              box-shadow var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease);
   font-family: inherit;
 }
 .input::placeholder, .textarea::placeholder { color: var(--fg-5); }
 .input:focus, .textarea:focus, .select:focus {
-  border-color: var(--accent-line);
-  box-shadow: 0 0 0 3px oklch(0.50 0.20 264 / 0.12);
+  border-color: var(--accent);
+  background: var(--bg);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 .textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
 
@@ -208,7 +483,6 @@ h3 { font-size: var(--text-md); line-height: 1.35; font-weight: 600; color: var(
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-1);
 }
 
 /* When something needs to feel lifted off a card (popover, dropdown, dialog) */

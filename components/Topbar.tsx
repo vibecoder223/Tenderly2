@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import Link from "next/link";
 
 export default function Topbar({
   crumbs,
@@ -14,8 +17,8 @@ export default function Topbar({
       className="sticky top-0 z-20 flex items-center gap-3 border-b"
       style={{
         height: "var(--topbar)",
-        background: "var(--surface)",
-        borderColor: "var(--border)",
+        background: "var(--bg)",
+        borderColor: "var(--divider)",
         paddingLeft: 16,
         paddingRight: 20,
       }}
@@ -35,10 +38,34 @@ export default function Topbar({
           </svg>
         </button>
       )}
-      <div className="flex items-center gap-2 text-[13px] font-medium" style={{ color: "var(--fg-4)" }}>
-        {crumbs}
+      <div className="crumbs">{crumbs}</div>
+      <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/search"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "4px 8px 4px 10px",
+            height: 26,
+            borderRadius: 6,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            fontSize: 11.5,
+            color: "var(--fg-4)",
+            textDecoration: "none",
+            cursor: "pointer",
+            transition: "border-color 100ms",
+          }}
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Quick find
+          <span className="kbd">⌘K</span>
+        </Link>
+        {actions}
       </div>
-      <div className="ml-auto flex items-center gap-2">{actions}</div>
     </header>
   );
 }

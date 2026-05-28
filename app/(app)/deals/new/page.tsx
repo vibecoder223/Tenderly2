@@ -13,10 +13,12 @@ export default function NewDealPage() {
         }
       />
       <div className="p-7 max-w-[640px]">
-        <h1 className="text-[18px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Create a new deal</h1>
-        <p className="text-sm mb-6" style={{ color: "var(--fg-4)" }}>
-          You can upload an RFP file in the next step.
-        </p>
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1 className="page-title">New deal</h1>
+          </div>
+          <p className="page-sub">Set up the workspace. Upload the RFP in the next step.</p>
+        </div>
         <NewDealForm />
       </div>
     </>

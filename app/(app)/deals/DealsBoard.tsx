@@ -73,18 +73,15 @@ function DealsFilterBar({
     filters.due !== "all";
 
   return (
-    <div className="card flex items-center gap-2 px-3 py-2 mb-3 flex-wrap" style={{ background: "var(--bg-1)" }}>
-      <div className="flex items-center gap-1.5" style={{ flex: 1, minWidth: 220 }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2" style={{ color: "var(--fg-4)", flexShrink: 0 }}>
+    <div className="toolbar">
+      <div className="search-pill">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
         </svg>
         <input
-          className="input"
           placeholder="Search deals…"
           value={filters.search}
           onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-          style={{ border: "none", background: "transparent", padding: "4px 0", flex: 1, fontSize: 13 }}
         />
       </div>
 
@@ -118,16 +115,23 @@ function DealsFilterBar({
       {active && (
         <button
           type="button"
-          className="text-[11.5px]"
-          style={{ color: "var(--accent)", padding: "4px 8px" }}
+          style={{
+            fontSize: 11.5,
+            color: "var(--accent)",
+            background: "transparent",
+            border: "none",
+            padding: "4px 8px",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
           onClick={() => setFilters({ search: "", status: "all", client: "all", due: "all" })}
         >
-          Clear filters
+          Clear
         </button>
       )}
 
-      <div className="text-[11.5px] ml-auto" style={{ color: "var(--fg-4)" }}>
-        {shown} of {total}
+      <div style={{ marginLeft: "auto", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: "var(--fg-4)" }}>
+        {shown} / {total}
       </div>
     </div>
   );
@@ -145,22 +149,16 @@ function FilterChip({
   onChange: (v: string) => void;
 }) {
   const isActive = value !== "all";
-  const current = options.find((o) => o.value === value);
   return (
     <div style={{ position: "relative" }}>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        className={`filter-chip${isActive ? " active" : ""}`}
         style={{
           appearance: "none",
-          background: isActive ? "var(--accent-tint)" : "var(--bg-2)",
-          color: isActive ? "var(--accent)" : "var(--fg-3)",
-          border: isActive ? "1px solid var(--accent-line)" : "1px solid var(--border)",
-          borderRadius: 999,
-          padding: "4px 26px 4px 10px",
-          fontSize: 12,
+          paddingRight: 24,
           cursor: "pointer",
-          fontWeight: isActive ? 600 : 500,
         }}
       >
         {options.map((o) => (
@@ -170,12 +168,12 @@ function FilterChip({
         ))}
       </select>
       <svg
-        width="10" height="10" viewBox="0 0 24 24" fill="none"
+        width="9" height="9" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="2.5"
         style={{
           position: "absolute", right: 8, top: "50%",
           transform: "translateY(-50%)", pointerEvents: "none",
-          color: isActive ? "var(--accent)" : "var(--fg-4)",
+          color: isActive ? "var(--accent)" : "var(--fg-5)",
         }}
       >
         <polyline points="6 9 12 15 18 9" />
@@ -450,16 +448,16 @@ export default function DealsBoard({
           total={deals.length}
           shown={filtered.length}
         />
-        <div className="card overflow-hidden">
-          <table className="w-full text-[13px]">
+        <div className="section-card">
+          <table className="data-table">
             <thead>
-              <tr style={{ color: "var(--fg-4)" }}>
-                <th className="text-left font-medium px-5 py-2.5">Deal</th>
-                <th className="text-left font-medium px-5 py-2.5">Client</th>
-                <th className="text-left font-medium px-5 py-2.5">Status</th>
-                <th className="text-left font-medium px-5 py-2.5">Completion</th>
-                <th className="text-left font-medium px-5 py-2.5">Due</th>
-                <th className="text-right font-medium px-5 py-2.5">Value</th>
+              <tr>
+                <th>Deal</th>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Completion</th>
+                <th>Due</th>
+                <th style={{ textAlign: "right" }}>Value</th>
                 <th style={{ width: 40 }}></th>
               </tr>
             </thead>
@@ -468,36 +466,56 @@ export default function DealsBoard({
                 const t = totals[d.id] ?? { total: 0, approved: 0 };
                 const pct = t.total > 0 ? Math.round((t.approved / t.total) * 100) : 0;
                 return (
-                  <tr key={d.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
-                    <td className="px-5 py-3">
-                      <Link href={`/deals/${d.id}`} className="font-medium inline-flex items-center gap-2" style={{ color: "var(--fg)" }}>
+                  <tr
+                    key={d.id}
+                    onClick={(e) => {
+                      // Don't navigate when clicking inside the kebab menu
+                      if ((e.target as HTMLElement).closest("[data-card-menu]")) return;
+                      router.push(`/deals/${d.id}`);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td>
+                      <Link
+                        href={`/deals/${d.id}`}
+                        className="inline-flex items-center gap-2"
+                        style={{ color: "var(--fg)", fontWeight: 500, textDecoration: "none" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {d.name}
                         {d.is_sample && <SampleBadge />}
                       </Link>
                     </td>
-                    <td className="px-5 py-3" style={{ color: "var(--fg-3)" }}>{d.client_name ?? "—"}</td>
-                    <td className="px-5 py-3"><StatusBadge status={d.status} /></td>
-                    <td className="px-5 py-3" style={{ minWidth: 160 }}>
+                    <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11.5 }}>{d.client_name ?? "—"}</td>
+                    <td><StatusBadge status={d.status} /></td>
+                    <td style={{ minWidth: 140 }}>
                       {t.total > 0 ? (
                         <div className="flex items-center gap-2">
-                          <div className="rounded-full" style={{ width: 80, height: 5, background: "var(--bg-2)" }}>
-                            <div style={{ width: `${pct}%`, height: "100%", background: pct >= 100 ? "var(--ok)" : "var(--accent)", borderRadius: 999 }} />
+                          <div style={{ width: 64, height: 4, background: "var(--bg-2)", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", background: pct >= 100 ? "var(--ok)" : "var(--accent)" }} />
                           </div>
-                          <span className="num text-[12px]" style={{ color: "var(--fg-3)" }}>{pct}%</span>
+                          <span className="mono num" style={{ color: "var(--fg-4)", fontSize: 11 }}>{pct}%</span>
                         </div>
-                      ) : <span style={{ color: "var(--fg-5)" }}>—</span>}
+                      ) : <span className="mono" style={{ color: "var(--fg-5)", fontSize: 11 }}>—</span>}
                     </td>
-                    <td className="px-5 py-3" style={{ color: "var(--fg-3)" }}>{d.due_date ? d.due_date.slice(0, 10) : "—"}</td>
-                    <td className="px-5 py-3 text-right num" style={{ color: "var(--fg-2)" }}>
-                      {d.value ? `$${Number(d.value).toLocaleString()}` : "—"}
+                    <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11.5 }}>{d.due_date ? d.due_date.slice(0, 10) : "—"}</td>
+                    <td style={{ textAlign: "right", fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 700, color: "var(--fg)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.018em" }}>
+                      {d.value ? (
+                        <>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
+                          {Number(d.value).toLocaleString()}
+                        </>
+                      ) : "—"}
                     </td>
-                    <td className="px-3 py-3">
-                      <DealCardMenu
-                        dealId={d.id}
-                        dealName={d.name}
-                        onRenamed={(n) => renameInList(d.id, n)}
-                        onDeleted={() => removeFromList(d.id)}
-                      />
+                    <td>
+                      <div data-card-menu onClick={(e) => e.stopPropagation()}>
+                        <DealCardMenu
+                          dealId={d.id}
+                          dealName={d.name}
+                          onRenamed={(n) => renameInList(d.id, n)}
+                          onDeleted={() => removeFromList(d.id)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 );

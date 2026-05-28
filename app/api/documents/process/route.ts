@@ -12,7 +12,8 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { document_id } = await req.json();
+  const body = await req.json().catch(() => ({} as { document_id?: string }));
+  const { document_id } = body as { document_id?: string };
   if (!document_id) return NextResponse.json({ error: "document_id required" }, { status: 400 });
 
   const { data: doc } = await supabase

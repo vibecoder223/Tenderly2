@@ -283,13 +283,12 @@ export default async function DashboardPage() {
         }
       />
       <div className="p-7 max-w-[1300px] space-y-6">
-        <div>
-          <h1 className="text-[20px] font-semibold mb-1" style={{ color: "var(--fg)" }}>
-            {member.organizations?.name}
-          </h1>
-          <p className="text-sm" style={{ color: "var(--fg-4)" }}>
-            RFP operations at a glance.
-          </p>
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1 className="page-title">{member.organizations?.name}</h1>
+            <span className="page-meta">{activeDeals.length} active · {questionTotals.total} questions</span>
+          </div>
+          <p className="page-sub">RFP operations at a glance.</p>
         </div>
 
         {showOnboarding && (
@@ -301,23 +300,22 @@ export default async function DashboardPage() {
         ) : (
           <>
             {inbox.length > 0 && <NeedsYou items={inbox} />}
-            <div className="grid grid-cols-4 gap-4">
-              <Tile label="Active deals" value={activeDeals.length} />
-              <Tile label="Due this week" value={dueSoon.length} tone={dueSoon.length > 0 ? "warn" : undefined} />
-              <Tile label="Overdue" value={overdue.length} tone={overdue.length > 0 ? "err" : undefined} />
-              <Tile
-                label="Unanswered mandatory"
-                value={mandatoryUnanswered}
-                tone={mandatoryUnanswered > 0 ? "err" : "ok"}
-              />
+            <div className="inline-stats">
+              <Stat label="active deals" value={activeDeals.length} />
+              <Stat label="due this week" value={dueSoon.length} tone={dueSoon.length > 0 ? "warn" : undefined} />
+              <Stat label="overdue" value={overdue.length} tone={overdue.length > 0 ? "err" : undefined} />
+              <Stat label="unanswered mandatory" value={mandatoryUnanswered} tone={mandatoryUnanswered > 0 ? "err" : undefined} />
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              <section className="col-span-2 card overflow-hidden">
-                <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: "var(--divider)" }}>
-                  <h2 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>Active deals</h2>
-                  <Link href="/deals" className="text-[12px]" style={{ color: "var(--accent)" }}>
-                    View all
+              <section className="section-card col-span-2">
+                <div className="section-card-head">
+                  <div>
+                    <span className="section-card-title">Active deals</span>
+                    <span className="section-card-count">{activeDeals.length}</span>
+                  </div>
+                  <Link href="/deals" style={{ fontSize: 11.5, color: "var(--accent)", fontWeight: 500 }}>
+                    View all →
                   </Link>
                 </div>
                 {activeDeals.length === 0 ? (
@@ -325,13 +323,13 @@ export default async function DashboardPage() {
                     No active deals right now.
                   </div>
                 ) : (
-                  <table className="w-full text-[13px]">
+                  <table className="data-table">
                     <thead>
-                      <tr style={{ color: "var(--fg-4)" }}>
-                        <th className="text-left font-medium px-5 py-2.5">Deal</th>
-                        <th className="text-left font-medium px-5 py-2.5">Status</th>
-                        <th className="text-left font-medium px-5 py-2.5">Completion</th>
-                        <th className="text-left font-medium px-5 py-2.5">Due</th>
+                      <tr>
+                        <th>Deal</th>
+                        <th>Status</th>
+                        <th>Completion</th>
+                        <th>Due</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -343,46 +341,45 @@ export default async function DashboardPage() {
                         const dueSoonRow =
                           due > 0 && !overdueRow && (due - Date.now()) / 86_400_000 < 7;
                         return (
-                          <tr key={d.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
-                            <td className="px-5 py-3">
-                              <Link
-                                href={`/deals/${d.id}`}
-                                className="font-medium"
-                                style={{ color: "var(--fg)" }}
-                              >
+                          <tr key={d.id}>
+                            <td>
+                              <Link href={`/deals/${d.id}`} style={{ color: "var(--fg)", fontWeight: 500, textDecoration: "none" }}>
                                 {d.name}
                               </Link>
-                              <div className="text-[11.5px]" style={{ color: "var(--fg-4)" }}>
-                                {d.client_name ?? ""}
-                              </div>
+                              {d.client_name && (
+                                <div className="meta-mono" style={{ marginTop: 1 }}>
+                                  {d.client_name}
+                                </div>
+                              )}
                             </td>
-                            <td className="px-5 py-3">
-                              <StatusBadge status={d.status} />
-                            </td>
-                            <td className="px-5 py-3" style={{ minWidth: 160 }}>
+                            <td><StatusBadge status={d.status} /></td>
+                            <td style={{ minWidth: 160 }}>
                               {t.total > 0 ? (
                                 <div className="flex items-center gap-2">
-                                  <div className="rounded-full" style={{ width: 80, height: 5, background: "var(--bg-2)" }}>
+                                  <div style={{ width: 80, height: 4, background: "var(--bg-2)", borderRadius: 2, overflow: "hidden" }}>
                                     <div
                                       style={{
                                         width: `${pct}%`,
                                         height: "100%",
                                         background: pct >= 100 ? "var(--ok)" : "var(--accent)",
-                                        borderRadius: 999,
                                       }}
                                     />
                                   </div>
-                                  <span className="num text-[12px]" style={{ color: "var(--fg-3)" }}>
+                                  <span className="mono num" style={{ fontSize: 11, color: "var(--fg-4)" }}>
                                     {pct}%
                                   </span>
                                 </div>
                               ) : (
-                                <span style={{ color: "var(--fg-5)" }}>Not started</span>
+                                <span className="meta-mono">not started</span>
                               )}
                             </td>
                             <td
-                              className="px-5 py-3"
-                              style={{ color: overdueRow ? "var(--err)" : dueSoonRow ? "var(--warn)" : "var(--fg-3)" }}
+                              className="mono"
+                              style={{
+                                fontSize: 11.5,
+                                color: overdueRow ? "var(--err)" : dueSoonRow ? "var(--warn)" : "var(--fg-4)",
+                                fontWeight: overdueRow ? 600 : 400,
+                              }}
                             >
                               {d.due_date ? d.due_date.slice(0, 10) : "—"}
                             </td>
@@ -394,29 +391,31 @@ export default async function DashboardPage() {
                 )}
               </section>
 
-              <section className="card overflow-hidden">
-                <div className="px-5 py-3.5 border-b" style={{ borderColor: "var(--divider)" }}>
-                  <h2 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>Recent activity</h2>
+              <section className="section-card">
+                <div className="section-card-head">
+                  <span className="section-card-title">Recent activity</span>
                 </div>
                 {(activity ?? []).length === 0 ? (
                   <div className="p-6 text-center text-sm" style={{ color: "var(--fg-4)" }}>
                     No activity yet.
                   </div>
                 ) : (
-                  <ul>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                     {(activity ?? []).map((a, i) => (
                       <li
                         key={i}
-                        className="px-5 py-3 border-t text-[12.5px]"
-                        style={{ borderColor: "var(--divider)" }}
+                        style={{
+                          padding: "10px 16px",
+                          borderBottom: "1px solid var(--divider)",
+                        }}
                       >
-                        <div style={{ color: "var(--fg-2)" }}>
+                        <div style={{ fontSize: 12.5, color: "var(--fg-2)" }}>
                           {a.action}{" "}
                           <span style={{ color: "var(--fg-4)" }}>{a.entity_type}</span>
                           {a.metadata?.filename ? `: ${a.metadata.filename}` : ""}
                           {a.metadata?.name ? `: ${a.metadata.name}` : ""}
                         </div>
-                        <div className="text-[11px]" style={{ color: "var(--fg-5)" }}>
+                        <div className="meta-mono" style={{ marginTop: 2 }}>
                           {new Date(a.created_at).toISOString().replace("T", " ").slice(0, 16)}
                         </div>
                       </li>
@@ -432,7 +431,7 @@ export default async function DashboardPage() {
   );
 }
 
-function Tile({
+function Stat({
   label,
   value,
   tone,
@@ -441,22 +440,18 @@ function Tile({
   value: number;
   tone?: "ok" | "warn" | "err";
 }) {
-  const color =
-    tone === "ok"
-      ? "var(--ok)"
-      : tone === "warn"
-      ? "var(--warn)"
-      : tone === "err"
-      ? "var(--err)"
-      : "var(--fg)";
+  const deltaClass =
+    tone === "warn" ? "stat-delta warn"
+    : tone === "err"  ? "stat-delta err"
+    : "stat-delta muted";
+  const deltaText = tone === "err" ? "needs attention" : tone === "warn" ? "soon" : "—";
   return (
-    <div className="card p-4">
-      <div className="text-[11.5px] uppercase tracking-wider font-semibold" style={{ color: "var(--fg-5)" }}>
-        {label}
+    <div className="inline-stat">
+      <div className="inline-stat-row">
+        <span className="stat-val num">{value}</span>
+        {value > 0 && tone && <span className={deltaClass}>{deltaText}</span>}
       </div>
-      <div className="text-[28px] font-semibold num mt-1" style={{ color }}>
-        {value}
-      </div>
+      <span className="stat-label">{label}</span>
     </div>
   );
 }

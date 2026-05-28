@@ -43,6 +43,13 @@ export default async function TemplatesPage() {
         }
       />
       <div className="p-7 max-w-[1400px]">
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1 className="page-title">Templates</h1>
+            <span className="page-meta">{templates.length} saved</span>
+          </div>
+          <p className="page-sub">Branded proposal templates for export. Set one as default, customize intro and footer.</p>
+        </div>
         {migrationMissing ? (
           <div className="card p-8">
             <h2 className="text-base font-semibold mb-1" style={{ color: "var(--fg)" }}>Run migration first</h2>

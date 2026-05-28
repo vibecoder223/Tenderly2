@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 
-type Item = { href: string; label: string; icon: React.ReactNode };
+type Item = { href: string; label: string; icon: React.ReactNode; shortcut?: string };
 type Group = { title: string; items: Item[] };
 
 const groups: Group[] = [
@@ -14,6 +14,7 @@ const groups: Group[] = [
       {
         href: "/dashboard",
         label: "Dashboard",
+        shortcut: "⌘1",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" />
@@ -24,6 +25,7 @@ const groups: Group[] = [
       {
         href: "/deals",
         label: "Deals",
+        shortcut: "⌘2",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
@@ -33,6 +35,7 @@ const groups: Group[] = [
       {
         href: "/my-queue",
         label: "My queue",
+        shortcut: "⌘3",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
@@ -47,6 +50,7 @@ const groups: Group[] = [
       {
         href: "/knowledge",
         label: "Knowledge base",
+        shortcut: "⌘4",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -82,6 +86,7 @@ const groups: Group[] = [
       {
         href: "/analytics",
         label: "Analytics",
+        shortcut: "⌘5",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 3v18h18" /><path d="M7 14l4-4 4 3 5-7" />
@@ -171,8 +176,8 @@ export default function Sidebar({
       className={`fixed inset-y-0 left-0 z-30 flex flex-col sidebar-rail${mobileOpen ? " sidebar-open" : ""}`}
       style={{
         width: "var(--sidebar)",
-        background: "var(--surface)",
-        borderRight: "1px solid var(--border)",
+        background: "var(--bg-2)",
+        borderRight: "1px solid var(--divider)",
       }}
     >
       {/* Brand */}
@@ -272,19 +277,20 @@ export default function Sidebar({
         style={{
           padding: "10px 12px",
           borderTop: "1px solid var(--divider)",
-          background: "var(--bg)",
+          background: "transparent",
         }}
       >
         <div
-          className="flex items-center justify-center text-white"
+          className="flex items-center justify-center"
           style={{
-            width: 28, height: 28,
-            borderRadius: 7,
-            background: "linear-gradient(135deg, oklch(0.50 0.20 264), oklch(0.62 0.16 270))",
+            width: 26, height: 26,
+            borderRadius: "50%",
+            background: "var(--accent-tint)",
+            color: "var(--accent-3)",
+            fontFamily: "'Cabinet Grotesk', sans-serif",
             fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.02em",
-            boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.15)",
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
             flexShrink: 0,
           }}
         >
@@ -414,6 +420,9 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
           {badge}
         </span>
       )}
+      {item.shortcut && badge == null && (
+        <span className="kbd" style={{ flexShrink: 0 }}>{item.shortcut}</span>
+      )}
     </Link>
   );
 }
@@ -423,23 +432,21 @@ function Mark() {
     <div
       style={{
         width: 26, height: 26,
-        borderRadius: 7,
-        background: "linear-gradient(140deg, oklch(0.18 0.04 264) 0%, oklch(0.28 0.08 264) 55%, oklch(0.48 0.22 264) 100%)",
-        boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.12), 0 1px 3px oklch(0.10 0.02 264 / 0.4)",
+        borderRadius: 6,
+        background: "var(--accent)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
+        fontFamily: "'Cabinet Grotesk', 'Switzer', sans-serif",
+        fontWeight: 800,
+        fontSize: 14,
+        color: "white",
+        letterSpacing: "-0.05em",
+        lineHeight: 1,
       }}
     >
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-        {/* T stem + crossbar */}
-        <rect x="3" y="3" width="9" height="1.6" rx="0.8" fill="oklch(1 0 0 / 0.90)" />
-        <rect x="6.7" y="4.6" width="1.6" height="4.2" rx="0.8" fill="oklch(1 0 0 / 0.90)" />
-        {/* O ring */}
-        <rect x="3.5" y="9.5" width="8" height="2.8" rx="1.4" fill="oklch(1 0 0 / 0.90)" />
-        <rect x="5" y="10.6" width="5" height="0.6" rx="0.3" fill="oklch(0.28 0.08 264 / 1)" />
-      </svg>
+      T
     </div>
   );
 }
