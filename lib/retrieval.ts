@@ -5,7 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callClaudeJson } from "./anthropic";
+import { callGeminiJson as callClaudeJson } from "./gemini";
 import { embedTexts, hasVoyage, rerank } from "./embeddings";
 
 export type Candidate = {
@@ -38,7 +38,7 @@ export async function retrieveForQuery(
 
   // 1. Query expansion (Haiku). If Anthropic isn't configured we skip.
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
-  if (process.env.ANTHROPIC_API_KEY) {
+  if (process.env.GOOGLE_AI_API_KEY) {
     try {
       const { data, usage } = await callClaudeJson<{
         paraphrases: string[];
