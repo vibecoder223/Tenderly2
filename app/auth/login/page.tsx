@@ -57,7 +57,14 @@ function LoginForm() {
     });
     if (error) {
       setGoogleLoading(false);
-      setErr(error.message);
+      // Provide a clearer, actionable message when the provider isn't enabled
+      if (error.message && /provider is not enabled|Unsupported provider/i.test(error.message)) {
+        setErr(
+          "Google sign-in is not enabled for this project. Enable the Google provider in your Supabase dashboard and add the app callback URLs."
+        );
+      } else {
+        setErr(error.message || "An error occurred while starting Google sign-in.");
+      }
     }
   }
 
@@ -89,6 +96,11 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <div className="text-xs mt-2" style={{ textAlign: "right" }}>
+            <Link href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`} style={{ color: "var(--accent)" }}>
+              Forgot password?
+            </Link>
+          </div>
         </div>
         {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
         <button type="submit" className="btn btn-primary w-full justify-center mt-2" disabled={loading}>

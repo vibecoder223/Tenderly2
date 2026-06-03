@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { getSiteUrl } from "@/utils/site-url";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
+  const params = useSearchParams();
+  const initialEmail = params.get("email") || "";
+  const [email, setEmail] = useState(initialEmail);
+  useEffect(() => {
+    // In case the search param arrives after hydration
+    const p = params.get("email");
+    if (p) setEmail(p);
+  }, [params]);
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
