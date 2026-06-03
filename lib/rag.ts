@@ -4,7 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callClaudeText, callClaudeHaikuText } from "./anthropic";
+import { callGeminiText as callClaudeText, callGeminiText as callClaudeHaikuText } from "./gemini";
 import { isNoSource, retrieveForQuery, type Candidate } from "./retrieval";
 
 const PROMPTS = {
@@ -85,12 +85,12 @@ export async function generateAndPersistAnswer(
     .slice(0, 3);
 
   // 4. Generate
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GOOGLE_AI_API_KEY) {
     // No LLM key — surface a transparent placeholder rather than fabricating.
     await upsertResponse(supabase, {
       question_id: args.question_id,
-      answer_text_with_markers: "AI_DISABLED: ANTHROPIC_API_KEY not configured.",
-      answer_text_clean: "AI_DISABLED: ANTHROPIC_API_KEY not configured.",
+      answer_text_with_markers: "AI_DISABLED: GOOGLE_AI_API_KEY not configured.",
+      answer_text_clean: "AI_DISABLED: GOOGLE_AI_API_KEY not configured.",
       tone: args.tone || "technical",
       confidence: 0,
       gap_flag: "no_source",

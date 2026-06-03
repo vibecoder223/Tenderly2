@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
-import { callClaudeText } from "@/lib/anthropic";
+import { callGeminiText as callClaudeText } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,9 +12,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GOOGLE_AI_API_KEY) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured. Set it in .env.local to use AI regeneration." },
+      { error: "GOOGLE_AI_API_KEY is not configured. Set it in .env.local to use AI regeneration." },
       { status: 503 }
     );
   }

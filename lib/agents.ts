@@ -11,7 +11,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { callClaudeJson, callClaudeText, estimateCost } from "./anthropic";
+import { callGeminiJson as callClaudeJson, callGeminiText as callClaudeText, estimateCost } from "./gemini";
 import { parseDocument, type ParsedDoc } from "./parse";
 import { chunkBlocks, type ProducedChunk } from "./chunk";
 import { embedTexts, hasVoyage } from "./embeddings";
