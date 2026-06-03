@@ -110,9 +110,10 @@ function LoginForm() {
       <div className="mt-4">
         <button
           type="button"
-          className="btn btn-ghost w-full justify-center"
+          className="btn w-full justify-center"
           onClick={signInWithGoogle}
           disabled={googleLoading}
+          aria-label="Sign in with Google"
         >
           {googleLoading ? (
             <>
@@ -128,7 +129,17 @@ function LoginForm() {
               Redirecting…
             </>
           ) : (
-            "Sign in with Google"
+            <>
+              <span style={{ display: "inline-flex", width: 18, height: 18, marginRight: 8 }}>
+                <svg viewBox="0 0 46 46" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="#4285F4" d="M23 9.5c3.9 0 7.1 1.3 9.5 3.5l7.1-7.1C36.5 2.1 30.2 0 23 0 14.6 0 7.2 3.8 3 9.4l8.3 6.5C13.6 12 17.9 9.5 23 9.5z"/>
+                  <path fill="#34A853" d="M44 23c0-1.6-.2-3.1-.6-4.6H23v9h11.8c-.5 2.7-2 5-4.2 6.5l6.6 5.1C41.1 36.1 44 30 44 23z"/>
+                  <path fill="#FBBC05" d="M11.3 28.6A13.5 13.5 0 0 1 10 23c0-1.8.4-3.6 1.1-5.2L3 11.6A23 23 0 0 0 0 23c0 3.7.9 7.2 2.6 10.3l8.7-4.7z"/>
+                  <path fill="#EA4335" d="M23 44c7.2 0 13.5-2.1 18.6-5.8l-8.9-6.9C30.1 33.5 26.1 35 23 35c-5.1 0-9.4-2.5-11.7-6.1l-8.3 6.5C7.2 42.2 14.6 44 23 44z"/>
+                </svg>
+              </span>
+              Sign in with Google
+            </>
           )}
         </button>
       </div>
