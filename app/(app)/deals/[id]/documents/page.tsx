@@ -13,6 +13,32 @@ const FAILED_STATUSES = new Set([
   "generation_failed",
 ]);
 
+type JobRow = { document_id: string; stage: string; status: string };
+
+const PHASE_LABEL: Record<string, string> = {
+  ingest: "Reading & chunking…",
+  extract: "Extracting requirements…",
+  structure: "Building question set…",
+};
+
+// Collapse a document's job rows into one progress line.
+function summarizeJobs(rows: JobRow[]): { label: string | null } {
+  const active = rows.filter((r) => r.status === "pending" || r.status === "claimed");
+  if (active.length === 0) return { label: null };
+
+  // Generation phase: show drafted count.
+  const gen = rows.filter((r) => r.stage === "generate");
+  if (gen.length > 0 && gen.some((r) => r.status === "pending" || r.status === "claimed")) {
+    const done = gen.filter((r) => r.status === "done").length;
+    return { label: `Drafting answers… ${done}/${gen.length}` };
+  }
+
+  for (const stage of ["ingest", "extract", "structure"]) {
+    if (active.some((r) => r.stage === stage)) return { label: PHASE_LABEL[stage] };
+  }
+  return { label: "Processing…" };
+}
+
 export default async function DealDocumentsPage({
   params,
 }: {
@@ -34,6 +60,21 @@ export default async function DealDocumentsPage({
     .select("id, filename, processing_status, file_size, mime_type, created_at, error_message")
     .eq("deal_id", id)
     .order("created_at", { ascending: false });
+
+  // Live pipeline progress, derived from the jobs queue (migration 0010).
+  const docIds = (documents ?? []).map((d) => d.id);
+  const progress = new Map<string, ReturnType<typeof summarizeJobs>>();
+  if (docIds.length > 0) {
+    const { data: jobs } = await supabase
+      .from("jobs")
+      .select("document_id, stage, status")
+      .in("document_id", docIds);
+    const byDoc = new Map<string, JobRow[]>();
+    for (const j of (jobs ?? []) as JobRow[]) {
+      (byDoc.get(j.document_id) ?? byDoc.set(j.document_id, []).get(j.document_id)!).push(j);
+    }
+    for (const [doc, rows] of byDoc) progress.set(doc, summarizeJobs(rows));
+  }
 
   return (
     <div className="p-7 space-y-6">
@@ -72,6 +113,11 @@ export default async function DealDocumentsPage({
                         <span>{new Date(d.created_at).toISOString().replace("T", " ").slice(0, 16)}</span>
                         <span className="mono truncate" title={d.mime_type ?? ""}>{d.mime_type ?? ""}</span>
                       </div>
+                      {progress.get(d.id)?.label && !isFailed && (
+                        <div className="text-[11.5px] mt-1.5" style={{ color: "var(--accent)" }}>
+                          {progress.get(d.id)!.label}
+                        </div>
+                      )}
                       {d.error_message && (
                         <div
                           className="text-[11.5px] mt-1.5 line-clamp-2"

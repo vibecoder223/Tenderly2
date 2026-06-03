@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
 import { generateAndPersistAnswer } from "@/lib/rag";
+import { hasLlmKey } from "@/lib/groq";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -13,9 +14,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!process.env.CEREBRAS_API_KEY) {
+  if (!hasLlmKey()) {
     return NextResponse.json(
-      { error: "CEREBRAS_API_KEY is not configured. Set it in .env.local." },
+      { error: "No LLM API key configured. Set OPENROUTER_API_KEY (or CEREBRAS_API_KEY) in .env.local." },
       { status: 503 }
     );
   }

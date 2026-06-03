@@ -24,7 +24,7 @@ export default async function DashboardPage() {
       .select("action, entity_type, metadata, created_at, user_id")
       .eq("org_id", orgId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(5),
   ]);
 
   const allDeals = deals ?? [];
@@ -248,7 +248,7 @@ export default async function DashboardPage() {
     {
       key: "rfp",
       label: "Upload an RFP to your deal",
-      desc: "TenderOps extracts questions and drafts answers from your knowledge base.",
+      desc: "Propello extracts questions and drafts answers from your knowledge base.",
       href: rfpDealLink,
       done: realRfpCount > 0,
     },
@@ -394,6 +394,9 @@ export default async function DashboardPage() {
               <section className="section-card">
                 <div className="section-card-head">
                   <span className="section-card-title">Recent activity</span>
+                  <Link href="/activity" style={{ fontSize: 11.5, color: "var(--accent)", fontWeight: 500 }}>
+                    View all →
+                  </Link>
                 </div>
                 {(activity ?? []).length === 0 ? (
                   <div className="p-6 text-center text-sm" style={{ color: "var(--fg-4)" }}>
@@ -404,10 +407,7 @@ export default async function DashboardPage() {
                     {(activity ?? []).map((a, i) => (
                       <li
                         key={i}
-                        style={{
-                          padding: "10px 16px",
-                          borderBottom: "1px solid var(--divider)",
-                        }}
+                        style={{ padding: "10px 16px", borderBottom: "1px solid var(--divider)" }}
                       >
                         <div style={{ fontSize: 12.5, color: "var(--fg-2)" }}>
                           {a.action}{" "}

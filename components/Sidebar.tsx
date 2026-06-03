@@ -197,7 +197,7 @@ export default function Sidebar({
             color: "var(--fg)",
           }}
         >
-          TenderOps
+          Propello
         </span>
       </div>
 
@@ -446,7 +446,7 @@ function Mark() {
         lineHeight: 1,
       }}
     >
-      T
+      P
     </div>
   );
 }

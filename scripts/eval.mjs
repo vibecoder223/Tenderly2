@@ -30,16 +30,16 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 
 const args = parseArgs(process.argv.slice(2));
 const ANTHROPIC_KEY = env.ANTHROPIC_API_KEY;
-const VOYAGE_KEY = env.VOYAGE_API_KEY;
+const JINA_KEY = env.JINA_API_KEY;
 
 if (!ANTHROPIC_KEY) {
   console.warn(
     "⚠ ANTHROPIC_API_KEY not set — generation will be skipped and metrics will not be meaningful."
   );
 }
-if (!VOYAGE_KEY) {
+if (!JINA_KEY) {
   console.warn(
-    "⚠ VOYAGE_API_KEY not set — retrieval will fall back to BM25-only, which usually underperforms."
+    "⚠ JINA_API_KEY not set — retrieval will fall back to BM25-only, which usually underperforms."
   );
 }
 
@@ -63,7 +63,8 @@ const cases = raw
   .filter(Boolean)
   .map((l) => JSON.parse(l));
 
-const VOYAGE_URL = "https://api.voyageai.com/v1";
+const JINA_EMBED_URL = "https://api.jina.ai/v1/embeddings";
+const JINA_RERANK_URL = "https://api.jina.ai/v1/rerank";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const SONNET = env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
@@ -197,18 +198,19 @@ console.log(`→ ${path.relative(process.cwd(), outPath)}`);
 async function retrieve(query) {
   // dense
   const dense = [];
-  if (VOYAGE_KEY) {
-    const eRes = await fetch(`${VOYAGE_URL}/embeddings`, {
+  if (JINA_KEY) {
+    const eRes = await fetch(JINA_EMBED_URL, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${VOYAGE_KEY}`,
+        authorization: `Bearer ${JINA_KEY}`,
       },
       body: JSON.stringify({
-        model: env.VOYAGE_EMBED_MODEL ?? "voyage-3-large",
+        model: env.JINA_EMBED_MODEL ?? "jina-embeddings-v3",
         input: [query],
-        input_type: "query",
-        output_dimension: 1024,
+        task: "retrieval.query",
+        dimensions: 1024,
+        embedding_type: "float",
       }),
     });
     if (eRes.ok) {
@@ -274,23 +276,23 @@ async function retrieve(query) {
   const cands = [...merged.values()];
   if (cands.length === 0) return { candidates: [], top_score: 0 };
 
-  if (VOYAGE_KEY && cands.length > 1) {
-    const r = await fetch(`${VOYAGE_URL}/rerank`, {
+  if (JINA_KEY && cands.length > 1) {
+    const r = await fetch(JINA_RERANK_URL, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${VOYAGE_KEY}`,
+        authorization: `Bearer ${JINA_KEY}`,
       },
       body: JSON.stringify({
-        model: env.VOYAGE_RERANK_MODEL ?? "rerank-2",
+        model: env.JINA_RERANK_MODEL ?? "jina-reranker-v2-base-multilingual",
         query,
         documents: cands.map((c) => c.text),
-        top_k: Math.min(6, cands.length),
+        top_n: Math.min(6, cands.length),
       }),
     });
     if (r.ok) {
       const j = await r.json();
-      const ranked = j.data.map((d) => ({
+      const ranked = j.results.map((d) => ({
         ...cands[d.index],
         score: d.relevance_score,
       }));

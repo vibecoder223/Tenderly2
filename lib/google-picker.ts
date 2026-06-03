@@ -110,6 +110,12 @@ function openPicker(accessToken: string, apiKey: string): Promise<PickedFile | n
   });
 }
 
+/** Warm the GIS + GAPI + Picker scripts ahead of the click so the OAuth
+ *  popup opens within the user gesture (network loads break gesture chain). */
+export function preloadGooglePicker(): void {
+  ensureLoaded().catch(() => { /* retried on click */ });
+}
+
 export async function pickDriveFile(): Promise<PickedFile | null> {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;

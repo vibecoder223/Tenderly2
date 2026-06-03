@@ -123,7 +123,7 @@ export async function POST(req: Request) {
   try {
     const fetchUrl = drive?.exportUrl ?? url;
     const res = await fetch(fetchUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 TenderOps/1.0" },
+      headers: { "User-Agent": "Mozilla/5.0 Propello/1.0" },
       redirect: "follow",
       signal: AbortSignal.timeout(30_000),
     });

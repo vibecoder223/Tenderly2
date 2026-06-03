@@ -45,11 +45,10 @@ const STAGE_TO_STEP: Record<string, number> = {
   uploading: 0, downloading: 1, parsing: 2, chunking: 3, embedding: 4, storing: 5, ready: 6,
 };
 
-type TabId = "upload" | "cloud" | "url";
+type TabId = "upload" | "cloud";
 const TABS: Array<{ id: TabId; label: string; key: string }> = [
   { id: "upload", label: "Upload", key: "U" },
   { id: "cloud",  label: "Cloud",  key: "C" },
-  { id: "url",    label: "URL",    key: "L" },
 ];
 
 type Provider = { id: string; label: string; sub: string; enabled: boolean };
@@ -61,12 +60,6 @@ const CLOUD_PROVIDERS: Provider[] = [
   { id: "notion",     label: "Notion",       sub: "Coming soon",     enabled: false },
   { id: "sharepoint", label: "SharePoint",   sub: "Coming soon",     enabled: false },
 ];
-
-function looksLikeUrl(s: string): boolean {
-  const trimmed = s.trim();
-  if (!/^https?:\/\//i.test(trimmed)) return false;
-  try { new URL(trimmed); return true; } catch { return false; }
-}
 
 export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
   const router = useRouter();
@@ -80,7 +73,6 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("upload");
-  const [urlInput, setUrlInput] = useState("");
 
   const totalPages = items.reduce((sum, d) => sum + (d.page_count ?? 0), 0);
 
@@ -131,29 +123,6 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
     }
     setProcessing(false);
     setCurrentFile("");
-    await refreshList();
-  }
-
-  async function handleUrl(url: string) {
-    setErr(null);
-    setProcessing(true);
-    setStepIdx(0);
-    setCurrentFile(url);
-    const res = await fetch("/api/knowledge/scrape", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, doc_type: docType }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setErr(json.error || "Failed to import");
-      setProcessing(false); setCurrentFile(""); return;
-    }
-    const docId = json.knowledge_document?.id;
-    if (docId) { setStepIdx(1); await pollDoc(docId); }
-    setProcessing(false);
-    setCurrentFile("");
-    setUrlInput("");
     await refreshList();
   }
 
@@ -215,20 +184,6 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
     router.refresh();
   }
 
-  // Page-wide paste: if user pastes a URL outside an input, ingest it
-  useEffect(() => {
-    function onWindowPaste(e: ClipboardEvent) {
-      if (processing) return;
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
-      const text = e.clipboardData?.getData("text") || "";
-      if (looksLikeUrl(text)) { e.preventDefault(); handleUrl(text.trim()); }
-    }
-    window.addEventListener("paste", onWindowPaste);
-    return () => window.removeEventListener("paste", onWindowPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processing, docType]);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -266,7 +221,11 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                 disabled={processing}
                 style={{
                   padding: "11px 12px 9px",
-                  border: "none",
+                  // Side longhands, not `border` shorthand — mixing `border`
+                  // with `borderBottom` makes React 19 warn every rerender.
+                  borderTop: "none",
+                  borderLeft: "none",
+                  borderRight: "none",
                   background: "transparent",
                   cursor: processing ? "default" : "pointer",
                   fontSize: 12.5,
@@ -376,55 +335,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                 </div>
               )}
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 8 }}>
-              <label style={{ fontSize: 12.5, color: "var(--fg-4)", fontWeight: 500 }}>
-                Paste a public link
-              </label>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input
-                  className="input"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && urlInput.trim() && handleUrl(urlInput.trim())}
-                  type="url"
-                  placeholder="https://example.com/security.pdf"
-                  style={{
-                    flex: 1,
-                    padding: "11px 14px",
-                    borderRadius: 10,
-                    fontSize: 14,
-                  }}
-                />
-                <button
-                  onClick={() => urlInput.trim() && handleUrl(urlInput.trim())}
-                  disabled={!urlInput.trim()}
-                  style={{
-                    padding: "11px 20px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: "var(--fg)",
-                    color: "var(--surface, #fff)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: urlInput.trim() ? "pointer" : "default",
-                    opacity: urlInput.trim() ? 1 : 0.5,
-                    transition: "opacity 120ms ease",
-                  }}
-                >
-                  Fetch
-                </button>
-              </div>
-              <div style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 4 }}>
-                Web pages, public PDFs, and Google Docs share links work.
-              </div>
-              {err && (
-                <div className="text-[12px] px-3 py-2 rounded mt-1" style={{ color: "var(--err)", background: "var(--err-tint, #fff0f0)" }}>
-                  {err}
-                </div>
-              )}
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Footer category control */}
@@ -643,13 +554,13 @@ function ProviderTile({ provider, onClick }: { provider: Provider; onClick?: () 
 }
 
 function ProviderMark({ kind, size = 28 }: { kind: string; size?: number }) {
+  if (kind === "drive") return <DriveLogo size={Math.round(size * 0.74)} />;
   const base: React.CSSProperties = {
     width: size, height: size, borderRadius: 6,
     display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
     fontSize: size * 0.5, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em",
   };
   switch (kind) {
-    case "drive":      return <div style={{ ...base, background: "linear-gradient(135deg,#f6c244 0%,#4e8af4 50%,#3aa757 100%)" }}>G</div>;
     case "dropbox":    return <div style={{ ...base, background: "#0061ff" }}>D</div>;
     case "onedrive":   return <div style={{ ...base, background: "#0364b8" }}>O</div>;
     case "box":        return <div style={{ ...base, background: "#0061d5" }}>B</div>;

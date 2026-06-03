@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
-import { runFullPipeline } from "@/lib/agents";
+import { enqueueIngest } from "@/lib/jobs";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 30;
 
+// Enqueue-only. The pipeline runs asynchronously: this just queues the first
+// stage and returns immediately. A drain driver (pg_cron / npm run drain)
+// advances the document through ingest → extract → structure → generate.
+// Also serves as "retry": it clears prior job rows and re-queues from the top.
 export async function POST(req: Request) {
   const supabase = createClient(await cookies());
   const { data: { user } } = await supabase.auth.getUser();
@@ -18,38 +22,44 @@ export async function POST(req: Request) {
 
   const { data: doc } = await supabase
     .from("documents")
-    .select("id, deal_id, deals(org_id, organizations(name))")
+    .select("id, deal_id, deals(org_id)")
     .eq("id", document_id)
     .maybeSingle();
   if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // If the LLM key is missing, mark the document with a clear state and return
-  // success — upload UX shouldn't error out.
-  if (!process.env.CEREBRAS_API_KEY) {
+  const orgId =
+    (doc as any).deals?.org_id ?? (doc as any).deals?.[0]?.org_id ?? null;
+  if (!orgId) return NextResponse.json({ error: "Org not resolved for document" }, { status: 400 });
+
+  // If the LLM key is missing, mark the document and return success — upload
+  // UX shouldn't error out.
+  if (!process.env.OPENROUTER_API_KEY && !process.env.LLM_API_KEY && !process.env.CEREBRAS_API_KEY) {
     await supabase
       .from("documents")
       .update({
         processing_status: "uploaded",
         error_message:
-          "CEREBRAS_API_KEY not configured. The file is stored, but the AI pipeline is disabled until a key is set in .env.local.",
+          "No LLM API key configured. The file is stored, but the AI pipeline is disabled until OPENROUTER_API_KEY (or CEREBRAS_API_KEY) is set in .env.local.",
       })
       .eq("id", document_id);
     return NextResponse.json({ ok: true, skipped: true, reason: "llm_key_missing" });
   }
 
-  // Prefer admin for the pipeline (writes across many tables across long runs).
-  // Falls back to user-context client where RLS already permits these writes.
-  const writer = tryCreateAdminClient() ?? supabase;
-
-  const orgName =
-    (doc as any).deals?.organizations?.name ??
-    (doc as any).deals?.[0]?.organizations?.[0]?.name ??
-    "Workspace";
-
-  try {
-    await runFullPipeline(writer, document_id, { orgName });
-    return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message ?? "Pipeline failed" }, { status: 500 });
+  const admin = tryCreateAdminClient();
+  if (!admin) {
+    return NextResponse.json(
+      { error: "SUPABASE_SERVICE_ROLE_KEY required to run the pipeline." },
+      { status: 503 }
+    );
   }
+
+  // Clean slate for (re)processing: drop any prior job rows, then queue ingest.
+  await admin.from("jobs").delete().eq("document_id", document_id);
+  await enqueueIngest(admin, { documentId: document_id, orgId });
+  await admin
+    .from("documents")
+    .update({ processing_status: "queued", error_message: null })
+    .eq("id", document_id);
+
+  return NextResponse.json({ ok: true, queued: true });
 }

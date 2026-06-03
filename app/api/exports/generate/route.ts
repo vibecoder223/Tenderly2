@@ -15,6 +15,7 @@ type TemplateSection = {
   type: "ai" | "static" | "qa";
   instruction?: string;
   content?: string;
+  maxWords?: number;
 };
 
 async function generateProposalSections(
@@ -60,15 +61,19 @@ async function generateProposalSections(
     }
     // AI section
     const instruction = expandTokens(sec.instruction ?? `Write the "${sec.name}" section for this RFP response proposal.`);
+    const wl = sec.maxWords && sec.maxWords > 0 ? sec.maxWords : null;
+    const lengthRule = wl
+      ? `Keep this section under ${wl} words. Be concise.`
+      : "Write 2-3 concise paragraphs.";
     try {
       const { text } = await callGroqText({
         system: `You are writing a section of a professional RFP proposal response.
-Write in formal business English. 2-3 concise paragraphs. Be persuasive and outcome-focused.
+Write in formal business English. ${lengthRule} Be persuasive and outcome-focused.
 Never invent facts not in the context. Do not include the section heading in your output.
 
 Deal context:\n${contextSummary}`,
         user: instruction,
-        maxTokens: 500,
+        maxTokens: wl ? Math.min(500, Math.ceil(wl * 1.6) + 40) : 500,
       });
       out.push({ heading: sec.name, content: text.trim() });
     } catch (e: any) {
@@ -371,7 +376,7 @@ export async function POST(req: Request) {
 
   if (format === "docx") {
     if (!usedGoldenTemplate) {
-      const accentColor = template?.accent_color?.replace("#", "") ?? "3B47D6";
+      const accentColor = template?.accent_color?.replace("#", "") ?? "1F7A53";
       if (merge) {
         buf = await renderDocx(exportable, {
           deal_name: deal.name,
@@ -404,6 +409,7 @@ export async function POST(req: Request) {
       org_name: orgName,
       citation_style: citationStyle,
       sections: merge ? sections : undefined,
+      accentColor: template?.accent_color ?? "#1F7A53",
     });
     contentType = "application/pdf";
     ext = "pdf";
@@ -442,8 +448,10 @@ async function renderPdf(
     org_name: string | null;
     citation_style: "inline" | "footnote";
     sections?: { heading: string; items: ExportQuestion[] }[];
+    accentColor?: string;
   }
 ): Promise<Buffer> {
+  const accent = opts.accentColor ?? "#1F7A53";
   return await new Promise<Buffer>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 56, size: "LETTER" });
     const chunks: Buffer[] = [];
@@ -467,7 +475,7 @@ async function renderPdf(
     doc.moveDown(1.5);
 
     function renderQuestion(q: ExportQuestion) {
-      doc.fontSize(11).fillColor("#3B47D6").text(q.requirement_id ?? "", { continued: false });
+      doc.fontSize(11).fillColor(accent).text(q.requirement_id ?? "", { continued: false });
       doc.moveDown(0.15);
       doc.fontSize(12.5).fillColor("#0F1626").text(q.question_text);
       doc.moveDown(0.35);
@@ -495,7 +503,7 @@ async function renderPdf(
     if (opts.sections && opts.sections.length > 0) {
       opts.sections.forEach((sec, i) => {
         if (i > 0) doc.addPage();
-        doc.fontSize(16).fillColor("#3B47D6").text(sec.heading);
+        doc.fontSize(16).fillColor(accent).text(sec.heading);
         doc.moveDown(0.6);
         for (const q of sec.items) renderQuestion(q);
       });

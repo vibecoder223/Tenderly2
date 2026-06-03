@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { logActivity } from "@/utils/activity";
+import { sanitizeCustomFields } from "@/lib/deal-fields-server";
 
 export async function POST(req: Request) {
   const supabase = createClient(await cookies());
@@ -21,6 +22,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "name required" }, { status: 400 });
   }
 
+  const custom_fields = await sanitizeCustomFields(supabase, member.org_id, body.custom_fields);
+
   const { data: deal, error } = await supabase
     .from("deals")
     .insert({
@@ -30,6 +33,7 @@ export async function POST(req: Request) {
       value: body.value ?? null,
       due_date: body.due_date || null,
       owner_id: user.id,
+      custom_fields,
     })
     .select()
     .single();

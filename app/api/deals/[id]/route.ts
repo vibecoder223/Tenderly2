@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
+import { sanitizeCustomFields } from "@/lib/deal-fields-server";
 
 export async function PATCH(
   req: Request,
@@ -23,6 +24,9 @@ export async function PATCH(
   const update: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in body) update[key] = body[key];
+  }
+  if ("custom_fields" in body) {
+    update.custom_fields = await sanitizeCustomFields(supabase, member.org_id, body.custom_fields);
   }
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });

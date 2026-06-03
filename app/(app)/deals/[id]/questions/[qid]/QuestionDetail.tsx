@@ -219,6 +219,11 @@ export default function QuestionDetail({
             className="textarea"
             rows={14}
             value={draft}
+            placeholder={
+              r?.gap_flag === "no_source"
+                ? "No AI draft — no grounding source was found. Write the answer manually, or add a document to your knowledge base and regenerate."
+                : "Write or generate an answer…"
+            }
             onChange={(e) => setDraft(e.target.value)}
           />
           <div className="flex items-center justify-between">

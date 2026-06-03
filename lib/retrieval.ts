@@ -1,11 +1,11 @@
 /**
- * Hybrid retrieval: query expansion (Haiku) → dense (pgvector) + sparse (BM25)
- * → rerank (Voyage) → top-6. Returns ranked chunk candidates with full
- * provenance for citation.
+ * Hybrid retrieval: query expansion → dense (pgvector, Jina embeddings) +
+ * sparse (BM25) → rerank (Jina) → top-6. Returns ranked chunk candidates with
+ * full provenance for citation.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callGroqJson, MODEL, MODEL_FAST } from "./groq";
+import { callGroqJson, MODEL, MODEL_FAST, hasLlmKey } from "./groq";
 import { embedTexts, hasEmbeddings, rerank } from "./embeddings";
 
 export type Candidate = {
@@ -40,7 +40,7 @@ export async function retrieveForQuery(
   // question and the recall gain is small. Set RAG_USE_QUERY_EXPANSION=1 to
   // re-enable. Embeddings still capture paraphrase similarity.
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
-  if (process.env.RAG_USE_QUERY_EXPANSION === "1" && process.env.CEREBRAS_API_KEY) {
+  if (process.env.RAG_USE_QUERY_EXPANSION === "1" && hasLlmKey()) {
     try {
       const { data, usage } = await callGroqJson<{
         paraphrases: string[];
@@ -173,6 +173,7 @@ async function sparseSearch(
       "id, raw_text, cleaned_text, section_path, page_start, page_end, sparse_terms, document_id, knowledge_document_id, knowledge_documents(filename), documents(filename)"
     )
     .eq("org_id", opts.org_id)
+    .not("knowledge_document_id", "is", null)
     .overlaps("sparse_terms", terms)
     .limit(200);
   if (error || !rows) return [];

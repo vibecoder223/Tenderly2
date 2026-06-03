@@ -4,7 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callGroqText, MODEL_FAST } from "./groq";
+import { callGroqText, MODEL_FAST, hasLlmKey } from "./groq";
 import { isNoSource, retrieveForQuery, type Candidate } from "./retrieval";
 
 const PROMPTS = {
@@ -12,7 +12,7 @@ const PROMPTS = {
 
 Rules:
 1. Every factual claim must be supported by a chunk in <sources>. If a claim is not supported, do not make it.
-2. Cite every supported claim inline using [c:CHUNK_ID]. The exact UUID from <sources>, no quotes, no extra brackets.
+2. Cite every supported claim inline using [c:N], where N is the chunk's number from <sources> (e.g. [c:1], [c:3]). No quotes, no extra brackets, no UUIDs.
 3. Write in business prose: confident, specific, concise. If voice examples are provided, match their tone.
 4. If sources contradict each other, prefer the more recent document and note the discrepancy in a closing sentence.
 5. If the sources do not cover the requirement, output exactly:
@@ -57,10 +57,12 @@ export async function generateAndPersistAnswer(
   if (isNoSource(retrieval.top_score, retrieval.candidates.length)) {
     await upsertResponse(supabase, {
       question_id: args.question_id,
+      // Keep the sentinel as an internal record of WHY there's no draft, but
+      // leave the user-facing draft empty — the no_source gap_flag drives the
+      // "No source found" banner. Never leak the sentinel into the draft box.
       answer_text_with_markers:
         "NO_SOURCE: The knowledge base does not contain content sufficient to answer this requirement.",
-      answer_text_clean:
-        "NO_SOURCE: The knowledge base does not contain content sufficient to answer this requirement.",
+      answer_text_clean: "",
       tone: args.tone || "technical",
       confidence: 0,
       gap_flag: "no_source",
@@ -71,11 +73,16 @@ export async function generateAndPersistAnswer(
     return { input_tokens: totalIn, output_tokens: totalOut };
   }
 
-  // 3. Voice examples — pull a couple of approved answers from this workspace
+  // 3. Voice examples — pull a couple of approved answers from THIS org only.
+  // responses carry no org column, so join question → document → deal → org and
+  // inner-filter on deals.org_id. Without this, approved answers from every
+  // tenant leak into this prompt (one customer's prose drafted into another's
+  // proposal — a cross-tenant data leak).
   const { data: priorApproved } = await supabase
     .from("responses")
-    .select("final_text, draft_text")
+    .select("final_text, draft_text, questions!inner(documents!inner(deals!inner(org_id)))")
     .eq("status", "approved")
+    .eq("questions.documents.deals.org_id", args.org_id)
     .not("final_text", "is", null)
     .limit(3);
 
@@ -85,11 +92,11 @@ export async function generateAndPersistAnswer(
     .slice(0, 3);
 
   // 4. Generate
-  if (!process.env.CEREBRAS_API_KEY) {
+  if (!hasLlmKey()) {
     await upsertResponse(supabase, {
       question_id: args.question_id,
-      answer_text_with_markers: "AI_DISABLED: CEREBRAS_API_KEY not configured.",
-      answer_text_clean: "AI_DISABLED: CEREBRAS_API_KEY not configured.",
+      answer_text_with_markers: "AI_DISABLED: no LLM API key configured.",
+      answer_text_clean: "AI_DISABLED: no LLM API key configured.",
       tone: args.tone || "technical",
       confidence: 0,
       gap_flag: "no_source",
@@ -119,8 +126,10 @@ export async function generateAndPersistAnswer(
   if (/^\s*NO_SOURCE:/i.test(rawAnswer)) {
     await upsertResponse(supabase, {
       question_id: args.question_id,
+      // Record the model's sentinel internally; keep the draft box empty so the
+      // banner — not raw "NO_SOURCE:" text — communicates the gap to the user.
       answer_text_with_markers: rawAnswer.trim(),
-      answer_text_clean: rawAnswer.trim(),
+      answer_text_clean: "",
       tone: args.tone || "technical",
       confidence: 0,
       gap_flag: "no_source",
@@ -200,10 +209,13 @@ ${args.voice_examples.map((v) => `<example>${v}</example>`).join("\n")}
 </voice_examples>`
     : "";
 
+  // Cite by 1-based index, not chunk UUID. LLMs reliably fail to reproduce long
+  // UUIDs verbatim (they emit empty or malformed markers), which silently drops
+  // every citation. A small integer is trivial to copy.
   const sources = args.sources
     .map(
-      (c) =>
-        `<chunk id="${c.chunk_id}" doc="${esc(c.document_filename)}" section="${esc(
+      (c, i) =>
+        `<chunk id="${i + 1}" doc="${esc(c.document_filename)}" section="${esc(
           c.section_path ?? ""
         )}" page="${c.page_start ?? ""}">
 ${c.text}
@@ -223,7 +235,7 @@ ${voice}
 ${sources}
 </sources>
 
-Write the answer now. Use [c:UUID] for every supported claim.`;
+Write the answer now. Cite every supported claim with the chunk's number in square brackets, e.g. [c:1] or [c:3]. Use only the numbers shown in <sources>.`;
 }
 
 function esc(s: string): string {
@@ -238,27 +250,29 @@ type ParsedCitation = {
   quote: string;
 };
 
+// Matches [c:N] and the full-width-bracket variant 【c:N】 some models emit.
+const CITE_RE = /[[【]\s*c:\s*(\d{1,3})\s*[\]】]/gi;
+
 function extractCitations(
   textWithMarkers: string,
   sources: Candidate[]
 ): ParsedCitation[] {
-  const byId = new Map(sources.map((s) => [s.chunk_id, s]));
   const out: ParsedCitation[] = [];
-  const seen = new Set<string>();
-  const markerRe = /\[c:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]/gi;
+  const seen = new Set<number>();
   let m: RegExpExecArray | null;
-  while ((m = markerRe.exec(textWithMarkers)) !== null) {
-    const id = m[1];
-    if (seen.has(id)) continue;
-    const src = byId.get(id);
+  CITE_RE.lastIndex = 0;
+  while ((m = CITE_RE.exec(textWithMarkers)) !== null) {
+    const n = parseInt(m[1], 10);
+    if (seen.has(n)) continue;
+    const src = sources[n - 1];
     if (!src) continue;
-    seen.add(id);
+    seen.add(n);
     // Quote: take the sentence preceding this marker as supporting context.
     const before = textWithMarkers.slice(0, m.index).replace(/\s+/g, " ").trim();
     const sentences = before.split(/(?<=[.!?])\s+/);
     const quote = (sentences[sentences.length - 1] || src.text.slice(0, 200)).slice(0, 400);
     out.push({
-      chunk_id: id,
+      chunk_id: src.chunk_id,
       document_filename: src.document_filename,
       section_path: src.section_path,
       page: src.page_start ?? null,
@@ -269,13 +283,7 @@ function extractCitations(
 }
 
 function stripMarkers(text: string): string {
-  // Remove well-formed citations first.
-  let cleaned = text.replace(/\s*\[c:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, "");
-  // Then strip any malformed citation fragments (broken brackets, partial UUIDs).
-  cleaned = cleaned.replace(/\[c:[^\]]*?\]/gi, "");          // any leftover [c:...] brackets
-  cleaned = cleaned.replace(/\[c:[0-9a-f-]+/gi, "");         // unclosed [c:...
-  cleaned = cleaned.replace(/\b[0-9a-f]{4,}-[0-9a-f-]+\b/gi, ""); // orphan UUID fragments mid-text
-  return cleaned.replace(/\s+/g, " ").trim();
+  return text.replace(CITE_RE, "").replace(/\s+/g, " ").trim();
 }
 
 async function upsertResponse(

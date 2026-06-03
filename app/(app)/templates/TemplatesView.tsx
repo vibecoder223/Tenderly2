@@ -46,6 +46,7 @@ type TemplateSection = {
   type: SectionType;
   instruction?: string;
   content?: string;
+  maxWords?: number;
 };
 
 // ---- Presets ----
@@ -120,7 +121,7 @@ const TYPE_LABELS: Record<SectionType, string> = {
 const TYPE_COLORS: Record<SectionType, string> = {
   ai: "var(--accent)",
   static: "var(--fg-4)",
-  qa: "#16a34a",
+  qa: "var(--warn)",
 };
 
 const AVAILABLE_SECTIONS = [
@@ -162,7 +163,7 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
       description: "",
       intro: type === "sections" ? sectionsToIntro(PRESET_STANDARD) : "",
       footer: "",
-      accent_color: "#3B47D6",
+      accent_color: "#1F7A53",
       font_family: "default",
       is_default: templates.length === 0,
     });
@@ -272,7 +273,12 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
                   alignItems: "center",
                   gap: 6,
                   background: "transparent",
-                  border: "none",
+                  // Use side longhands, not `border` shorthand: mixing `border`
+                  // with `borderBottom` in one style object makes React 19 warn
+                  // on every rerender.
+                  borderTop: "none",
+                  borderLeft: "none",
+                  borderRight: "none",
                   cursor: "pointer",
                   fontFamily: "inherit",
                   letterSpacing: "-0.005em",
@@ -811,6 +817,23 @@ function SectionBuilderForm({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addingSection, setAddingSection] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState<Record<string, { loading: boolean; text?: string; error?: string }>>({});
+
+  async function previewSection(sec: TemplateSection) {
+    setPreview((p) => ({ ...p, [sec.id]: { loading: true } }));
+    try {
+      const res = await fetch("/api/templates/preview-section", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instruction: sec.instruction, name: sec.name, maxWords: sec.maxWords }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Preview failed");
+      setPreview((p) => ({ ...p, [sec.id]: { loading: false, text: data.text } }));
+    } catch (e: any) {
+      setPreview((p) => ({ ...p, [sec.id]: { loading: false, error: e.message } }));
+    }
+  }
 
   function updateSection(id: string, patch: Partial<TemplateSection>) {
     setSections((prev) => prev.map((s) => s.id === id ? { ...s, ...patch } : s));
@@ -822,7 +845,7 @@ function SectionBuilderForm({
 
   function addSection(template: typeof AVAILABLE_SECTIONS[0]) {
     const newSec: TemplateSection = {
-      id: Date.now().toString(),
+      id: `s${Date.now()}`,
       name: template.name,
       type: template.type,
       instruction: (template as any).instruction,
@@ -831,6 +854,28 @@ function SectionBuilderForm({
     setSections((prev) => [...prev, newSec]);
     setExpandedId(newSec.id);
     setAddingSection(false);
+  }
+
+  function addCustomAi() {
+    const newSec: TemplateSection = {
+      id: `s${Date.now()}`,
+      name: "New section",
+      type: "ai",
+      instruction: "",
+    };
+    setSections((prev) => [...prev, newSec]);
+    setExpandedId(newSec.id);
+    setAddingSection(false);
+  }
+
+  function moveSection(index: number, dir: -1 | 1) {
+    setSections((prev) => {
+      const j = index + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[j]] = [next[j], next[index]];
+      return next;
+    });
   }
 
   async function submit(e: React.FormEvent) {
@@ -877,29 +922,33 @@ function SectionBuilderForm({
           </div>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <label className="label">Accent color</label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)}
-                style={{ width: 42, height: 32, padding: 0, border: "1px solid var(--border)", borderRadius: 6 }} />
-              <input className="input mono" style={{ width: 96 }} value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-            </div>
-          </div>
-
-          <LogoUpload templateId={t.id} disabled={isNew} currentLogoPath={t.logo_path ?? null} />
-
-          <div style={{ paddingTop: 20 }}>
-            <label className="flex items-center gap-2 text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
-              Set as default
-            </label>
-          </div>
-          <div style={{ paddingTop: 20, marginLeft: "auto", display: "flex", gap: 8 }}>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="flex items-center gap-2 text-[13px]" style={{ color: "var(--fg-3)" }}>
+            <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+            Set as default
+          </label>
+          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
             <button type="button" className="btn text-[11.5px]" onClick={() => applyPreset(PRESET_STANDARD)}>Use standard preset</button>
             <button type="button" className="btn text-[11.5px]" onClick={() => applyPreset(PRESET_FULL)}>Use full preset</button>
           </div>
         </div>
+
+        <details>
+          <summary className="text-[12px] font-medium cursor-pointer" style={{ color: "var(--fg-3)" }}>
+            Branding (accent color, logo)
+          </summary>
+          <div className="flex items-center gap-4 flex-wrap mt-3">
+            <div>
+              <label className="label">Accent color</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)}
+                  style={{ width: 42, height: 32, padding: 0, border: "1px solid var(--border)", borderRadius: 6 }} />
+                <input className="input mono" style={{ width: 96 }} value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+              </div>
+            </div>
+            <LogoUpload templateId={t.id} disabled={isNew} currentLogoPath={t.logo_path ?? null} />
+          </div>
+        </details>
       </div>
 
       {/* Sections list */}
@@ -919,11 +968,18 @@ function SectionBuilderForm({
 
         {addingSection && (
           <div className="card p-4" style={{ background: "var(--bg-2)" }}>
-            <p className="text-[12px] font-medium mb-3" style={{ color: "var(--fg-3)" }}>Choose a section to add:</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[12px] font-medium" style={{ color: "var(--fg-3)" }}>Choose a section to add:</p>
+              <button
+                type="button"
+                className="btn btn-primary text-[11.5px]"
+                onClick={addCustomAi}
+              >
+                ✦ Custom AI section
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-2">
-              {AVAILABLE_SECTIONS.filter(
-                (a) => !sections.some((s) => s.name === a.name)
-              ).map((a) => (
+              {AVAILABLE_SECTIONS.map((a) => (
                 <button
                   key={a.name}
                   type="button"
@@ -954,6 +1010,22 @@ function SectionBuilderForm({
                   {TYPE_LABELS[sec.type]}
                 </span>
                 <span className="text-[13px] font-medium" style={{ color: "var(--fg)", flex: 1 }}>{sec.name}</span>
+                <button
+                  type="button"
+                  disabled={i === 0}
+                  onClick={(e) => { e.stopPropagation(); moveSection(i, -1); }}
+                  className="text-[12px] px-1"
+                  style={{ color: "var(--fg-4)", opacity: i === 0 ? 0.3 : 1 }}
+                  title="Move up"
+                >↑</button>
+                <button
+                  type="button"
+                  disabled={i === sections.length - 1}
+                  onClick={(e) => { e.stopPropagation(); moveSection(i, 1); }}
+                  className="text-[12px] px-1"
+                  style={{ color: "var(--fg-4)", opacity: i === sections.length - 1 ? 0.3 : 1 }}
+                  title="Move down"
+                >↓</button>
                 {sec.type !== "qa" && (
                   <span className="text-[11px]" style={{ color: "var(--fg-5)" }}>
                     {isExpanded ? "▲" : "▼"}
@@ -987,9 +1059,40 @@ function SectionBuilderForm({
                         onChange={(e) => updateSection(sec.id, { instruction: e.target.value })}
                         placeholder="Tell the AI what to write. Use [Client Name], [RFP Title], [Sector] etc."
                       />
-                      <p className="text-[11px] mt-1" style={{ color: "var(--fg-5)" }}>
-                        At export time, Groq generates this section using your deal's context + this instruction.
-                      </p>
+                      <div className="flex items-center gap-3 mt-2 flex-wrap">
+                        <label className="flex items-center gap-2 text-[12px]" style={{ color: "var(--fg-3)" }}>
+                          Word limit
+                          <input
+                            type="number"
+                            min={0}
+                            step={25}
+                            className="input mono"
+                            style={{ width: 80 }}
+                            value={sec.maxWords ?? ""}
+                            placeholder="none"
+                            onChange={(e) => updateSection(sec.id, { maxWords: e.target.value ? Math.max(0, parseInt(e.target.value, 10)) : undefined })}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          className="btn text-[11.5px]"
+                          disabled={preview[sec.id]?.loading}
+                          onClick={() => previewSection(sec)}
+                        >
+                          {preview[sec.id]?.loading ? "Generating…" : "Preview"}
+                        </button>
+                        <span className="text-[11px]" style={{ color: "var(--fg-5)" }}>
+                          Preview uses your most recent deal as sample context.
+                        </span>
+                      </div>
+                      {preview[sec.id]?.error && (
+                        <p className="text-[11.5px] mt-2" style={{ color: "var(--err)" }}>{preview[sec.id]!.error}</p>
+                      )}
+                      {preview[sec.id]?.text && (
+                        <div className="mt-2 p-3 rounded text-[12.5px] whitespace-pre-wrap" style={{ background: "var(--bg-2)", color: "var(--fg-2)", border: "1px solid var(--divider)", lineHeight: 1.55 }}>
+                          {preview[sec.id]!.text}
+                        </div>
+                      )}
                     </div>
                   )}
                   {sec.type === "static" && (
@@ -1133,7 +1236,7 @@ function TextTemplateForm({
 function UploadDocxForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (t: T) => void }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [accent, setAccent] = useState("#3B47D6");
+  const [accent, setAccent] = useState("#1F7A53");
   const [isDefault, setIsDefault] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -1166,7 +1269,7 @@ function UploadDocxForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: 
       <div>
         <h2 className="text-base font-semibold" style={{ color: "var(--fg)" }}>Upload .docx template</h2>
         <p className="text-[12.5px] mt-1" style={{ color: "var(--fg-4)" }}>
-          Your Word file becomes the <strong>golden template</strong>. TenderOps fills placeholders only — never rewrites sections.
+          Your Word file becomes the <strong>golden template</strong>. Propello fills placeholders only — never rewrites sections.
         </p>
       </div>
 
