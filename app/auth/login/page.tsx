@@ -22,10 +22,15 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    if (!email || !email.includes("@")) {
+      setErr("Please sign in with your email address.");
+      return;
+    }
     setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -37,6 +42,22 @@ function LoginForm() {
     // Keep spinner active through the redirect
     router.push(next);
     router.refresh();
+  }
+
+  async function signInWithGoogle() {
+    setErr(null);
+    setGoogleLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}${next}`,
+      },
+    });
+    if (error) {
+      setGoogleLoading(false);
+      setErr(error.message);
+    }
   }
 
   return (
@@ -86,6 +107,31 @@ function LoginForm() {
           ) : "Sign in"}
         </button>
       </form>
+      <div className="mt-4">
+        <button
+          type="button"
+          className="btn btn-ghost w-full justify-center"
+          onClick={signInWithGoogle}
+          disabled={googleLoading}
+        >
+          {googleLoading ? (
+            <>
+              <svg
+                width="14" height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                style={{ animation: "spin 0.75s linear infinite", flexShrink: 0 }}
+              >
+                <circle cx="7" cy="7" r="5.5" stroke="oklch(1 0 0 / 0.35)" strokeWidth="1.5" />
+                <path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              Redirecting…
+            </>
+          ) : (
+            "Sign in with Google"
+          )}
+        </button>
+      </div>
       <div className="text-xs text-center mt-5" style={{ color: "var(--fg-4)" }}>
         New here?{" "}
         <Link href="/auth/signup" style={{ color: "var(--accent)" }}>Create an account</Link>
