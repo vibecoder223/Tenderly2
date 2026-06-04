@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import RecoveryRedirect from "@/components/RecoveryRedirect";
 
 export const metadata: Metadata = {
   title: "Propello — RFP Response Platform",
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <RecoveryRedirect />
+        {children}
+      </body>
     </html>
   );
 }

@@ -15,15 +15,38 @@ export default function ResetPasswordClient() {
   const [checking, setChecking] = useState(true);
   const [hasSession, setHasSession] = useState(false);
 
-  // The recovery link routes through /api/auth/callback, which exchanges the
-  // code for a session before redirecting here. Confirm a session exists so we
-  // can show an actionable message if the link was already used or expired.
+  // Supabase recovery links use the implicit flow: the tokens arrive in the URL
+  // fragment (#access_token=…&type=recovery). The browser client parses that
+  // fragment on construction (detectSessionInUrl) and persists the session to
+  // cookies, firing PASSWORD_RECOVERY / SIGNED_IN. We listen for that, also
+  // check for an already-established session, and fall back to a timed settle so
+  // the page never hangs on "Verifying…".
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setHasSession(!!data.user);
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      setHasSession(ok);
       setChecking(false);
+    };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) finish(true);
     });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) finish(true);
+    });
+
+    const t = setTimeout(() => {
+      supabase.auth.getSession().then(({ data }) => finish(!!data.session));
+    }, 1500);
+
+    return () => {
+      clearTimeout(t);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   async function submit(e: React.FormEvent) {

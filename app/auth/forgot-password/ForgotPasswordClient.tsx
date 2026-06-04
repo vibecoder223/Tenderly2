@@ -24,8 +24,12 @@ export default function ForgotPasswordClient() {
     setErr(null);
     setLoading(true);
     const supabase = createClient();
+    // Recovery uses the implicit flow (tokens land in the URL fragment), so the
+    // link must point at a client page that can read the fragment — not the
+    // server callback, which only handles the PKCE ?code= flow. RecoveryRedirect
+    // is the safety net if Supabase falls back to the Site URL.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${getSiteUrl()}/api/auth/callback?next=/auth/reset-password`,
+      redirectTo: `${getSiteUrl()}/auth/reset-password`,
     });
     setLoading(false);
     if (error) {
