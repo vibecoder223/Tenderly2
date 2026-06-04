@@ -5,6 +5,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 
+// Map raw Supabase auth errors to actionable, human copy.
+function friendlyAuthError(msg: string): string {
+  const m = (msg || "").toLowerCase();
+  if (m.includes("invalid login credentials")) return "Incorrect email or password.";
+  if (m.includes("email not confirmed")) return "Confirm your email first — check your inbox for the link.";
+  if (m.includes("invalid api key")) {
+    return "Auth is misconfigured (invalid API key). If you just changed environment variables, restart the dev server so the new key is loaded.";
+  }
+  if (m.includes("rate limit") || m.includes("too many")) return "Too many attempts. Wait a minute and try again.";
+  return msg || "Something went wrong. Try again.";
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<div className="card p-7" style={{ color: "var(--fg-4)" }}>Loading…</div>}>
@@ -20,7 +32,10 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  // Surface errors handed back by the auth callback (e.g. an expired magic /
+  // recovery link redirects here with ?error=…). Without this the message is
+  // silently dropped and the user just sees a blank login form.
+  const [err, setErr] = useState<string | null>(params.get("error"));
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -36,7 +51,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
-      setErr(error.message);
+      setErr(friendlyAuthError(error.message));
       return;
     }
     // Keep spinner active through the redirect

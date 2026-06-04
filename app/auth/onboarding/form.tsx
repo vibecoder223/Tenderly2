@@ -39,26 +39,29 @@ export default function OnboardingForm({
     <div className="card p-7">
       <h1 className="text-lg font-semibold mb-1" style={{ color: "var(--fg)" }}>Set up your workspace</h1>
       <p className="text-sm mb-5" style={{ color: "var(--fg-4)" }}>
-        Signed in as <span className="mono">{email}</span>.
+        Signed in as <span className="mono">{email}</span>. This takes one click — you can rename anything later.
       </p>
       <form onSubmit={submit} className="space-y-3">
         <div>
-          <label className="label">Workspace / company name</label>
+          <label className="label">
+            Workspace / company name <span style={{ color: "var(--fg-5)" }}>· optional</span>
+          </label>
           <input
             className="input"
-            placeholder="Acme Corp"
+            placeholder={name ? `${name}'s Workspace` : "My Workspace"}
             value={orgName}
             onChange={(e) => setOrgName(e.target.value)}
-            required
           />
         </div>
         <div>
-          <label className="label">Your display name</label>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
+          <label className="label">
+            Your display name <span style={{ color: "var(--fg-5)" }}>· optional</span>
+          </label>
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
         <button type="submit" className="btn btn-primary w-full justify-center mt-2" disabled={loading}>
-          {loading ? "Creating workspace…" : "Continue"}
+          {loading ? "Setting up…" : "Continue to app"}
         </button>
       </form>
     </div>

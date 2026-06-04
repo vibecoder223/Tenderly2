@@ -17,10 +17,19 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { orgName, name } = await req.json();
-  if (!orgName || typeof orgName !== "string") {
-    return NextResponse.json({ error: "orgName required" }, { status: 400 });
-  }
+  const body = await req.json();
+  const name: string = typeof body?.name === "string" ? body.name : "";
+
+  // Workspace name is optional — we never block sign-in on it. When the user
+  // leaves it blank, derive a sensible default from their name or email so they
+  // land straight in the app and can rename the workspace later in settings.
+  const rawOrg = typeof body?.orgName === "string" ? body.orgName.trim() : "";
+  const fallbackLabel =
+    (name && name.trim()) ||
+    (user.user_metadata?.name as string | undefined)?.trim() ||
+    user.email?.split("@")[0] ||
+    "My";
+  const orgName = rawOrg || `${fallbackLabel}'s Workspace`;
 
   // Onboarding has a fundamental chicken-and-egg with RLS: until the user has a
   // team_members row, they have no org membership the policies can grant against.
