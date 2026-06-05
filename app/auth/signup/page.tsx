@@ -32,21 +32,53 @@ function SignupForm() {
     setInfo(null);
     setLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, invite_token: invite || undefined } },
+
+    // Create the account server-side. When the service-role key is configured,
+    // the account is created already confirmed so the user can sign in right
+    // away — no email round-trip (Supabase's default mailer doesn't deliver to
+    // arbitrary addresses without SMTP). If the server reports `adminless`, fall
+    // back to the standard client-side signUp + email-confirmation flow.
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password, name, invite: invite || undefined }),
     });
-    if (error) {
+    const result = await res.json().catch(() => ({ error: "Signup failed." }));
+
+    if (!res.ok && !result.adminless) {
       setLoading(false);
-      setErr(error.message);
+      setErr(result.error || "Could not create account.");
       return;
     }
-    if (!data.session) {
-      setLoading(false);
-      setInfo("Check your inbox to confirm your email, then sign in.");
-      return;
+
+    if (result.adminless) {
+      // Standard flow: client signUp triggers the confirmation email (requires
+      // SMTP). If confirmation is disabled, signUp returns a session directly.
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name, invite_token: invite || undefined } },
+      });
+      if (error) {
+        setLoading(false);
+        setErr(error.message);
+        return;
+      }
+      if (!data.session) {
+        setLoading(false);
+        setInfo("Check your inbox to confirm your email, then sign in.");
+        return;
+      }
+    } else {
+      // Account created + confirmed server-side — establish the session now.
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setLoading(false);
+        setErr(error.message);
+        return;
+      }
     }
+
     // Keep spinner active through the redirect
     if (invite) {
       router.push(`/auth/accept?token=${invite}`);
