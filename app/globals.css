@@ -722,8 +722,9 @@ h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.
 .mobile-menu-btn {
   display: none;
   position: fixed;
-  top: 13px;
-  left: 14px;
+  /* Vertically centered within the 44px topbar: (44 - 30) / 2 = 7px. */
+  top: 7px;
+  left: 12px;
   z-index: 40;
   width: 30px;
   height: 30px;
@@ -745,6 +746,12 @@ h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.
 
   .mobile-menu-btn {
     display: flex;
+  }
+
+  /* Make room for the fixed hamburger so the breadcrumbs don't sit under it.
+     Overrides the Topbar header's inline left padding on mobile only. */
+  .app-main > header {
+    padding-left: 52px !important;
   }
 
   /* Sidebar: hidden off-screen by default */
