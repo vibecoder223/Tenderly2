@@ -26,7 +26,12 @@ export type RetrievalResult = {
   usage: { input_tokens: number; output_tokens: number };
 };
 
-const NO_SOURCE_THRESHOLD = 0.4;
+// Calibrated to the jina-reranker-v2 score distribution: genuinely relevant
+// passages commonly score 0.25–0.45 (a perfect security-policy ↔ security-
+// question match measured 0.36). A 0.4 gate rejected good matches and made
+// drafting return "no_source" even when the answer was clearly in the KB.
+// 0.2 keeps real matches while still filtering noise (< 0.2).
+const NO_SOURCE_THRESHOLD = 0.2;
 
 export async function retrieveForQuery(
   supabase: SupabaseClient,
