@@ -449,7 +449,7 @@ h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.
 .input, .textarea, .select {
   width: 100%;
   border: 1px solid var(--border);
-  background: var(--bg-2);
+  background-color: var(--bg-2);
   border-radius: var(--r);
   padding: 7px 10px;
   font-size: var(--text-sm);
@@ -457,16 +457,83 @@ h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.
   outline: none;
   transition: border-color var(--dur-fast) var(--ease),
               box-shadow var(--dur-fast) var(--ease),
-              background var(--dur-fast) var(--ease);
+              background-color var(--dur-fast) var(--ease);
   font-family: inherit;
 }
 .input::placeholder, .textarea::placeholder { color: var(--fg-5); }
 .input:focus, .textarea:focus, .select:focus {
   border-color: var(--accent);
-  background: var(--bg);
+  background-color: var(--bg);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 .textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+
+/* Custom select — strip native OS chrome, draw a Vellum chevron. */
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239b9a94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 13px;
+}
+.select::-ms-expand { display: none; }
+.select:hover { border-color: var(--border-strong); }
+.select:focus {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23347a52' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+.select option { color: var(--fg); background: var(--surface); }
+
+/* ──────────────── Custom popover select (components/Select.tsx) */
+.vselect { position: relative; display: inline-block; }
+.vselect-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  height: 32px;
+  line-height: 1;
+}
+.vselect-trigger:disabled { opacity: 0.55; cursor: not-allowed; }
+.vselect-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vselect-menu {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-3);
+  animation: vselect-in 90ms var(--ease);
+}
+@keyframes vselect-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.vselect-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  color: var(--fg-2);
+  cursor: pointer;
+  user-select: none;
+}
+.vselect-option.active { background: var(--bg-2); color: var(--fg); }
+.vselect-option.selected { color: var(--accent); font-weight: 500; }
+.vselect-option.selected.active { background: var(--accent-tint); }
+.vselect-option svg { flex-shrink: 0; }
 
 .label {
   font-size: var(--text-xs);

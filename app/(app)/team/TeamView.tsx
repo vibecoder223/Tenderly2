@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Select from "@/components/Select";
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 type Member = {
   id: string;
@@ -143,11 +146,17 @@ export default function TeamView({
               </div>
               <div>
                 <label className="label">Role</label>
-                <select className="select" value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                  <option value="viewer">Viewer</option>
-                </select>
+                <Select
+                  value={role}
+                  onChange={setRole}
+                  minWidth={180}
+                  ariaLabel="Invite role"
+                  options={[
+                    { value: "user", label: "User" },
+                    { value: "admin", label: "Admin" },
+                    { value: "viewer", label: "Viewer" },
+                  ]}
+                />
               </div>
               <div>
                 <button type="submit" className="btn btn-primary" disabled={busy || !email}>
@@ -189,7 +198,7 @@ export default function TeamView({
         </div>
       )}
 
-      <div className="card overflow-hidden">
+      <div className="card" style={{ overflow: "visible" }}>
         <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: "var(--divider)" }}>
           <h3 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>
             Members ({members.length})
@@ -225,17 +234,13 @@ export default function TeamView({
                   </td>
                   <td className="px-5 py-3">
                     {editable ? (
-                      <select
-                        className="select"
+                      <Select
                         value={m.role}
                         disabled={rowBusy === m.id || lastOwner}
-                        title={lastOwner ? "Promote another owner before changing the only owner's role" : undefined}
-                        onChange={(e) => changeRole(m.id, e.target.value)}
-                      >
-                        {assignableRoles.map((r) => (
-                          <option key={r} value={r}>{r}</option>
-                        ))}
-                      </select>
+                        ariaLabel="Change member role"
+                        onChange={(v) => changeRole(m.id, v)}
+                        options={assignableRoles.map((r) => ({ value: r, label: cap(r) }))}
+                      />
                     ) : (
                       <span className="badge">{m.role}</span>
                     )}
