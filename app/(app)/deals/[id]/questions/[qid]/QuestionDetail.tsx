@@ -75,6 +75,33 @@ export default function QuestionDetail({
   const [commentsLocal, setCommentsLocal] = useState<Comment[]>(comments);
   const [postingComment, setPostingComment] = useState(false);
   const [autoSave, setAutoSave] = useState<null | "saving" | Date>(null);
+  const [suggestion, setSuggestion] = useState<
+    | { response_text: string; similarity: number; usage_count: number; question_text: string | null }
+    | null
+  >(null);
+  const [reuseDismissed, setReuseDismissed] = useState(false);
+
+  // Reuse: nearest previously-approved answer for this question.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/questions/${question.id}/suggestions`)
+      .then((res) => (res.ok ? res.json() : { suggestions: [] }))
+      .then((d) => {
+        if (!cancelled) setSuggestion(d.suggestions?.[0] ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [question.id]);
+
+  function insertSuggestion() {
+    if (!suggestion) return;
+    setDraft(suggestion.response_text);
+    setReuseDismissed(true);
+    setInfo("Inserted from your answer library. Review and adjust before submitting.");
+    autosaveDraft(suggestion.response_text, tone);
+  }
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const autosaveDraft = useCallback(async (text: string, currentTone: string) => {
@@ -201,6 +228,47 @@ export default function QuestionDetail({
         </header>
 
         <NoSourceBanner flag={r?.gap_flag ?? null} />
+
+        {suggestion && !reuseDismissed && (
+          <div
+            className="card p-4"
+            style={{ borderColor: "var(--accent-line)", background: "var(--accent-tint)" }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] font-semibold" style={{ color: "var(--accent-2)" }}>
+                  Answered before
+                </span>
+                <span className="meta-mono text-[10.5px]" style={{ color: "var(--accent)" }}>
+                  {Math.round(suggestion.similarity * 100)}% match
+                  {suggestion.usage_count > 0 ? ` · used ${suggestion.usage_count}×` : ""}
+                </span>
+              </div>
+              <button
+                onClick={() => setReuseDismissed(true)}
+                className="text-[11px]"
+                style={{ color: "var(--fg-4)" }}
+              >
+                Dismiss
+              </button>
+            </div>
+            <p
+              className="text-[12.5px] mb-3"
+              style={{
+                color: "var(--fg-2)",
+                display: "-webkit-box",
+                WebkitLineClamp: 4,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {suggestion.response_text}
+            </p>
+            <button onClick={insertSuggestion} className="btn btn-primary" disabled={saving}>
+              Insert this answer
+            </button>
+          </div>
+        )}
 
         <div className="card p-5 space-y-3">
           <div className="flex items-center justify-between">

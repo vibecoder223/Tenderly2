@@ -12,10 +12,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { embedTexts, hasEmbeddings } from "./embeddings";
 
-/** Show a Reuse suggestion at/above this question similarity. */
-export const LIBRARY_SUGGEST_MIN = 0.85;
+/**
+ * Show a Reuse suggestion at/above this question similarity. Jina v3 lands
+ * genuine RFP paraphrases around 0.78–0.90, so this is intentionally permissive
+ * — the human decides via the Reuse card. (Verbatim auto-reuse uses the much
+ * stricter LIBRARY_REUSE_MIN below.)
+ */
+export const LIBRARY_SUGGEST_MIN = 0.78;
 /** On capture, update an existing row instead of inserting at/above this. */
 export const LIBRARY_DEDUPE_MIN = 0.92;
+/**
+ * At/above this similarity the generator skips the LLM entirely and drafts the
+ * stored approved answer verbatim — it's a near-identical question a human
+ * already signed off on. Still routed to review so a person confirms the match.
+ */
+export const LIBRARY_REUSE_MIN = 0.9;
 
 export type AnswerMatch = {
   id: string;
@@ -120,5 +131,28 @@ export async function suggestAnswers(
     return (data ?? []) as AnswerMatch[];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Record that a library answer was reused: bump usage_count and last_used_at.
+ * Best-effort — never throws, never blocks the caller.
+ */
+export async function recordReuse(supabase: SupabaseClient, id: string): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from("response_library")
+      .select("usage_count")
+      .eq("id", id)
+      .maybeSingle();
+    await supabase
+      .from("response_library")
+      .update({
+        usage_count: ((data?.usage_count as number) ?? 0) + 1,
+        last_used_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+  } catch {
+    // ignore
   }
 }

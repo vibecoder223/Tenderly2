@@ -6,6 +6,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { callGroqText, MODEL_FAST, hasLlmKey } from "./groq";
 import { isNoSource, retrieveForQuery, type Candidate } from "./retrieval";
+import { suggestAnswers, recordReuse, LIBRARY_REUSE_MIN } from "./answer-library";
 
 const PROMPTS = {
   generator_system_v1: `You are a proposal writer at the customer's company. You write answers to RFP requirements in the customer's own voice, drawing exclusively from the source chunks provided. You never invent facts. You never speculate. You never use external knowledge.
@@ -43,6 +44,38 @@ export async function generateAndPersistAnswer(
 ): Promise<GenerationUsage> {
   let totalIn = 0;
   let totalOut = 0;
+
+  // 0. Library-first. If a near-identical question was already approved for this
+  // org, draft that approved answer verbatim and skip retrieval + the LLM
+  // entirely — faster, free, and consistent with what a human already signed
+  // off. Still routed to review so a person confirms the reuse. Cross-tenant
+  // safety is enforced inside match_answers (org-scoped).
+  const libMatches = await suggestAnswers(supabase, {
+    org_id: args.org_id,
+    question_text: args.question_text,
+    limit: 1,
+  });
+  const reuse = libMatches[0];
+  if (
+    reuse &&
+    reuse.similarity >= LIBRARY_REUSE_MIN &&
+    reuse.source_question_id !== args.question_id &&
+    reuse.response_text?.trim()
+  ) {
+    await upsertResponse(supabase, {
+      question_id: args.question_id,
+      answer_text_with_markers: reuse.response_text,
+      answer_text_clean: reuse.response_text,
+      tone: args.tone || "technical",
+      confidence: 0.95,
+      gap_flag: "ok",
+      status: "requires_review",
+      generated_by: "ai",
+      citations: [],
+    });
+    void recordReuse(supabase, reuse.id);
+    return { input_tokens: totalIn, output_tokens: totalOut };
+  }
 
   // 1. Retrieve
   const retrieval = await retrieveForQuery(supabase, {
