@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Select from "@/components/Select";
 
 type T = {
   id: string;
@@ -1208,9 +1209,12 @@ function TextTemplateForm({
         </div>
         <div>
           <label className="label">Font</label>
-          <select className="select" value={form.font_family} onChange={(e) => setForm({ ...form, font_family: e.target.value })}>
-            {FONTS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
-          </select>
+          <Select
+            value={form.font_family}
+            onChange={(v) => setForm({ ...form, font_family: v })}
+            fullWidth
+            options={FONTS.map((f) => ({ value: f.value, label: f.label }))}
+          />
         </div>
         <div>
           <label className="label">Default</label>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { DealFieldDef } from "@/lib/deal-fields";
+import Select from "@/components/Select";
 
 export type Person = { user_id: string; name: string | null; email: string };
 
@@ -46,19 +47,23 @@ export default function CustomFieldInputs({
           <div key={d.key}>
             {labelEl}
             {d.type === "select" ? (
-              <select className="input" value={(v as string) ?? ""} onChange={(e) => onChange(d.key, e.target.value)}>
-                <option value="">—</option>
-                {(d.options ?? []).map((o) => (
-                  <option key={o} value={o}>{o}</option>
-                ))}
-              </select>
+              <Select
+                value={(v as string) ?? ""}
+                onChange={(val) => onChange(d.key, val)}
+                fullWidth
+                triggerClassName="input"
+                placeholder="—"
+                options={[{ value: "", label: "—" }, ...(d.options ?? []).map((o) => ({ value: o, label: o }))]}
+              />
             ) : d.type === "person" ? (
-              <select className="input" value={(v as string) ?? ""} onChange={(e) => onChange(d.key, e.target.value)}>
-                <option value="">—</option>
-                {(people ?? []).map((p) => (
-                  <option key={p.user_id} value={p.user_id}>{p.name || p.email}</option>
-                ))}
-              </select>
+              <Select
+                value={(v as string) ?? ""}
+                onChange={(val) => onChange(d.key, val)}
+                fullWidth
+                triggerClassName="input"
+                placeholder="—"
+                options={[{ value: "", label: "—" }, ...(people ?? []).map((p) => ({ value: p.user_id, label: p.name || p.email }))]}
+              />
             ) : (
               <input
                 className={`input${d.type === "number" || d.type === "currency" ? " mono" : ""}`}

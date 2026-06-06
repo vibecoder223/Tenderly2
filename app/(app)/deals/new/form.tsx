@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CustomFieldInputs, { type Person } from "@/components/CustomFieldInputs";
+import Select from "@/components/Select";
 import {
   coerceValue,
   firstMissingRequired,
@@ -230,9 +231,13 @@ function AddFieldInline({ onAdded }: { onAdded: (def: DealFieldDef) => void }) {
         </div>
         <div>
           <label className="label">Type</label>
-          <select className="input" value={type} onChange={(e) => setType(e.target.value as FieldType)}>
-            {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
+          <Select
+            value={type}
+            onChange={(v) => setType(v as FieldType)}
+            fullWidth
+            triggerClassName="input"
+            options={FIELD_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+          />
         </div>
       </div>
 

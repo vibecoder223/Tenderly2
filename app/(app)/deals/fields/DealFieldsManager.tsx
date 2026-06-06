@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/Select";
 import { FIELD_TYPES, type DealFieldDef, type FieldType } from "@/lib/deal-fields";
 
 export default function DealFieldsManager({
@@ -149,11 +150,13 @@ export default function DealFieldsManager({
             </div>
             <div>
               <label className="label">Type</label>
-              <select className="input" value={type} onChange={(e) => setType(e.target.value as FieldType)}>
-                {FIELD_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+              <Select
+                value={type}
+                onChange={(v) => setType(v as FieldType)}
+                fullWidth
+                triggerClassName="input"
+                options={FIELD_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+              />
             </div>
           </div>
 

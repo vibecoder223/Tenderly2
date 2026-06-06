@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Select from "@/components/Select";
 
 export default function LibraryForm() {
   const router = useRouter();
@@ -34,13 +35,18 @@ export default function LibraryForm() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Category</label>
-          <select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="general">General</option>
-            <option value="technical">Technical</option>
-            <option value="compliance">Compliance</option>
-            <option value="commercial">Commercial</option>
-            <option value="operational">Operational</option>
-          </select>
+          <Select
+            value={category}
+            onChange={setCategory}
+            fullWidth
+            options={[
+              { value: "general", label: "General" },
+              { value: "technical", label: "Technical" },
+              { value: "compliance", label: "Compliance" },
+              { value: "commercial", label: "Commercial" },
+              { value: "operational", label: "Operational" },
+            ]}
+          />
         </div>
         <div>
           <label className="label">Keyword / topic</label>

@@ -9,6 +9,7 @@ import {
   NoSourceBanner,
   type CitationItem,
 } from "@/components/CitationChips";
+import Select from "@/components/Select";
 
 type Member = { user_id: string; name: string | null; email: string };
 type Comment = {
@@ -319,27 +320,32 @@ export default function QuestionDetail({
           <h3 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>Properties</h3>
           <div>
             <label className="label">Assignee</label>
-            <select
-              className="select"
+            <Select
               value={question.assigned_to ?? ""}
-              onChange={(e) => assignTo(e.target.value)}
-            >
-              <option value="">Unassigned</option>
-              {members.map((m) => (
-                <option key={m.user_id} value={m.user_id}>
-                  {m.name || m.email}
-                  {m.user_id === currentUser.id ? " (you)" : ""}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => assignTo(v)}
+              fullWidth
+              placeholder="Unassigned"
+              options={[
+                { value: "", label: "Unassigned" },
+                ...members.map((m) => ({
+                  value: m.user_id,
+                  label: `${m.name || m.email}${m.user_id === currentUser.id ? " (you)" : ""}`,
+                })),
+              ]}
+            />
           </div>
           <div>
             <label className="label">Tone</label>
-            <select className="select" value={tone} onChange={(e) => setTone(e.target.value)}>
-              <option value="formal">Formal</option>
-              <option value="technical">Technical</option>
-              <option value="consultative">Consultative</option>
-            </select>
+            <Select
+              value={tone}
+              onChange={setTone}
+              fullWidth
+              options={[
+                { value: "formal", label: "Formal" },
+                { value: "technical", label: "Technical" },
+                { value: "consultative", label: "Consultative" },
+              ]}
+            />
           </div>
           <Row label="Status" value={question.status.replace(/_/g, " ")} />
           <Row label="Topic" value={requirement?.topic ?? question.category ?? "—"} />

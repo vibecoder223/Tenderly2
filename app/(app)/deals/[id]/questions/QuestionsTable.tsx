@@ -10,6 +10,7 @@ import {
   NoSourceBanner,
   type CitationItem,
 } from "@/components/CitationChips";
+import Select from "@/components/Select";
 
 /* ─── shared types ──────────────────────────────────────────────────────── */
 
@@ -216,16 +217,13 @@ export default function QuestionsTable({
           }}
         >
           {documents.length > 1 && (
-            <select
-              className="select"
+            <Select
+              fullWidth
               style={{ fontSize: 12 }}
               value={currentDocId ?? ""}
-              onChange={(e) => router.push(`/deals/${dealId}/questions?doc=${e.target.value}`)}
-            >
-              {documents.map((d) => (
-                <option key={d.id} value={d.id}>{d.filename}</option>
-              ))}
-            </select>
+              onChange={(v) => router.push(`/deals/${dealId}/questions?doc=${v}`)}
+              options={documents.map((d) => ({ value: d.id, label: d.filename }))}
+            />
           )}
           <input
             className="input"
@@ -235,18 +233,27 @@ export default function QuestionsTable({
             onChange={(e) => setSearch(e.target.value)}
           />
           <div style={{ display: "flex", gap: 6 }}>
-            <select className="select" style={{ flex: 1, fontSize: 11.5, padding: "5px 8px" }} value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="all">All statuses</option>
-              <option value="todo">To do</option>
-              <option value="drafting">Drafting</option>
-              <option value="review">In review</option>
-              <option value="approved">Approved</option>
-              <option value="blocked">Blocked</option>
-            </select>
-            <select className="select" style={{ flex: 1, fontSize: 11.5, padding: "5px 8px" }} value={topic} onChange={(e) => setTopic(e.target.value)}>
-              <option value="all">All topics</option>
-              {topics.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <Select
+              wrapperStyle={{ flex: 1 }}
+              style={{ fontSize: 11.5, padding: "5px 8px" }}
+              value={status}
+              onChange={setStatus}
+              options={[
+                { value: "all", label: "All statuses" },
+                { value: "todo", label: "To do" },
+                { value: "drafting", label: "Drafting" },
+                { value: "review", label: "In review" },
+                { value: "approved", label: "Approved" },
+                { value: "blocked", label: "Blocked" },
+              ]}
+            />
+            <Select
+              wrapperStyle={{ flex: 1 }}
+              style={{ fontSize: 11.5, padding: "5px 8px" }}
+              value={topic}
+              onChange={setTopic}
+              options={[{ value: "all", label: "All topics" }, ...topics.map((t) => ({ value: t, label: t }))]}
+            />
           </div>
           <div style={{ fontSize: 11, color: "var(--fg-5)", textAlign: "right" }}>
             {filtered.length} of {questions.length}
@@ -614,19 +621,19 @@ function QuestionDetailInline({
         {/* Assignee */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 11, color: "var(--fg-4)", fontWeight: 500 }}>Assignee</span>
-          <select
-            className="select"
+          <Select
             style={{ fontSize: 12, padding: "3px 7px", height: 26, borderRadius: 5 }}
             value={assignedTo ?? ""}
-            onChange={(e) => assignTo(e.target.value)}
-          >
-            <option value="">Unassigned</option>
-            {members.map((m) => (
-              <option key={m.user_id} value={m.user_id}>
-                {m.name || m.email}{m.user_id === currentUser.id ? " (you)" : ""}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => assignTo(v)}
+            placeholder="Unassigned"
+            options={[
+              { value: "", label: "Unassigned" },
+              ...members.map((m) => ({
+                value: m.user_id,
+                label: `${m.name || m.email}${m.user_id === currentUser.id ? " (you)" : ""}`,
+              })),
+            ]}
+          />
         </div>
 
         <div style={{ width: 1, height: 16, background: "var(--divider)" }} />
@@ -634,16 +641,16 @@ function QuestionDetailInline({
         {/* Tone */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 11, color: "var(--fg-4)", fontWeight: 500 }}>Tone</span>
-          <select
-            className="select"
+          <Select
             style={{ fontSize: 12, padding: "3px 7px", height: 26, borderRadius: 5 }}
             value={tone}
-            onChange={(e) => setTone(e.target.value)}
-          >
-            <option value="formal">Formal</option>
-            <option value="technical">Technical</option>
-            <option value="consultative">Consultative</option>
-          </select>
+            onChange={setTone}
+            options={[
+              { value: "formal", label: "Formal" },
+              { value: "technical", label: "Technical" },
+              { value: "consultative", label: "Consultative" },
+            ]}
+          />
         </div>
 
         <div style={{ width: 1, height: 16, background: "var(--divider)" }} />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CustomFieldInputs, { type Person } from "@/components/CustomFieldInputs";
+import Select from "@/components/Select";
 import {
   coerceValue,
   firstMissingRequired,
@@ -129,9 +130,13 @@ export default function DealDetailsCard({
             </div>
             <div>
               <label className="label">Status</label>
-              <select className="input" value={core.status} onChange={(e) => setCore({ ...core, status: e.target.value })}>
-                {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              <Select
+                value={core.status}
+                onChange={(v) => setCore({ ...core, status: v })}
+                fullWidth
+                triggerClassName="input"
+                options={STATUS_OPTIONS.map((s) => ({ value: s.value, label: s.label }))}
+              />
             </div>
           </div>
 

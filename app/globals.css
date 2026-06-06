@@ -492,13 +492,20 @@ h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.
 .vselect-trigger {
   display: flex;
   align-items: center;
+  gap: 6px;
   width: 100%;
   text-align: left;
-  height: 32px;
+  min-height: 32px;
   line-height: 1;
+  /* The component draws its own chevron, so suppress the .select bg chevron and
+     its reserved right padding. */
+  background-image: none !important;
+  padding-right: 9px;
 }
 .vselect-trigger:disabled { opacity: 0.55; cursor: not-allowed; }
-.vselect-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vselect-value { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vselect-chevron { flex-shrink: 0; color: var(--fg-4); transition: color var(--dur-fast) var(--ease); }
+.vselect-trigger[aria-expanded="true"] .vselect-chevron { color: var(--accent); }
 .vselect-menu {
   position: absolute;
   z-index: 50;

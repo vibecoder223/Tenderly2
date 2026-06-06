@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
+import Select from "@/components/Select";
 
 type Deal = {
   id: string;
@@ -150,35 +151,13 @@ function FilterChip({
 }) {
   const isActive = value !== "all";
   return (
-    <div style={{ position: "relative" }}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`filter-chip${isActive ? " active" : ""}`}
-        style={{
-          appearance: "none",
-          paddingRight: 24,
-          cursor: "pointer",
-        }}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {label}: {o.label}
-          </option>
-        ))}
-      </select>
-      <svg
-        width="9" height="9" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" strokeWidth="2.5"
-        style={{
-          position: "absolute", right: 8, top: "50%",
-          transform: "translateY(-50%)", pointerEvents: "none",
-          color: isActive ? "var(--accent)" : "var(--fg-5)",
-        }}
-      >
-        <polyline points="6 9 12 15 18 9" />
-      </svg>
-    </div>
+    <Select
+      value={value}
+      onChange={onChange}
+      triggerClassName={`filter-chip${isActive ? " active" : ""}`}
+      ariaLabel={label}
+      options={options.map((o) => ({ value: o.value, label: `${label}: ${o.label}` }))}
+    />
   );
 }
 

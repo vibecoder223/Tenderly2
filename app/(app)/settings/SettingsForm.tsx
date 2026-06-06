@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Select from "@/components/Select";
 
 export default function SettingsForm({
   orgName,
@@ -51,11 +52,16 @@ export default function SettingsForm({
       </div>
       <div>
         <label className="label">Default tone</label>
-        <select className="select" value={tone} onChange={(e) => setTone(e.target.value)}>
-          <option value="formal">Formal</option>
-          <option value="technical">Technical</option>
-          <option value="consultative">Consultative</option>
-        </select>
+        <Select
+          value={tone}
+          onChange={setTone}
+          fullWidth
+          options={[
+            { value: "formal", label: "Formal" },
+            { value: "technical", label: "Technical" },
+            { value: "consultative", label: "Consultative" },
+          ]}
+        />
       </div>
       <div>
         <label className="label">Claude model</label>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Select from "@/components/Select";
 
 type Doc = { id: string; filename: string; total: number; approved: number };
 type Template = { id: string; name: string; kind: string | null; is_default: boolean };
@@ -197,14 +198,19 @@ export default function ExportControls({
       <div>
         <label className="text-[12px] font-medium block mb-2" style={{ color: "var(--fg-3)" }}>Branding template</label>
         <div className="flex items-center gap-2 flex-wrap">
-          <select className="select" style={{ width: 280 }} value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-            <option value="">— None (plain output) —</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.kind === "docx" ? "📄 " : ""}{t.name}{t.is_default ? " (default)" : ""}{t.kind === "docx" ? " — golden .docx" : ""}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={templateId}
+            onChange={setTemplateId}
+            wrapperStyle={{ width: 280 }}
+            placeholder="— None (plain output) —"
+            options={[
+              { value: "", label: "— None (plain output) —" },
+              ...templates.map((t) => ({
+                value: t.id,
+                label: `${t.kind === "docx" ? "📄 " : ""}${t.name}${t.is_default ? " (default)" : ""}${t.kind === "docx" ? " — golden .docx" : ""}`,
+              })),
+            ]}
+          />
           <a href="/templates" className="text-[11.5px]" style={{ color: "var(--accent)" }}>Manage templates →</a>
         </div>
         {templateId && templates.find((t) => t.id === templateId)?.kind === "docx" && (
@@ -217,10 +223,15 @@ export default function ExportControls({
       {/* Citation style */}
       <div className="flex items-center gap-3">
         <label className="text-[12px]" style={{ color: "var(--fg-3)" }}>Citation style:</label>
-        <select className="select" style={{ width: 160 }} value={citationStyle} onChange={(e) => setCitationStyle(e.target.value as "inline" | "footnote")}>
-          <option value="inline">Inline</option>
-          <option value="footnote">Footnotes</option>
-        </select>
+        <Select
+          value={citationStyle}
+          onChange={(v) => setCitationStyle(v as "inline" | "footnote")}
+          wrapperStyle={{ width: 160 }}
+          options={[
+            { value: "inline", label: "Inline" },
+            { value: "footnote", label: "Footnotes" },
+          ]}
+        />
       </div>
 
       {/* Actions */}

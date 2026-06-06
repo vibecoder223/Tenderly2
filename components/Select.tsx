@@ -16,6 +16,11 @@ export default function Select({
   disabled,
   minWidth = 108,
   ariaLabel,
+  fullWidth,
+  triggerClassName = "select",
+  style,
+  wrapperStyle,
+  placeholder = "Select…",
 }: {
   value: string;
   options: SelectOption[];
@@ -23,6 +28,14 @@ export default function Select({
   disabled?: boolean;
   minWidth?: number;
   ariaLabel?: string;
+  fullWidth?: boolean;
+  /** Base class for the trigger button (e.g. "select", "input", "filter-chip"). */
+  triggerClassName?: string;
+  /** Inline style applied to the trigger button (fontSize, padding, height…). */
+  style?: React.CSSProperties;
+  /** Inline style applied to the wrapper (flex, width…). */
+  wrapperStyle?: React.CSSProperties;
+  placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -73,10 +86,15 @@ export default function Select({
   }
 
   return (
-    <div ref={rootRef} className="vselect" style={{ minWidth }}>
+    <div
+      ref={rootRef}
+      className="vselect"
+      style={{ ...(fullWidth ? { width: "100%" } : { minWidth }), ...wrapperStyle }}
+    >
       <button
         type="button"
-        className="vselect-trigger select"
+        className={`vselect-trigger ${triggerClassName}`}
+        style={style}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -84,7 +102,10 @@ export default function Select({
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onKey}
       >
-        <span className="vselect-value">{selected?.label ?? "Select…"}</span>
+        <span className="vselect-value">{selected?.label ?? placeholder}</span>
+        <svg className="vselect-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
       {open && (
         <ul className="vselect-menu" role="listbox">
