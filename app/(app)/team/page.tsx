@@ -42,6 +42,7 @@ export default async function TeamPage() {
           members={(members ?? []) as any[]}
           invites={(invites ?? []) as any[]}
           currentUserId={user.id}
+          currentUserRole={member.role}
           canInvite={canInvite}
         />
       </div>

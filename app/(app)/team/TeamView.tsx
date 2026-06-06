@@ -22,15 +22,19 @@ type Invite = {
   token: string;
 };
 
+const ROLE_OPTIONS = ["owner", "admin", "user", "viewer"];
+
 export default function TeamView({
   members,
   invites,
   currentUserId,
+  currentUserRole,
   canInvite,
 }: {
   members: Member[];
   invites: Invite[];
   currentUserId: string;
+  currentUserRole: string;
   canInvite: boolean;
 }) {
   const router = useRouter();
@@ -38,9 +42,47 @@ export default function TeamView({
   const [role, setRole] = useState("user");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [generated, setGenerated] = useState<{ url: string; email: string } | null>(null);
+  const [generated, setGenerated] = useState<{ url: string; email: string; reused?: boolean; emailed?: boolean; emailError?: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+  const [rowErr, setRowErr] = useState<string | null>(null);
   const [origin, setOrigin] = useState("");
+
+  const isOwner = currentUserRole === "owner";
+  const canManage = ["owner", "admin"].includes(currentUserRole);
+  // Owners can assign any role; admins can't grant or change owner status.
+  const assignableRoles = isOwner ? ROLE_OPTIONS : ROLE_OPTIONS.filter((r) => r !== "owner");
+
+  async function changeRole(id: string, newRole: string) {
+    setRowErr(null);
+    setRowBusy(id);
+    const res = await fetch(`/api/team/member/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ role: newRole }),
+    });
+    setRowBusy(null);
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({ error: "Failed" }));
+      setRowErr(error || "Could not change role.");
+      return;
+    }
+    router.refresh();
+  }
+
+  async function removeMember(id: string, label: string) {
+    if (!confirm(`Remove ${label} from this workspace?`)) return;
+    setRowErr(null);
+    setRowBusy(id);
+    const res = await fetch(`/api/team/member/${id}`, { method: "DELETE" });
+    setRowBusy(null);
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({ error: "Failed" }));
+      setRowErr(error || "Could not remove member.");
+      return;
+    }
+    router.refresh();
+  }
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
@@ -61,7 +103,7 @@ export default function TeamView({
       setErr(j.error || "Failed");
       return;
     }
-    setGenerated({ url: j.url, email });
+    setGenerated({ url: j.url, email, reused: j.reused, emailed: j.emailed, emailError: j.emailError });
     setEmail("");
     router.refresh();
   }
@@ -118,8 +160,19 @@ export default function TeamView({
           {generated && (
             <div className="mt-4 p-3 rounded" style={{ background: "var(--accent-tint)" }}>
               <div className="text-[12px] mb-1.5" style={{ color: "var(--accent-2)" }}>
-                Share this link with <span className="mono">{generated.email}</span>:
+                {generated.emailed
+                  ? `✓ Invite emailed to `
+                  : generated.reused
+                  ? "A pending invite already exists — re-share this link with "
+                  : "Share this link with "}
+                <span className="mono">{generated.email}</span>
+                {generated.emailed ? "." : ":"}
               </div>
+              {!generated.emailed && generated.emailError && (
+                <div className="text-[11px] mb-1.5" style={{ color: "var(--fg-4)" }}>
+                  (Email didn’t send: {generated.emailError}. Share the link manually.)
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <input
                   readOnly
@@ -137,10 +190,11 @@ export default function TeamView({
       )}
 
       <div className="card overflow-hidden">
-        <div className="px-5 py-3.5 border-b" style={{ borderColor: "var(--divider)" }}>
+        <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: "var(--divider)" }}>
           <h3 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>
             Members ({members.length})
           </h3>
+          {rowErr && <span className="text-xs" style={{ color: "var(--err)" }}>{rowErr}</span>}
         </div>
         <table className="w-full text-[13px]">
           <thead>
@@ -149,26 +203,62 @@ export default function TeamView({
               <th className="text-left font-medium px-5 py-2.5">Email</th>
               <th className="text-left font-medium px-5 py-2.5">Role</th>
               <th className="text-left font-medium px-5 py-2.5">Joined</th>
+              {canManage && <th className="text-right font-medium px-5 py-2.5"></th>}
             </tr>
           </thead>
           <tbody>
-            {members.map((m) => (
-              <tr key={m.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
-                <td className="px-5 py-3 font-medium" style={{ color: "var(--fg)" }}>
-                  {m.name || "—"}
-                  {m.user_id === currentUserId && (
-                    <span className="text-[11px] ml-2" style={{ color: "var(--fg-4)" }}>(you)</span>
+            {members.map((m) => {
+              const isSelf = m.user_id === currentUserId;
+              // Admins can't modify owners; owners can modify anyone.
+              const editable = canManage && (m.role !== "owner" || isOwner);
+              const lastOwner = m.role === "owner" && members.filter((x) => x.role === "owner").length <= 1;
+              return (
+                <tr key={m.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
+                  <td className="px-5 py-3 font-medium" style={{ color: "var(--fg)" }}>
+                    {m.name || "—"}
+                    {isSelf && (
+                      <span className="text-[11px] ml-2" style={{ color: "var(--fg-4)" }}>(you)</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 mono text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                    {m.email}
+                  </td>
+                  <td className="px-5 py-3">
+                    {editable ? (
+                      <select
+                        className="select"
+                        value={m.role}
+                        disabled={rowBusy === m.id || lastOwner}
+                        title={lastOwner ? "Promote another owner before changing the only owner's role" : undefined}
+                        onChange={(e) => changeRole(m.id, e.target.value)}
+                      >
+                        {assignableRoles.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="badge">{m.role}</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3" style={{ color: "var(--fg-4)" }}>
+                    {m.created_at.slice(0, 10)}
+                  </td>
+                  {canManage && (
+                    <td className="px-5 py-3 text-right">
+                      {editable && !isSelf && !lastOwner && (
+                        <button
+                          className="btn btn-danger"
+                          disabled={rowBusy === m.id}
+                          onClick={() => removeMember(m.id, m.name || m.email)}
+                        >
+                          {rowBusy === m.id ? "…" : "Remove"}
+                        </button>
+                      )}
+                    </td>
                   )}
-                </td>
-                <td className="px-5 py-3 mono text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                  {m.email}
-                </td>
-                <td className="px-5 py-3"><span className="badge">{m.role}</span></td>
-                <td className="px-5 py-3" style={{ color: "var(--fg-4)" }}>
-                  {m.created_at.slice(0, 10)}
-                </td>
-              </tr>
-            ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

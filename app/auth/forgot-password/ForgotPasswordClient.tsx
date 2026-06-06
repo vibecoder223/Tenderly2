@@ -23,19 +23,34 @@ export default function ForgotPasswordClient() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-    const supabase = createClient();
-    // Recovery uses the implicit flow (tokens land in the URL fragment), so the
-    // link must point at a client page that can read the fragment — not the
-    // server callback, which only handles the PKCE ?code= flow. RecoveryRedirect
-    // is the safety net if Supabase falls back to the Site URL.
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${getSiteUrl()}/auth/reset-password`,
-    });
-    setLoading(false);
-    if (error) {
-      setErr(error.message);
-      return;
+
+    // Primary path: server mints the recovery link and emails it via Resend
+    // (Supabase's own mailer can't deliver without SMTP). The response is always
+    // ok and reveals nothing about whether the account exists.
+    let fallback = false;
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const j = await res.json().catch(() => ({}));
+      fallback = !!j.fallback;
+    } catch {
+      fallback = true;
     }
+
+    // Fallback (no Resend / no service role): let Supabase try its own flow. The
+    // link still lands on the implicit-flow fragment that RecoveryRedirect
+    // forwards to /auth/reset-password.
+    if (fallback) {
+      const supabase = createClient();
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${getSiteUrl()}/auth/reset-password`,
+      });
+    }
+
+    setLoading(false);
     setSent(true);
   }
 
