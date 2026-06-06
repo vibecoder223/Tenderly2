@@ -52,5 +52,17 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Already-authenticated users have no business on the login or signup screens —
+  // send them into the app (or to their intended ?next= target). Other /auth
+  // pages are intentionally reachable while signed in: reset-password (recovery
+  // session), onboarding (authed but no org yet), and accept (invite).
+  if (user && (path === "/auth/login" || path === "/auth/signup")) {
+    const url = request.nextUrl.clone();
+    const next = request.nextUrl.searchParams.get("next");
+    url.pathname = next && next.startsWith("/") ? next : "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }

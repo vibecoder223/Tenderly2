@@ -24,12 +24,14 @@ function SignupForm() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [exists, setExists] = useState(false); // email already has an account
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setInfo(null);
+    setExists(false);
     setLoading(true);
     const supabase = createClient();
 
@@ -47,6 +49,7 @@ function SignupForm() {
 
     if (!res.ok && !result.adminless) {
       setLoading(false);
+      if (res.status === 409) setExists(true); // surface a one-click sign-in link
       setErr(result.error || "Could not create account.");
       return;
     }
@@ -127,6 +130,16 @@ function SignupForm() {
           />
         </div>
         {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
+        {exists && (
+          <div className="text-xs">
+            <Link
+              href={`/auth/login?email=${encodeURIComponent(email)}${invite ? `&next=${encodeURIComponent(`/auth/accept?token=${invite}`)}` : ""}`}
+              style={{ color: "var(--accent)" }}
+            >
+              Sign in to your account →
+            </Link>
+          </div>
+        )}
         {info && <div className="text-xs" style={{ color: "var(--ok)" }}>{info}</div>}
         <button type="submit" className="btn btn-primary w-full justify-center mt-2" disabled={loading}>
           {loading ? (

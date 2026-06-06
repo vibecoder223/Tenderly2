@@ -1,9 +1,19 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
+
+// Stores the last email a user successfully signed in with, so returning
+// visitors don't retype it. Browser autofill is unreliable across sessions;
+// this is an explicit, predictable prefill.
+const LAST_EMAIL_KEY = "tenderly:last-email";
+
+// The Google provider is disabled in Supabase unless explicitly enabled, so the
+// button is hidden by default to avoid a dead-end "provider not enabled" error.
+// Set NEXT_PUBLIC_ENABLE_GOOGLE=true once the provider is configured.
+const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_GOOGLE === "true";
 
 // Map raw Supabase auth errors to actionable, human copy.
 function friendlyAuthError(msg: string): string {
@@ -30,7 +40,9 @@ function LoginForm() {
   const params = useSearchParams();
   const next = params.get("next") || "/dashboard";
 
-  const [email, setEmail] = useState("");
+  // Prefer an explicit ?email= (e.g. forwarded from signup "account exists"),
+  // otherwise fall back to the last remembered email once on mount.
+  const [email, setEmail] = useState(params.get("email") || "");
   const [password, setPassword] = useState("");
   // Surface errors handed back by the auth callback (e.g. an expired magic /
   // recovery link redirects here with ?error=…). Without this the message is
@@ -38,6 +50,18 @@ function LoginForm() {
   const [err, setErr] = useState<string | null>(params.get("error"));
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (params.get("email")) return; // explicit param wins
+    try {
+      const remembered = localStorage.getItem(LAST_EMAIL_KEY);
+      if (remembered) setEmail(remembered);
+    } catch {
+      // localStorage unavailable (private mode) — no prefill, no harm.
+    }
+    // Run once on mount; params is stable for this render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +77,11 @@ function LoginForm() {
       setLoading(false);
       setErr(friendlyAuthError(error.message));
       return;
+    }
+    try {
+      localStorage.setItem(LAST_EMAIL_KEY, email);
+    } catch {
+      // ignore — remembering the email is best-effort.
     }
     // Keep spinner active through the redirect
     router.push(next);
@@ -135,6 +164,7 @@ function LoginForm() {
           ) : "Sign in"}
         </button>
       </form>
+      {GOOGLE_ENABLED && (
       <div className="mt-4">
         <button
           type="button"
@@ -171,6 +201,7 @@ function LoginForm() {
           )}
         </button>
       </div>
+      )}
       <div className="text-xs text-center mt-5" style={{ color: "var(--fg-4)" }}>
         New here?{" "}
         <Link href="/auth/signup" style={{ color: "var(--accent)" }}>Create an account</Link>
