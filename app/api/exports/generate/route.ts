@@ -376,7 +376,8 @@ export async function POST(req: Request) {
 
   if (format === "docx") {
     if (!usedGoldenTemplate) {
-      const accentColor = template?.accent_color?.replace("#", "") ?? "1F7A53";
+      // Default to the Vellum forest accent when a template doesn't set one.
+      const accentColor = template?.accent_color?.replace("#", "") ?? "1F6F43";
       if (merge) {
         buf = await renderDocx(exportable, {
           deal_name: deal.name,

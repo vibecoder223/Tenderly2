@@ -35,7 +35,7 @@ export type ExportOptions = {
    * rendered BEFORE the Q&A block. Each has a heading + body text.
    */
   proposalSections?: { heading: string; content: string }[];
-  /** Accent color hex (no #) for headings, defaults to 3B47D6 */
+  /** Accent color hex (no #) for headings, defaults to 1F6F43 */
   accentColor?: string;
   /** Optional template logo (raw bytes + extension) rendered at top of doc. */
   logo?: { buffer: Buffer; ext: "png" | "jpg" } | null;
@@ -66,10 +66,10 @@ export async function renderDocx(
     new Paragraph({
       heading: HeadingLevel.TITLE,
       alignment: AlignmentType.LEFT,
-      children: [new TextRun({ text: "RFP Response", bold: true, size: 48 })],
+      children: [new TextRun({ text: "RFP Response", bold: true, size: 48, color: "1A1A17" })],
     }),
     new Paragraph({
-      children: [new TextRun({ text: opts.deal_name, size: 28, color: "5B6478" })],
+      children: [new TextRun({ text: opts.deal_name, size: 28, color: "6B6862" })],
       spacing: { after: 100 },
     })
   );
@@ -77,7 +77,7 @@ export async function renderDocx(
     titleParas.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `Prepared for ${opts.client_name}`, size: 22, color: "8A93A6" }),
+          new TextRun({ text: `Prepared for ${opts.client_name}`, size: 22, color: "9B9A94" }),
         ],
       })
     );
@@ -86,7 +86,7 @@ export async function renderDocx(
     titleParas.push(
       new Paragraph({
         children: [
-          new TextRun({ text: `Submitted by ${opts.org_name}`, size: 22, color: "8A93A6" }),
+          new TextRun({ text: `Submitted by ${opts.org_name}`, size: 22, color: "9B9A94" }),
         ],
       })
     );
@@ -101,7 +101,7 @@ export async function renderDocx(
             day: "numeric",
           }),
           size: 20,
-          color: "8A93A6",
+          color: "9B9A94",
         }),
       ],
       spacing: { after: 600 },
@@ -109,7 +109,7 @@ export async function renderDocx(
   );
 
   const bodyParas: Paragraph[] = [];
-  const accent = opts.accentColor ?? "3B47D6";
+  const accent = opts.accentColor ?? "1F6F43";
   // Footnote refs are numbered across the whole doc.
   let footnoteCounter = 0;
   let footnoteSourceList: ExportQuestion[] = [];
@@ -141,7 +141,7 @@ export async function renderDocx(
         if (q.requirement_id) {
           out.push(
             new Paragraph({
-              children: [new TextRun({ text: q.requirement_id, bold: true, color: "3B47D6", size: 20 })],
+              children: [new TextRun({ text: q.requirement_id, bold: true, color: "1F6F43", size: 20 })],
               spacing: { before: 240, after: 60 },
             })
           );
@@ -149,7 +149,7 @@ export async function renderDocx(
         out.push(
           new Paragraph({
             heading: HeadingLevel.HEADING_2,
-            children: [new TextRun({ text: q.question_text, bold: true, size: 24 })],
+            children: [new TextRun({ text: q.question_text, bold: true, size: 24, color: "1A1A17" })],
             spacing: { after: 120 },
           })
         );
@@ -160,7 +160,7 @@ export async function renderDocx(
                 new TextRun({
                   text: "No source found in the knowledge base. This requirement requires human review before submission.",
                   italics: true,
-                  color: "C0392B",
+                  color: "B0432F",
                   size: 22,
                 }),
               ],
@@ -174,7 +174,7 @@ export async function renderDocx(
           const inline = q.citations
             .map((c) => `[Source: ${c.document_filename}${c.page != null ? `, p.${c.page}` : ""}]`)
             .join(" ");
-          if (inline) answerRuns.push(new TextRun({ text: ` ${inline}`, size: 20, color: "5B6478" }));
+          if (inline) answerRuns.push(new TextRun({ text: ` ${inline}`, size: 20, color: "6B6862" }));
         } else if (opts.citation_style === "footnote" && q.citations.length > 0) {
           const refs: string[] = [];
           for (const _c of q.citations) {
@@ -182,7 +182,7 @@ export async function renderDocx(
             refs.push(`${footnoteCounter}`);
           }
           answerRuns.push(
-            new TextRun({ text: ` [${refs.join(", ")}]`, superScript: true, size: 18, color: "3B47D6" })
+            new TextRun({ text: ` [${refs.join(", ")}]`, superScript: true, size: 18, color: "1F6F43" })
           );
         }
         out.push(
@@ -283,10 +283,10 @@ export async function renderDocx(
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({ text: opts.deal_name + " — Page ", size: 18, color: "8A93A6" }),
-                  new TextRun({ children: [PageNumber.CURRENT], size: 18, color: "8A93A6" }),
-                  new TextRun({ text: " of ", size: 18, color: "8A93A6" }),
-                  new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 18, color: "8A93A6" }),
+                  new TextRun({ text: opts.deal_name + " — Page ", size: 18, color: "9B9A94" }),
+                  new TextRun({ children: [PageNumber.CURRENT], size: 18, color: "9B9A94" }),
+                  new TextRun({ text: " of ", size: 18, color: "9B9A94" }),
+                  new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 18, color: "9B9A94" }),
                 ],
               }),
             ],
