@@ -132,7 +132,7 @@ export default function TeamView({
             Generates a one-time link. They'll be added to this workspace when they sign up or sign in.
           </p>
           <form onSubmit={invite} className="space-y-3">
-            <div className="grid grid-cols-[1fr_180px_auto] gap-2 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px_auto] gap-2 items-end">
               <div>
                 <label className="label">Email</label>
                 <input
@@ -205,7 +205,8 @@ export default function TeamView({
           </h3>
           {rowErr && <span className="text-xs" style={{ color: "var(--err)" }}>{rowErr}</span>}
         </div>
-        <table className="w-full text-[13px]">
+        <div className="overflow-x-auto lg:overflow-x-visible">
+        <table className="w-full text-[13px] min-w-[560px]">
           <thead>
             <tr style={{ color: "var(--fg-4)" }}>
               <th className="text-left font-medium px-5 py-2.5">Name</th>
@@ -266,6 +267,7 @@ export default function TeamView({
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {invites.length > 0 && (
@@ -275,7 +277,8 @@ export default function TeamView({
               Pending invites ({invites.length})
             </h3>
           </div>
-          <table className="w-full text-[13px]">
+          <div className="overflow-x-auto">
+          <table className="w-full text-[13px] min-w-[480px]">
             <thead>
               <tr style={{ color: "var(--fg-4)" }}>
                 <th className="text-left font-medium px-5 py-2.5">Email</th>
@@ -317,6 +320,7 @@ export default function TeamView({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

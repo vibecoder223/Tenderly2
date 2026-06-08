@@ -18,6 +18,7 @@ export default function ForgotPasswordClient() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [devLink, setDevLink] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +37,7 @@ export default function ForgotPasswordClient() {
       });
       const j = await res.json().catch(() => ({}));
       fallback = !!j.fallback;
+      if (j.devResetLink) setDevLink(j.devResetLink as string);
     } catch {
       fallback = true;
     }
@@ -61,6 +63,19 @@ export default function ForgotPasswordClient() {
         <p className="text-sm mb-5" style={{ color: "var(--fg-4)" }}>
           If <span className="mono">{email}</span> has an account, you'll receive a reset link shortly.
         </p>
+        {devLink && (
+          <div
+            className="mb-4 p-3"
+            style={{ background: "var(--warn-tint)", borderRadius: "var(--r)", border: "1px solid var(--border)" }}
+          >
+            <div className="text-[11px] mb-1.5" style={{ color: "var(--warn)" }}>
+              Dev only — email delivery isn’t configured for this address, so here’s the link:
+            </div>
+            <a href={devLink} className="text-xs mono" style={{ color: "var(--accent)", wordBreak: "break-all" }}>
+              {devLink}
+            </a>
+          </div>
+        )}
         <Link href="/auth/login" className="btn w-full justify-center" style={{ display: "flex" }}>
           Back to sign in
         </Link>

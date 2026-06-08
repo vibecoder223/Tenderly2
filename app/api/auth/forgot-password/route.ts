@@ -31,6 +31,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, fallback: true });
   }
 
+  const isProd = process.env.NODE_ENV === "production";
+
   try {
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
@@ -42,9 +44,20 @@ export async function POST(req: Request) {
     if (error || !link) return NextResponse.json({ ok: true });
 
     const tpl = resetEmail({ resetUrl: link });
-    await sendEmail({ to: email, subject: tpl.subject, html: tpl.html, text: tpl.text });
-  } catch {
-    // Best-effort; never surface internal failures here.
+    const sent = await sendEmail({ to: email, subject: tpl.subject, html: tpl.html, text: tpl.text });
+
+    if (!sent.ok) {
+      // Don't fail the request (anti-enumeration), but make the failure visible
+      // in server logs instead of silently lying "check your inbox". The most
+      // common cause is Resend without a verified domain (it only delivers to
+      // the account owner until then — verify a domain + set RESEND_FROM).
+      console.error(`[forgot-password] email send failed: ${sent.error}`);
+      // Outside production, return the link so the flow is testable without a
+      // verified sending domain. Never do this in production.
+      if (!isProd) return NextResponse.json({ ok: true, devResetLink: link });
+    }
+  } catch (e) {
+    console.error("[forgot-password]", e instanceof Error ? e.message : e);
   }
 
   return NextResponse.json({ ok: true });

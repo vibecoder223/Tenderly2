@@ -199,8 +199,8 @@ export default function QuestionDetail({
   }
 
   return (
-    <div className="grid grid-cols-3 gap-6">
-      <div className="col-span-2 space-y-5">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
+      <div className="lg:col-span-2 space-y-5">
         <header>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="mono text-[12px]" style={{ color: "var(--fg-4)" }}>

@@ -25,7 +25,7 @@ export default function DealHeader({
 
   return (
     <header
-      className="px-7 py-4 border-b flex items-start gap-6"
+      className="py-3.5 md:py-4 border-b flex flex-col gap-3 md:flex-row md:items-start md:gap-6 pl-[52px] pr-4 md:px-7"
       style={{ background: "var(--surface)", borderColor: "var(--divider)" }}
     >
       <div className="flex-1 min-w-0">
@@ -36,8 +36,8 @@ export default function DealHeader({
             {deal.client_name ?? "—"}
           </span>
         </div>
-        <div className="page-title-row" style={{ gap: 10 }}>
-          <h1 className="page-title">{deal.name}</h1>
+        <div className="page-title-row" style={{ gap: 10, flexWrap: "wrap" }}>
+          <h1 className="page-title" style={{ wordBreak: "break-word" }}>{deal.name}</h1>
           <StatusBadge
             status={deal.status}
             label={dealStatusLabels[deal.status] ?? deal.status}
@@ -45,11 +45,7 @@ export default function DealHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-3 self-start" style={{ marginTop: 4 }}>
-        <CloneDealButton dealId={deal.id} />
-      </div>
-
-      <div style={{ display: "flex", alignItems: "stretch", gap: 24 }}>
+      <div className="flex items-end gap-x-5 gap-y-3 flex-wrap md:items-start md:self-start">
         <Meta label="value">
           <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 700, letterSpacing: "-0.022em", fontSize: 17, color: "var(--fg)" }}>
             {deal.value ? (
@@ -86,6 +82,9 @@ export default function DealHeader({
             </div>
           )}
         </Meta>
+        <div className="self-center md:self-start md:mt-1">
+          <CloneDealButton dealId={deal.id} />
+        </div>
       </div>
     </header>
   );
@@ -93,7 +92,7 @@ export default function DealHeader({
 
 function Meta({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ minWidth: 112 }}>
+    <div style={{ minWidth: 88 }}>
       <div
         style={{
           fontFamily: "'JetBrains Mono', monospace",
