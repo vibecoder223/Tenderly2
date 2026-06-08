@@ -718,6 +718,15 @@ h3 { font-size: 13.5px; line-height: 1.35; font-weight: 600; letter-spacing: -0.
   position: relative;
 }
 
+/* Quick find pill — full label on desktop, icon-only on mobile so it never
+   wraps inside the fixed-height topbar. */
+.quick-find { padding: 4px 8px 4px 10px; }
+@media (max-width: 640px) {
+  .quick-find { padding: 0; width: 30px; height: 30px; justify-content: center; }
+  .quick-find-label,
+  .quick-find-kbd { display: none; }
+}
+
 /* Mobile menu trigger — hidden on desktop */
 .mobile-menu-btn {
   display: none;

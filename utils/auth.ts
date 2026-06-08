@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
@@ -11,14 +12,18 @@ export type MemberWithOrg = {
   organizations: { id: string; name: string; slug: string } | null;
 };
 
-export async function requireUser() {
+// cache() dedupes within a single server render. The (app) layout AND the page
+// both call these, and getUser() is a network round-trip to the Supabase Auth
+// server — without caching that (and the team_members query) runs twice per
+// navigation. Cached, it runs once.
+export const requireUser = cache(async () => {
   const supabase = createClient(await cookies());
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
   return { user, supabase };
-}
+});
 
-export async function requireMembership() {
+export const requireMembership = cache(async () => {
   const { user, supabase } = await requireUser();
   const { data: memberRaw } = await supabase
     .from("team_members")
@@ -33,4 +38,4 @@ export async function requireMembership() {
   // it's a single FK; cast for safety.
   const member = memberRaw as unknown as MemberWithOrg;
   return { user, supabase, member };
-}
+});

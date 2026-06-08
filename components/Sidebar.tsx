@@ -135,10 +135,15 @@ export default function Sidebar({
     return () => window.removeEventListener("sidebar-toggle", handle);
   }, []);
 
-  // Inbox count
+  // Inbox count — fetch once on mount and refresh when the tab regains focus,
+  // instead of on every route change (which fired a request per navigation).
   useEffect(() => {
-    fetch("/api/inbox/count").then(r => r.json()).then(d => setQueueCount(d.count ?? 0)).catch(() => {});
-  }, [path]);
+    const load = () =>
+      fetch("/api/inbox/count").then(r => r.json()).then(d => setQueueCount(d.count ?? 0)).catch(() => {});
+    load();
+    window.addEventListener("focus", load);
+    return () => window.removeEventListener("focus", load);
+  }, []);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
