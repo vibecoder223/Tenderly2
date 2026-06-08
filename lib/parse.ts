@@ -46,9 +46,10 @@ export async function parseDocument(
 async function parsePdf(buf: Buffer): Promise<ParsedDoc> {
   // pdfjs-dist 4.x ships ESM. Use the legacy build to stay Node-friendly.
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  // Disable worker — we run on the server.
-  // @ts-expect-error global
-  pdfjs.GlobalWorkerOptions.workerSrc = undefined;
+  // Do NOT set GlobalWorkerOptions.workerSrc here. Assigning `undefined` throws
+  // "Invalid `workerSrc` type" in pdfjs 4.x and broke every PDF upload. Left
+  // unset, the legacy build runs parsing on the main thread (no worker), which
+  // is exactly what we want on the server.
 
   const loadingTask = pdfjs.getDocument({
     data: new Uint8Array(buf),
