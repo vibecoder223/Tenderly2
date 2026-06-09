@@ -70,7 +70,7 @@ export default function AnswersView({ answers }: { answers: Answer[] }) {
       <div className="section-card">
         <div className="section-card-head">
           <div>
-            <span className="section-card-title">Answers</span>
+            <span className="section-card-title">Text</span>
             <span className="section-card-count">{filtered.length}</span>
           </div>
         </div>

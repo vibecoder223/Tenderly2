@@ -27,7 +27,7 @@ export default function KnowledgeTabs({
           Documents <span className="seg-count">{documents.length}</span>
         </button>
         <button className={`seg-btn${tab === "answers" ? " active" : ""}`} onClick={() => go("answers")}>
-          Answers <span className="seg-count">{answers.length}</span>
+          Text <span className="seg-count">{answers.length}</span>
         </button>
       </div>
 
