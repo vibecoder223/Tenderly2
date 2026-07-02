@@ -573,9 +573,9 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 }
 .seg-btn:hover { color: var(--fg); }
 .seg-btn.active {
-  background: var(--surface);
-  color: var(--fg);
-  box-shadow: var(--shadow-2);
+  background: var(--accent-tint);
+  color: var(--accent-3);
+  font-weight: 600;
 }
 .seg-count {
   font-family: "Geist Mono", monospace;
@@ -585,7 +585,7 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   padding: 1px 6px;
   border-radius: 999px;
 }
-.seg-btn.active .seg-count { color: var(--accent); background: var(--accent-tint); }
+.seg-btn.active .seg-count { color: var(--accent-3); background: var(--accent-tint2); }
 
 .label {
   font-size: var(--text-xs);
