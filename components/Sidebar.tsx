@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 
-type Item = { href: string; label: string; icon: React.ReactNode; shortcut?: string };
-type Group = { title: string; items: Item[] };
+type Item = { href: string; label: string; icon: React.ReactNode };
+type Group = { title?: string; items: Item[] };
 
 const groups: Group[] = [
   {
@@ -14,7 +14,6 @@ const groups: Group[] = [
       {
         href: "/dashboard",
         label: "Dashboard",
-        shortcut: "⌘1",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" />
@@ -25,7 +24,6 @@ const groups: Group[] = [
       {
         href: "/deals",
         label: "Deals",
-        shortcut: "⌘2",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
@@ -35,7 +33,6 @@ const groups: Group[] = [
       {
         href: "/my-queue",
         label: "My queue",
-        shortcut: "⌘3",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
@@ -45,12 +42,12 @@ const groups: Group[] = [
     ],
   },
   {
-    title: "Intelligence",
+    // No label: a bare divider is enough for a three-item group — an
+    // uppercase header here would outweigh what it's introducing.
     items: [
       {
         href: "/knowledge",
         label: "Knowledge base",
-        shortcut: "⌘4",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -69,15 +66,9 @@ const groups: Group[] = [
           </svg>
         ),
       },
-    ],
-  },
-  {
-    title: "Insights",
-    items: [
       {
         href: "/analytics",
         label: "Analytics",
-        shortcut: "⌘5",
         icon: (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 3v18h18" /><path d="M7 14l4-4 4 3 5-7" />
@@ -226,20 +217,24 @@ export default function Sidebar({
       {/* Primary navigation */}
       <div className="flex-1 overflow-y-auto" style={{ padding: "8px 0 12px" }}>
         {groups.map((group, gi) => (
-          <div key={group.title} style={{ marginTop: gi === 0 ? 0 : 18 }}>
-            <div
-              style={{
-                fontFamily: "'Geist Mono', ui-monospace, monospace",
-                fontSize: 9,
-                fontWeight: 500,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                color: "var(--fg-4)",
-                padding: "0 16px 6px",
-              }}
-            >
-              {group.title}
-            </div>
+          <div key={group.title ?? gi} style={{ marginTop: gi === 0 ? 0 : 14 }}>
+            {group.title ? (
+              <div
+                style={{
+                  fontFamily: "'Geist Mono', ui-monospace, monospace",
+                  fontSize: 9,
+                  fontWeight: 500,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: "var(--fg-4)",
+                  padding: "0 16px 6px",
+                }}
+              >
+                {group.title}
+              </div>
+            ) : (
+              <div style={{ height: 1, background: "var(--divider)", margin: "0 16px 8px" }} />
+            )}
             <nav style={{ display: "flex", flexDirection: "column", gap: 1, padding: "0 8px" }}>
               {group.items.map((it) => (
                 <NavItem
@@ -427,9 +422,6 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
         }}>
           {badge}
         </span>
-      )}
-      {item.shortcut && badge == null && (
-        <span className="kbd" style={{ flexShrink: 0 }}>{item.shortcut}</span>
       )}
     </Link>
   );
