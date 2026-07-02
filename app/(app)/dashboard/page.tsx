@@ -308,10 +308,9 @@ export default async function DashboardPage() {
                 </div>
                 <ul className="queue">
                   {inbox.map((item, i) => (
-                    <Link key={i} href={item.href} className="queue-row">
-                      <span className={`queue-sig ${item.tone}`} aria-hidden="true" />
+                    <Link key={i} href={item.href} className="queue-row no-sig">
                       <span className="queue-say">{item.label}</span>
-                      <span className="queue-ref">{QUEUE_REF[item.icon]}</span>
+                      <span className={`stage ${item.tone}`}>{QUEUE_REF[item.icon]}</span>
                       <span className="queue-act">{QUEUE_ACT[item.icon]}</span>
                     </Link>
                   ))}

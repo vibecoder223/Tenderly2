@@ -942,8 +942,13 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 }
 .stage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--fg-4); }
 .stage.draft  { color: var(--accent-3); } .stage.draft::before  { background: var(--accent); }
-.stage.review { color: var(--warn); }     .stage.review::before { background: var(--warn); }
-.stage.done   { color: var(--ok); }        .stage.done::before   { background: var(--ok); }
+.stage.review,
+.stage.warn   { color: var(--warn); }     .stage.review::before,
+                                           .stage.warn::before   { background: var(--warn); }
+.stage.done,
+.stage.ok     { color: var(--ok); }        .stage.done::before,
+                                            .stage.ok::before    { background: var(--ok); }
+.stage.err    { color: var(--err); }       .stage.err::before   { background: var(--err); }
 
 /* Completion meter */
 .meter { display: flex; align-items: center; gap: 8px; }
