@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propello · Draft B4 · Graphite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Cool graphite-tinted light canvas */
+    --bg:        oklch(0.972 0.002 250);
+    --panel:     oklch(0.955 0.003 250);
+    --surface:   oklch(1 0 0);
+    --ink:       oklch(0.16 0.008 250);
+    --ink-2:     oklch(0.31 0.007 250);
+    --ink-3:     oklch(0.46 0.006 250);
+    --ink-4:     oklch(0.60 0.005 250);
+    --rule:      oklch(0.878 0.004 250);
+    --rule-soft: oklch(0.928 0.003 250);
+    /* Dark instrument cluster */
+    --cluster:      oklch(0.21 0.010 250);
+    --cluster-2:    oklch(0.25 0.010 250);
+    --cluster-line: oklch(0.31 0.010 250);
+    --cluster-ink:  oklch(0.72 0.008 250);
+    --cluster-hot:  oklch(0.95 0.004 250);
+    --leaf:         oklch(0.80 0.15 152);
+    --accent:      oklch(0.42 0.13 152);
+    --accent-deep: oklch(0.31 0.11 152);
+    --accent-tint: oklch(0.955 0.028 152);
+    --warn: oklch(0.56 0.13 72);
+    --err:  oklch(0.52 0.17 27);
+    --warn-soft: oklch(0.78 0.12 78);
+    --err-soft:  oklch(0.74 0.13 30);
+    --sans: 'Geist', system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13px; line-height: 1.45; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; background: none; border: none; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  .microlabel {
+    font-family: var(--mono); font-size: 9px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-4);
+  }
+
+  .shell { display: grid; grid-template-columns: 216px 1fr; min-height: 100vh; }
+
+  .side { background: var(--panel); border-right: 1px solid var(--rule); padding: 18px 0 14px; display: flex; flex-direction: column; }
+  .wordmark { display: flex; align-items: center; gap: 8px; padding: 0 18px 16px; }
+  .mark {
+    width: 20px; height: 20px; border-radius: 5px; background: var(--cluster);
+    display: grid; place-items: center; color: var(--leaf);
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+  }
+  .wordmark .word { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; color: var(--ink); }
+  .wordmark .ver { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--ink-4); }
+  .find {
+    margin: 0 12px 16px; padding: 5px 9px; border: 1px solid var(--rule); border-radius: 5px;
+    background: var(--surface); display: flex; align-items: center; gap: 8px;
+    color: var(--ink-4); font-size: 12px;
+  }
+  .find kbd { margin-left: auto; font-family: var(--mono); font-size: 9.5px; border: 1px solid var(--rule); border-radius: 3px; padding: 0 4px; color: var(--ink-4); }
+  .navgroup { padding: 0 12px; margin-bottom: 18px; }
+  .navgroup .microlabel { padding: 0 6px 6px; display: block; }
+  .nav a {
+    display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 5px;
+    color: var(--ink-3); font-size: 12.5px; font-weight: 500;
+    transition: background 100ms var(--ease), color 100ms var(--ease);
+  }
+  .nav a:hover { background: oklch(0.935 0.003 250); color: var(--ink); }
+  .nav a.on { background: var(--cluster); color: var(--cluster-hot); }
+  .nav a.on::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--leaf); }
+  .nav a.on .count { color: var(--cluster-ink); }
+  .nav a .count { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+  .side .foot { margin-top: auto; padding: 12px 18px 0; border-top: 1px solid var(--rule); }
+  .sys { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); line-height: 1.8; }
+  .sys .live { color: var(--accent); }
+
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    height: 44px; border-bottom: 1px solid var(--rule); background: var(--surface);
+    display: flex; align-items: center; gap: 10px; padding: 0 24px;
+    font-size: 12px; color: var(--ink-4);
+  }
+  .topbar .here { color: var(--ink); font-weight: 500; }
+  .topbar .sep { color: var(--rule); }
+  .topbar .actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4.5px 11px; border-radius: 5px;
+    font-size: 12px; font-weight: 500; border: 1px solid var(--rule); color: var(--ink-2);
+    background: var(--surface); transition: border-color 100ms var(--ease);
+  }
+  .btn:hover { border-color: var(--ink-4); }
+  .btn.primary { background: var(--cluster); border-color: var(--cluster); color: var(--cluster-hot); }
+  .btn.primary:hover { background: var(--cluster-2); }
+  .btn kbd { font-family: var(--mono); font-size: 9px; opacity: 0.55; }
+
+  /* Dark instrument cluster: the one committed color moment */
+  .band {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: var(--cluster); border-bottom: 1px solid var(--rule);
+  }
+  .band .cell { padding: 18px 24px 16px; border-right: 1px solid var(--cluster-line); }
+  .band .cell:last-child { border-right: none; }
+  .band .microlabel { display: block; margin-bottom: 6px; color: var(--cluster-ink); }
+  .band .reading { display: flex; align-items: baseline; gap: 8px; }
+  .band .n {
+    font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--cluster-hot);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
+  }
+  .band .n.ok { color: var(--leaf); }
+  .band .n.warn { color: var(--warn-soft); }
+  .band .n.err { color: var(--err-soft); }
+  .band .delta { font-family: var(--mono); font-size: 10px; color: var(--cluster-ink); }
+  .band .delta.up { color: var(--leaf); }
+
+  .content { padding: 26px 24px 60px; display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+
+  .block { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .blockhead { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--rule-soft); }
+  .blockhead h2 { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .blockhead .tally { font-family: var(--mono); font-size: 10px; color: var(--ink-4); }
+  .blockhead .more { margin-left: auto; font-size: 11.5px; font-weight: 500; color: var(--accent-deep); }
+  .blockhead .more:hover { color: var(--accent); }
+
+  .queue { list-style: none; }
+  .queue li a {
+    display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 12px;
+    padding: 10px 16px; border-bottom: 1px solid var(--rule-soft);
+    transition: background 100ms var(--ease);
+  }
+  .queue li:last-child a { border-bottom: none; }
+  .queue li a:hover { background: var(--bg); }
+  .sig { width: 7px; height: 7px; border-radius: 2px; justify-self: center; }
+  .sig.warn { background: var(--warn); }
+  .sig.err { background: var(--err); }
+  .queue .say { font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+  .queue .say small { display: block; font-weight: 400; font-size: 11.5px; color: var(--ink-4); margin-top: 1px; }
+  .queue .ref { font-family: var(--mono); font-size: 10px; color: var(--ink-4); }
+  .queue .act {
+    font-size: 11px; font-weight: 500; color: var(--accent-deep);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 3px 8px;
+    transition: border-color 100ms var(--ease);
+  }
+  .queue li a:hover .act { border-color: var(--accent); }
+
+  .block.deals { margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-4); text-align: left;
+    padding: 8px 16px; border-bottom: 1px solid var(--rule); background: var(--bg);
+  }
+  thead th.r, td.r { text-align: right; }
+  tbody td { padding: 10px 16px; border-bottom: 1px solid var(--rule-soft); font-size: 12.5px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 100ms var(--ease); }
+  tbody tr:hover { background: var(--bg); }
+  .deal { font-weight: 550; color: var(--ink); font-size: 12.5px; }
+  .client { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-4); margin-top: 2px; }
+  .stage {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em;
+    color: var(--ink-3); text-transform: uppercase;
+  }
+  .stage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--ink-4); }
+  .stage.draft { color: var(--accent-deep); } .stage.draft::before { background: var(--accent); }
+  .stage.review { color: var(--warn); } .stage.review::before { background: var(--warn); }
+  .meter { display: flex; align-items: center; gap: 8px; }
+  .meter .track { width: 72px; height: 4px; background: var(--rule-soft); border-radius: 2px; overflow: hidden; }
+  .meter .fill { height: 100%; background: var(--accent); }
+  .meter .pct { font-family: var(--mono); font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .qcount { font-family: var(--mono); font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .due { font-family: var(--mono); font-size: 10.5px; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+  .due.late { color: var(--err); font-weight: 600; }
+
+  .rail { display: flex; flex-direction: column; gap: 24px; }
+  .feed { list-style: none; }
+  .feed li { display: grid; grid-template-columns: 74px 1fr; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--rule-soft); }
+  .feed li:last-child { border-bottom: none; }
+  .feed .t { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); padding-top: 2px; }
+  .feed .what { font-size: 12px; color: var(--ink-3); }
+  .feed .what b { color: var(--ink); font-weight: 550; }
+
+  .telemetry { padding: 14px 16px; }
+  .telemetry .row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--rule-soft); }
+  .telemetry .row:last-child { border-bottom: none; }
+  .telemetry .k { font-size: 11.5px; color: var(--ink-3); }
+  .telemetry .v { font-family: var(--mono); font-size: 11.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .telemetry .v.good { color: var(--accent-deep); }
+  .sparkrow { display: flex; align-items: flex-end; gap: 2px; padding: 10px 0 2px; height: 38px; }
+  .sparkrow i { width: 6px; background: var(--accent-tint); border-radius: 1px; }
+  .sparkrow i.hot { background: var(--accent); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="wordmark"><div class="mark">P</div><span class="word">Propello</span><span class="ver">v2.4</span></div>
+    <div class="find">Search <kbd>⌘K</kbd></div>
+    <div class="navgroup">
+      <span class="microlabel">Workspace</span>
+      <nav class="nav">
+        <a class="on" href="#">Dashboard</a>
+        <a href="#">Deals <span class="count">8</span></a>
+        <a href="#">My queue <span class="count">10</span></a>
+      </nav>
+    </div>
+    <div class="navgroup">
+      <span class="microlabel">Intelligence</span>
+      <nav class="nav">
+        <a href="#">Knowledge base <span class="count">142</span></a>
+        <a href="#">Templates</a>
+      </nav>
+    </div>
+    <div class="navgroup">
+      <span class="microlabel">Insights</span>
+      <nav class="nav">
+        <a href="#">Analytics</a>
+        <a href="#">Team</a>
+        <a href="#">Settings</a>
+      </nav>
+    </div>
+    <div class="foot">
+      <div class="sys">
+        <div><span class="live">●</span> PIPELINE ACTIVE</div>
+        <div>QUEUE 14 · DRAIN 2.0s</div>
+        <div>KHALIFA @ APPLAB.QA</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <span>Workspace</span><span class="sep">/</span><span class="here">Dashboard</span>
+      <div class="actions">
+        <button class="btn">Import RFP <kbd>U</kbd></button>
+        <button class="btn primary">New deal <kbd>N</kbd></button>
+      </div>
+    </div>
+
+    <div class="band" role="list" aria-label="Pipeline summary">
+      <div class="cell" role="listitem"><span class="microlabel">Active deals</span><div class="reading"><span class="n">8</span><span class="delta up">+2 this week</span></div></div>
+      <div class="cell" role="listitem"><span class="microlabel">Questions tracked</span><div class="reading"><span class="n">351</span><span class="delta">across 6 docs</span></div></div>
+      <div class="cell" role="listitem"><span class="microlabel">Awaiting approval</span><div class="reading"><span class="n warn">2</span><span class="delta">oldest 6h</span></div></div>
+      <div class="cell" role="listitem"><span class="microlabel">Overdue</span><div class="reading"><span class="n err">2</span><span class="delta">worst −3d</span></div></div>
+      <div class="cell" role="listitem"><span class="microlabel">Mandatory unanswered</span><div class="reading"><span class="n err">197</span><span class="delta">of 213 must</span></div></div>
+    </div>
+
+    <div class="content">
+      <div>
+        <div class="block">
+          <div class="blockhead"><h2>Requires action</h2><span class="tally">3</span><a class="more" href="#">My queue →</a></div>
+          <ul class="queue">
+            <li><a href="#"><span class="sig warn"></span><span class="say">Approve 2 reviewed answers<small>QNB Digital Banking · security section</small></span><span class="ref">SEC-4.1 · SEC-4.3</span><span class="act">Review</span></a></li>
+            <li><a href="#"><span class="sig err"></span><span class="say">Ashghal ITS tender overdue by 3 days<small>41% complete · 89 questions open</small></span><span class="ref">DUE 29 JUN</span><span class="act">Open</span></a></li>
+            <li><a href="#"><span class="sig err"></span><span class="say">2 documents failed extraction<small>ITS-Tender-Vol2.pdf · MoPH-Annex-C.docx</small></span><span class="ref">PIPELINE</span><span class="act">Retry</span></a></li>
+          </ul>
+        </div>
+
+        <div class="block deals">
+          <div class="blockhead"><h2>Active deals</h2><span class="tally">8</span><a class="more" href="#">All deals →</a></div>
+          <table>
+            <thead><tr><th>Deal</th><th>Stage</th><th>Completion</th><th class="r">Qs</th><th class="r">Due</th></tr></thead>
+            <tbody>
+              <tr><td><div class="deal">QNB Digital Banking Platform</div><div class="client">QATAR NATIONAL BANK</div></td><td><span class="stage review">Review</span></td><td><div class="meter"><span class="track"><span class="fill" style="width:82%"></span></span><span class="pct">82%</span></div></td><td class="r"><span class="qcount">96</span></td><td class="r"><span class="due">14 JUL</span></td></tr>
+              <tr><td><div class="deal">Ashghal Intelligent Transport RFP</div><div class="client">PUBLIC WORKS AUTHORITY</div></td><td><span class="stage draft">Drafting</span></td><td><div class="meter"><span class="track"><span class="fill" style="width:41%"></span></span><span class="pct">41%</span></div></td><td class="r"><span class="qcount">151</span></td><td class="r"><span class="due late">29 JUN</span></td></tr>
+              <tr><td><div class="deal">Ooredoo Managed Security Services</div><div class="client">OOREDOO QATAR</div></td><td><span class="stage draft">Drafting</span></td><td><div class="meter"><span class="track"><span class="fill" style="width:57%"></span></span><span class="pct">57%</span></div></td><td class="r"><span class="qcount">64</span></td><td class="r"><span class="due">21 JUL</span></td></tr>
+              <tr><td><div class="deal">MoPH Health Data Exchange</div><div class="client">MINISTRY OF PUBLIC HEALTH</div></td><td><span class="stage">Triage</span></td><td><div class="meter"><span class="pct" style="color:var(--ink-4)">queued</span></div></td><td class="r"><span class="qcount">67</span></td><td class="r"><span class="due">02 AUG</span></td></tr>
+              <tr><td><div class="deal">QF Campus Wayfinding System</div><div class="client">QATAR FOUNDATION</div></td><td><span class="stage review">Review</span></td><td><div class="meter"><span class="track"><span class="fill" style="width:94%"></span></span><span class="pct">94%</span></div></td><td class="r"><span class="qcount">28</span></td><td class="r"><span class="due">08 JUL</span></td></tr>
+              <tr><td><div class="deal">Milaha Fleet Telemetry Upgrade</div><div class="client">QATAR NAVIGATION</div></td><td><span class="stage draft">Drafting</span></td><td><div class="meter"><span class="track"><span class="fill" style="width:23%"></span></span><span class="pct">23%</span></div></td><td class="r"><span class="qcount">45</span></td><td class="r"><span class="due">30 JUL</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="block">
+          <div class="blockhead"><h2>Activity</h2></div>
+          <ul class="feed">
+            <li><span class="t">14:32 SARA</span><span class="what">approved <b>SEC-3.2</b> data residency, QNB</span></li>
+            <li><span class="t">14:18 AUTO</span><span class="what">drafted <b>12 answers</b>, Ooredoo MSS, conf 0.71</span></li>
+            <li><span class="t">13:47 KHALIFA</span><span class="what">uploaded <b>ITS-Tender-Vol2.pdf</b>, 214 pp</span></li>
+            <li><span class="t">11:05 FAHAD</span><span class="what">rejected <b>PRC-1.4</b> penalty terms</span></li>
+            <li><span class="t">09:51 AUTO</span><span class="what">extracted <b>67 reqs</b>, MoPH annexes</span></li>
+          </ul>
+        </div>
+        <div class="block">
+          <div class="blockhead"><h2>Pipeline · 24h</h2></div>
+          <div class="telemetry">
+            <div class="sparkrow" aria-hidden="true"><i style="height:8px"></i><i style="height:12px"></i><i style="height:7px"></i><i style="height:16px" class="hot"></i><i style="height:22px" class="hot"></i><i style="height:14px"></i><i style="height:9px"></i><i style="height:18px" class="hot"></i><i style="height:26px" class="hot"></i><i style="height:12px"></i><i style="height:6px"></i><i style="height:10px"></i></div>
+            <div class="row"><span class="k">Answers drafted</span><span class="v">38</span></div>
+            <div class="row"><span class="k">Avg confidence</span><span class="v good">0.73</span></div>
+            <div class="row"><span class="k">Citations attached</span><span class="v">112</span></div>
+            <div class="row"><span class="k">Requirements extracted</span><span class="v">67</span></div>
+            <div class="row"><span class="k">Tokens spent</span><span class="v">418k</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

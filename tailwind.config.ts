@@ -39,7 +39,7 @@ const config: Config = {
           "system-ui",
           "sans-serif",
         ],
-        mono: ["JetBrains Mono", "ui-monospace", "SF Mono", "Menlo", "monospace"],
+        mono: ["Geist Mono", "ui-monospace", "SF Mono", "Menlo", "monospace"],
       },
       borderRadius: {
         xs: "4px",

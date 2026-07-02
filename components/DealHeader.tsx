@@ -32,7 +32,7 @@ export default function DealHeader({
         <div className="crumbs" style={{ marginBottom: 4 }}>
           <Link href="/deals" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Deals</Link>
           <span className="sep">/</span>
-          <span className="curr" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5 }}>
+          <span className="curr" style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11.5 }}>
             {deal.client_name ?? "—"}
           </span>
         </div>
@@ -47,10 +47,10 @@ export default function DealHeader({
 
       <div className="flex items-end gap-x-5 gap-y-3 flex-wrap md:items-start md:self-start">
         <Meta label="value">
-          <span style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 700, letterSpacing: "-0.022em", fontSize: 17, color: "var(--fg)" }}>
+          <span style={{ fontFamily: "'Geist', sans-serif", fontWeight: 700, letterSpacing: "-0.022em", fontSize: 17, color: "var(--fg)" }}>
             {deal.value ? (
               <>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
+                <span style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
                 {Number(deal.value).toLocaleString()}
               </>
             ) : "—"}
@@ -95,7 +95,7 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
     <div style={{ minWidth: 88 }}>
       <div
         style={{
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: "'Geist Mono', monospace",
           fontSize: 10,
           textTransform: "uppercase",
           letterSpacing: "0.06em",

@@ -131,7 +131,7 @@ function DealsFilterBar({
         </button>
       )}
 
-      <div style={{ marginLeft: "auto", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: "var(--fg-4)" }}>
+      <div style={{ marginLeft: "auto", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, color: "var(--fg-4)" }}>
         {shown} / {total}
       </div>
     </div>
@@ -478,10 +478,10 @@ export default function DealsBoard({
                       ) : <span className="mono" style={{ color: "var(--fg-5)", fontSize: 11 }}>—</span>}
                     </td>
                     <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11.5 }}>{d.due_date ? d.due_date.slice(0, 10) : "—"}</td>
-                    <td style={{ textAlign: "right", fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 700, color: "var(--fg)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.018em" }}>
+                    <td style={{ textAlign: "right", fontFamily: "'Geist', sans-serif", fontWeight: 700, color: "var(--fg)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.018em" }}>
                       {d.value ? (
                         <>
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
+                          <span style={{ fontFamily: "'Geist Mono', monospace", fontSize: 10.5, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
                           {Number(d.value).toLocaleString()}
                         </>
                       ) : "—"}

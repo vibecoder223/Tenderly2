@@ -1,10 +1,11 @@
+import { getClaimsUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   const supabase = createClient(await cookies());
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getClaimsUser(supabase);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { document_id, requirement_id, question_text, category, priority } = await req.json();

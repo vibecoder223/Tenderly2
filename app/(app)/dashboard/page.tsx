@@ -1,23 +1,30 @@
 import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
-import StatusBadge from "@/components/StatusBadge";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
-import NeedsYou from "@/components/NeedsYou";
 
 export default async function DashboardPage() {
   const { supabase, member } = await requireMembership();
   const orgId = member.org_id;
 
-  const [{ data: deals }, { data: kdocs }, { data: activity }] = await Promise.all([
+  // One parallel batch for every query that only needs orgId. Sequential
+  // awaits here are pure waterfall: each one is a network round-trip to
+  // Supabase, so they add up fast.
+  const [
+    { data: deals },
+    { data: kdocs },
+    { data: activity },
+    { data: orgRow },
+    { count: teamCount },
+  ] = await Promise.all([
     supabase
       .from("deals")
-      .select("id, name, client_name, status, value, due_date, updated_at")
+      .select("id, name, client_name, status, value, due_date, updated_at, is_sample, created_at")
       .eq("org_id", orgId)
       .order("updated_at", { ascending: false }),
     supabase
       .from("knowledge_documents")
-      .select("id, ingestion_status")
+      .select("id, ingestion_status, is_sample")
       .eq("org_id", orgId),
     supabase
       .from("activity_log")
@@ -25,20 +32,45 @@ export default async function DashboardPage() {
       .eq("org_id", orgId)
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("organizations")
+      .select("onboarding_dismissed")
+      .eq("id", orgId)
+      .maybeSingle(),
+    supabase
+      .from("team_members")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId),
   ]);
 
   const allDeals = deals ?? [];
   const dealIds = allDeals.map((d) => d.id);
+  const realDeals = allDeals.filter((d) => !d.is_sample);
+  const realDealIdSet = new Set(realDeals.map((d) => d.id));
 
   let questionTotals = { total: 0, approved: 0, inReview: 0, unanswered: 0 };
   let dealCompletion = new Map<string, { total: number; approved: number }>();
   let mandatoryUnanswered = 0;
+  let docsFailed = 0;
+  let realRfpCount = 0;
 
   if (dealIds.length > 0) {
-    const { data: docRows } = await supabase
-      .from("documents")
-      .select("id, deal_id")
-      .in("deal_id", dealIds);
+    const [{ data: docRows }, { count: failedDocCount }] = await Promise.all([
+      supabase
+        .from("documents")
+        .select("id, deal_id, is_sample")
+        .in("deal_id", dealIds),
+      supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .in("deal_id", dealIds)
+        .eq("processing_status", "failed"),
+    ]);
+    docsFailed = failedDocCount ?? 0;
+    realRfpCount = (docRows ?? []).filter(
+      (r) => realDealIdSet.has(r.deal_id) && !r.is_sample
+    ).length;
+
     const docByDeal = new Map<string, string[]>();
     for (const r of docRows ?? []) {
       const arr = docByDeal.get(r.deal_id) ?? [];
@@ -48,10 +80,17 @@ export default async function DashboardPage() {
     const allDocIds = (docRows ?? []).map((r) => r.id);
 
     if (allDocIds.length > 0) {
-      const { data: qs } = await supabase
-        .from("questions")
-        .select("document_id, status, requirement_id")
-        .in("document_id", allDocIds);
+      const [{ data: qs }, { data: reqRows }] = await Promise.all([
+        supabase
+          .from("questions")
+          .select("document_id, status, requirement_id")
+          .in("document_id", allDocIds),
+        supabase
+          .from("extracted_requirements")
+          .select("requirement_id, is_mandatory")
+          .eq("is_mandatory", true)
+          .in("document_id", allDocIds),
+      ]);
       const totalsByDoc = new Map<string, { total: number; approved: number }>();
       for (const q of qs ?? []) {
         questionTotals.total += 1;
@@ -74,23 +113,12 @@ export default async function DashboardPage() {
         }
         dealCompletion.set(dealId, agg);
       }
-      // Unanswered mandatory items across the org
-      const { count: mu } = await supabase
-        .from("extracted_requirements")
-        .select("id", { count: "exact", head: true })
-        .eq("is_mandatory", true)
-        .in("document_id", allDocIds);
-      // We treat all mandatory items as potentially unanswered then subtract approvedQ where requirement matches:
+      // Mandatory items with no approved answer
       const mustAnsweredIds = new Set(
         (qs ?? [])
           .filter((q: any) => q.status === "approved")
           .map((q: any) => q.requirement_id)
       );
-      const { data: reqRows } = await supabase
-        .from("extracted_requirements")
-        .select("requirement_id, is_mandatory")
-        .eq("is_mandatory", true)
-        .in("document_id", allDocIds);
       mandatoryUnanswered =
         (reqRows ?? []).filter((r: any) => !mustAnsweredIds.has(r.requirement_id)).length;
     }
@@ -110,17 +138,6 @@ export default async function DashboardPage() {
   );
   const kbReady = (kdocs ?? []).filter((k) => k.ingestion_status === "ready").length;
   const kbFailed = (kdocs ?? []).filter((k) => k.ingestion_status === "failed").length;
-
-  // Failed document processing inside any of this org's deals
-  let docsFailed = 0;
-  if (dealIds.length > 0) {
-    const { count } = await supabase
-      .from("documents")
-      .select("id", { count: "exact", head: true })
-      .in("deal_id", dealIds)
-      .eq("processing_status", "failed");
-    docsFailed = count ?? 0;
-  }
   const failedCount = kbFailed + docsFailed;
 
   const inbox = [
@@ -158,76 +175,23 @@ export default async function DashboardPage() {
   const isEmpty = allDeals.length === 0;
 
   // ─── Onboarding checklist state ────────────────────────────────────────
-  // Steps complete only when the user has REAL (non-sample) data.
-  const { data: orgRow } = await supabase
-    .from("organizations")
-    .select("onboarding_dismissed")
-    .eq("id", orgId)
-    .maybeSingle();
+  // Steps complete only when the user has REAL (non-sample) data. All of it
+  // is derived from rows already fetched above — no extra queries.
   const onboardingDismissed = orgRow?.onboarding_dismissed ?? false;
-
-  const [
-    { count: realKbCount },
-    { count: realDealCount },
-    { count: teamCount },
-  ] = await Promise.all([
-    supabase
-      .from("knowledge_documents")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .eq("is_sample", false),
-    supabase
-      .from("deals")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .eq("is_sample", false),
-    supabase
-      .from("team_members")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId),
-  ]);
-
-  // RFP-uploaded step needs at least one real document on a real deal
-  let realRfpCount = 0;
-  if ((realDealCount ?? 0) > 0) {
-    const { data: realDealRows } = await supabase
-      .from("deals")
-      .select("id")
-      .eq("org_id", orgId)
-      .eq("is_sample", false);
-    const realDealIds = (realDealRows ?? []).map((d) => d.id);
-    if (realDealIds.length > 0) {
-      const { count } = await supabase
-        .from("documents")
-        .select("id", { count: "exact", head: true })
-        .in("deal_id", realDealIds)
-        .eq("is_sample", false);
-      realRfpCount = count ?? 0;
-    }
-  }
+  const realKbCount = (kdocs ?? []).filter((k) => !k.is_sample).length;
+  const realDealCount = realDeals.length;
 
   // Pick a target deal for the "Upload RFP" step deep-link: the user's
   // first real deal if any, else the seeded sample, else the deals index.
   let rfpDealLink = "/deals";
-  if ((realDealCount ?? 0) > 0) {
-    const { data: firstReal } = await supabase
-      .from("deals")
-      .select("id")
-      .eq("org_id", orgId)
-      .eq("is_sample", false)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (firstReal?.id) rfpDealLink = `/deals/${firstReal.id}/documents`;
+  if (realDeals.length > 0) {
+    const firstReal = [...realDeals].sort((a, b) =>
+      (a.created_at ?? "").localeCompare(b.created_at ?? "")
+    )[0];
+    rfpDealLink = `/deals/${firstReal.id}/documents`;
   } else {
-    const { data: sample } = await supabase
-      .from("deals")
-      .select("id")
-      .eq("org_id", orgId)
-      .eq("is_sample", true)
-      .limit(1)
-      .maybeSingle();
-    if (sample?.id) rfpDealLink = `/deals/${sample.id}/documents`;
+    const sample = allDeals.find((d) => d.is_sample);
+    if (sample) rfpDealLink = `/deals/${sample.id}/documents`;
   }
 
   const onboardingSteps = [
@@ -282,7 +246,47 @@ export default async function DashboardPage() {
           </Link>
         }
       />
-      <div className="p-7 max-w-[1300px] space-y-6">
+      {!isEmpty && !showOnboarding && (
+        <div className="band" role="list" aria-label="Pipeline summary">
+          <div className="band-cell" role="listitem">
+            <span className="band-label">Active deals</span>
+            <div className="band-reading">
+              <span className="band-n">{activeDeals.length}</span>
+              <span className="band-delta">{questionTotals.total} questions</span>
+            </div>
+          </div>
+          <div className="band-cell" role="listitem">
+            <span className="band-label">Awaiting approval</span>
+            <div className="band-reading">
+              <span className={`band-n${questionTotals.inReview > 0 ? " warn" : ""}`}>{questionTotals.inReview}</span>
+              <span className="band-delta">in review</span>
+            </div>
+          </div>
+          <div className="band-cell" role="listitem">
+            <span className="band-label">Due this week</span>
+            <div className="band-reading">
+              <span className={`band-n${dueSoon.length > 0 ? " warn" : ""}`}>{dueSoon.length}</span>
+              <span className="band-delta">next 7 days</span>
+            </div>
+          </div>
+          <div className="band-cell" role="listitem">
+            <span className="band-label">Overdue</span>
+            <div className="band-reading">
+              <span className={`band-n${overdue.length > 0 ? " err" : ""}`}>{overdue.length}</span>
+              <span className="band-delta">past due date</span>
+            </div>
+          </div>
+          <div className="band-cell" role="listitem">
+            <span className="band-label">Mandatory unanswered</span>
+            <div className="band-reading">
+              <span className={`band-n${mandatoryUnanswered > 0 ? " err" : ""}`}>{mandatoryUnanswered}</span>
+              <span className="band-delta">must-have items</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-7 pt-0 max-w-[1300px] space-y-6">
         <div className="page-header">
           <div className="page-title-row">
             <h1 className="page-title">{member.organizations?.name}</h1>
@@ -299,13 +303,27 @@ export default async function DashboardPage() {
           !showOnboarding && <OnboardingCard kbReady={kbReady} />
         ) : (
           <>
-            {inbox.length > 0 && <NeedsYou items={inbox} />}
-            <div className="inline-stats">
-              <Stat label="active deals" value={activeDeals.length} />
-              <Stat label="due this week" value={dueSoon.length} tone={dueSoon.length > 0 ? "warn" : undefined} />
-              <Stat label="overdue" value={overdue.length} tone={overdue.length > 0 ? "err" : undefined} />
-              <Stat label="unanswered mandatory" value={mandatoryUnanswered} tone={mandatoryUnanswered > 0 ? "err" : undefined} />
-            </div>
+            {inbox.length > 0 && (
+              <section className="section-card">
+                <div className="section-card-head">
+                  <div>
+                    <span className="section-card-title">Requires action</span>
+                    <span className="section-card-count">{inbox.length}</span>
+                  </div>
+                  <Link href="/my-queue" className="block-more">My queue →</Link>
+                </div>
+                <ul className="queue">
+                  {inbox.map((item, i) => (
+                    <Link key={i} href={item.href} className="queue-row">
+                      <span className={`queue-sig ${item.tone}`} aria-hidden="true" />
+                      <span className="queue-say">{item.label}</span>
+                      <span className="queue-ref">{QUEUE_REF[item.icon]}</span>
+                      <span className="queue-act">{QUEUE_ACT[item.icon]}</span>
+                    </Link>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <div className="grid grid-cols-3 gap-6">
               <section className="section-card col-span-2">
@@ -314,9 +332,7 @@ export default async function DashboardPage() {
                     <span className="section-card-title">Active deals</span>
                     <span className="section-card-count">{activeDeals.length}</span>
                   </div>
-                  <Link href="/deals" style={{ fontSize: 11.5, color: "var(--accent)", fontWeight: 500 }}>
-                    View all →
-                  </Link>
+                  <Link href="/deals" className="block-more">View all →</Link>
                 </div>
                 {activeDeals.length === 0 ? (
                   <div className="p-8 text-center text-sm" style={{ color: "var(--fg-4)" }}>
@@ -327,9 +343,9 @@ export default async function DashboardPage() {
                     <thead>
                       <tr>
                         <th>Deal</th>
-                        <th>Status</th>
+                        <th>Stage</th>
                         <th>Completion</th>
-                        <th>Due</th>
+                        <th style={{ textAlign: "right" }}>Due</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -340,43 +356,41 @@ export default async function DashboardPage() {
                         const overdueRow = due > 0 && due < Date.now();
                         const dueSoonRow =
                           due > 0 && !overdueRow && (due - Date.now()) / 86_400_000 < 7;
+                        const stageClass =
+                          d.status === "in_progress" ? "draft" : d.status === "new" ? "" : "review";
+                        const stageLabel =
+                          d.status === "in_progress" ? "Drafting" : d.status === "new" ? "Triage" : "Review";
                         return (
                           <tr key={d.id}>
                             <td>
-                              <Link href={`/deals/${d.id}`} style={{ color: "var(--fg)", fontWeight: 500, textDecoration: "none" }}>
+                              <Link href={`/deals/${d.id}`} style={{ color: "var(--fg)", fontWeight: 550, textDecoration: "none" }}>
                                 {d.name}
                               </Link>
                               {d.client_name && (
-                                <div className="meta-mono" style={{ marginTop: 1 }}>
+                                <div className="meta-mono" style={{ marginTop: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                                   {d.client_name}
                                 </div>
                               )}
                             </td>
-                            <td><StatusBadge status={d.status} /></td>
-                            <td style={{ minWidth: 160 }}>
+                            <td><span className={`stage ${stageClass}`}>{stageLabel}</span></td>
+                            <td style={{ minWidth: 140 }}>
                               {t.total > 0 ? (
-                                <div className="flex items-center gap-2">
-                                  <div style={{ width: 80, height: 4, background: "var(--bg-2)", borderRadius: 2, overflow: "hidden" }}>
-                                    <div
-                                      style={{
-                                        width: `${pct}%`,
-                                        height: "100%",
-                                        background: pct >= 100 ? "var(--ok)" : "var(--accent)",
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="mono num" style={{ fontSize: 11, color: "var(--fg-4)" }}>
-                                    {pct}%
+                                <div className="meter">
+                                  <span className="meter-track">
+                                    <span className={`meter-fill${pct >= 100 ? " full" : ""}`} style={{ width: `${pct}%` }} />
                                   </span>
+                                  <span className="meter-pct">{pct}%</span>
                                 </div>
                               ) : (
-                                <span className="meta-mono">not started</span>
+                                <span className="meter-pct" style={{ color: "var(--fg-4)" }}>not started</span>
                               )}
                             </td>
                             <td
                               className="mono"
                               style={{
-                                fontSize: 11.5,
+                                textAlign: "right",
+                                fontSize: 10.5,
+                                fontVariantNumeric: "tabular-nums",
                                 color: overdueRow ? "var(--err)" : dueSoonRow ? "var(--warn)" : "var(--fg-4)",
                                 fontWeight: overdueRow ? 600 : 400,
                               }}
@@ -393,31 +407,25 @@ export default async function DashboardPage() {
 
               <section className="section-card">
                 <div className="section-card-head">
-                  <span className="section-card-title">Recent activity</span>
-                  <Link href="/activity" style={{ fontSize: 11.5, color: "var(--accent)", fontWeight: 500 }}>
-                    View all →
-                  </Link>
+                  <span className="section-card-title">Activity</span>
+                  <Link href="/activity" className="block-more">View all →</Link>
                 </div>
                 {(activity ?? []).length === 0 ? (
                   <div className="p-6 text-center text-sm" style={{ color: "var(--fg-4)" }}>
                     No activity yet.
                   </div>
                 ) : (
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                  <ul className="feed">
                     {(activity ?? []).map((a, i) => (
-                      <li
-                        key={i}
-                        style={{ padding: "10px 16px", borderBottom: "1px solid var(--divider)" }}
-                      >
-                        <div style={{ fontSize: 12.5, color: "var(--fg-2)" }}>
-                          {a.action}{" "}
-                          <span style={{ color: "var(--fg-4)" }}>{a.entity_type}</span>
+                      <li key={i} className="feed-row">
+                        <span className="feed-t">
+                          {new Date(a.created_at).toISOString().replace("T", " ").slice(5, 16)}
+                        </span>
+                        <span className="feed-what">
+                          <b>{a.action}</b> {a.entity_type}
                           {a.metadata?.filename ? `: ${a.metadata.filename}` : ""}
                           {a.metadata?.name ? `: ${a.metadata.name}` : ""}
-                        </div>
-                        <div className="meta-mono" style={{ marginTop: 2 }}>
-                          {new Date(a.created_at).toISOString().replace("T", " ").slice(0, 16)}
-                        </div>
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -431,30 +439,16 @@ export default async function DashboardPage() {
   );
 }
 
-function Stat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone?: "ok" | "warn" | "err";
-}) {
-  const deltaClass =
-    tone === "warn" ? "stat-delta warn"
-    : tone === "err"  ? "stat-delta err"
-    : "stat-delta muted";
-  const deltaText = tone === "err" ? "needs attention" : tone === "warn" ? "soon" : "—";
-  return (
-    <div className="inline-stat">
-      <div className="inline-stat-row">
-        <span className="stat-val num">{value}</span>
-        {value > 0 && tone && <span className={deltaClass}>{deltaText}</span>}
-      </div>
-      <span className="stat-label">{label}</span>
-    </div>
-  );
-}
+const QUEUE_REF: Record<string, string> = {
+  review: "IN REVIEW",
+  clock: "DUE DATE",
+  alert: "PIPELINE",
+};
+const QUEUE_ACT: Record<string, string> = {
+  review: "Review",
+  clock: "Open",
+  alert: "Retry",
+};
 
 function OnboardingCard({ kbReady }: { kbReady: number }) {
   return (

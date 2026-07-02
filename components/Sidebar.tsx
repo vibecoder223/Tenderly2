@@ -202,8 +202,8 @@ export default function Sidebar({
         <form onSubmit={submitSearch}>
           <label style={{
             display: "flex", alignItems: "center", gap: 6,
-            padding: "6px 10px", borderRadius: 6,
-            background: "var(--bg-2)", border: "1px solid var(--border)",
+            padding: "6px 10px", borderRadius: 5,
+            background: "var(--surface)", border: "1px solid var(--border)",
             cursor: "text",
           }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-5)", flexShrink: 0 }}>
@@ -229,11 +229,12 @@ export default function Sidebar({
           <div key={group.title} style={{ marginTop: gi === 0 ? 0 : 18 }}>
             <div
               style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.10em",
+                fontFamily: "'Geist Mono', ui-monospace, monospace",
+                fontSize: 9,
+                fontWeight: 500,
+                letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                color: "var(--fg-5)",
+                color: "var(--fg-4)",
                 padding: "0 16px 6px",
               }}
             >
@@ -283,9 +284,9 @@ export default function Sidebar({
             borderRadius: "50%",
             background: "var(--accent-tint)",
             color: "var(--accent-3)",
-            fontFamily: "'Cabinet Grotesk', sans-serif",
+            fontFamily: "'Geist', sans-serif",
             fontSize: 11,
-            fontWeight: 700,
+            fontWeight: 600,
             letterSpacing: "-0.01em",
             flexShrink: 0,
           }}
@@ -368,12 +369,13 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "7px 10px",
-        borderRadius: 6,
-        fontSize: 13,
-        fontWeight: active ? 600 : 500,
-        background: active ? "var(--accent-tint)" : "transparent",
-        color: active ? "var(--accent-2)" : "var(--fg-3)",
+        padding: "6px 10px",
+        borderRadius: 5,
+        fontSize: 12.5,
+        fontWeight: 500,
+        background: active ? "var(--surface)" : "transparent",
+        color: active ? "var(--fg)" : "var(--fg-3)",
+        boxShadow: active ? "inset 0 0 0 1px var(--border)" : "none",
         position: "relative",
         transition: "background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)",
       }}
@@ -390,6 +392,16 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
         }
       }}
     >
+      {active && (
+        <span
+          aria-hidden
+          style={{
+            width: 4, height: 4, borderRadius: "50%",
+            background: "var(--accent)", flexShrink: 0,
+            marginRight: -6,
+          }}
+        />
+      )}
       <span
         aria-hidden
         style={{
@@ -427,18 +439,18 @@ function Mark() {
   return (
     <div
       style={{
-        width: 26, height: 26,
-        borderRadius: 6,
-        background: "var(--accent)",
+        width: 24, height: 24,
+        borderRadius: 5,
+        background: "var(--accent-3)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        fontFamily: "'Cabinet Grotesk', 'Switzer', sans-serif",
-        fontWeight: 800,
-        fontSize: 14,
-        color: "white",
-        letterSpacing: "-0.05em",
+        fontFamily: "'Geist Mono', ui-monospace, monospace",
+        fontWeight: 600,
+        fontSize: 12,
+        color: "oklch(0.97 0.012 152)",
+        letterSpacing: "-0.02em",
         lineHeight: 1,
       }}
     >

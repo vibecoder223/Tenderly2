@@ -215,14 +215,14 @@ export default function UploadCard({ dealId }: { dealId: string }) {
             />
             <DocIcon size={26} color="var(--accent)" />
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 14, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.015em", marginBottom: 2 }}>
+              <div style={{ fontFamily: "'Geist', sans-serif", fontSize: 14, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.015em", marginBottom: 2 }}>
                 Drop the RFP file
               </div>
               <div style={{ fontSize: 12, color: "var(--fg-4)" }}>
                 or <span style={{ color: "var(--accent)", textDecoration: "underline" }}>browse</span>
               </div>
             </div>
-            <div style={{ fontSize: 10.5, color: "var(--fg-5)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", marginTop: 2, letterSpacing: "0.04em" }}>
+            <div style={{ fontSize: 10.5, color: "var(--fg-5)", fontFamily: "'Geist Mono', ui-monospace, monospace", marginTop: 2, letterSpacing: "0.04em" }}>
               pdf · docx · txt · ai answers every requirement
             </div>
             {err && (

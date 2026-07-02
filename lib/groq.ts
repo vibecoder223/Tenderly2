@@ -110,20 +110,33 @@ function windowTokens(now: number): number {
   return tokenWindow.reduce((s, e) => s + e.tokens, 0);
 }
 
+// Minimum gap between request starts. Providers with a strict requests-per-
+// second cap (Mistral free tier: 1 req/s) 429 on back-to-back calls even when
+// the per-minute budget has room, so RPM alone can't express their limit.
+const LLM_MIN_INTERVAL_MS = Number(process.env.LLM_MIN_INTERVAL_MS ?? 0);
+let lastRequestAt = 0;
+
 // Block until BOTH the rolling 60s request budget (RPM) and token budget (TPM)
 // have room for this call, then reserve a slot in each window.
 async function reserveSlot(est: number): Promise<void> {
-  if (!LLM_RPM && !LLM_TPM) return;
+  if (!LLM_RPM && !LLM_TPM && !LLM_MIN_INTERVAL_MS) return;
   for (;;) {
     const now = Date.now();
     requestWindow = requestWindow.filter((t) => now - t < 60_000);
     const reqOk = !LLM_RPM || requestWindow.length < LLM_RPM;
     // A single call larger than the whole token budget would deadlock — exempt.
     const tokOk = !LLM_TPM || est >= LLM_TPM || windowTokens(now) + est <= LLM_TPM;
-    if (reqOk && tokOk) {
+    const gapOk = !LLM_MIN_INTERVAL_MS || now - lastRequestAt >= LLM_MIN_INTERVAL_MS;
+    if (reqOk && tokOk && gapOk) {
       requestWindow.push(now);
+      lastRequestAt = now;
       if (LLM_TPM) tokenWindow.push({ t: now, tokens: est });
       return;
+    }
+    if (reqOk && tokOk && !gapOk) {
+      // Only the spacing gate is binding — short sleep until the gap elapses.
+      await new Promise((r) => setTimeout(r, LLM_MIN_INTERVAL_MS - (now - lastRequestAt)));
+      continue;
     }
     // Sleep until the oldest entry in the binding window ages out of the minute.
     const oldestReq = requestWindow[0];

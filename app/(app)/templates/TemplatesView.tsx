@@ -288,7 +288,7 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
                 {opt.label}
                 <span
                   style={{
-                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    fontFamily: "'Geist Mono', ui-monospace, monospace",
                     fontSize: 10.5,
                     color: active ? "var(--accent-3)" : "var(--fg-5)",
                     background: active ? "var(--accent-tint)" : "var(--bg-2)",
@@ -447,7 +447,7 @@ function TemplateCard({
       <div className="flex items-start justify-between gap-2 px-5 pt-4">
         <span
           style={{
-            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontFamily: "'Geist Mono', ui-monospace, monospace",
             fontSize: 11,
             color: kind === "ai" ? "var(--accent-3)" : "var(--fg-4)",
             background: kind === "ai" ? "var(--accent-tint)" : "var(--bg-2)",

@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             style={{
               borderRadius: 6,
               background: "var(--accent)",
-              fontFamily: "'Cabinet Grotesk', 'Switzer', sans-serif",
+              fontFamily: "'Geist', sans-serif",
               fontWeight: 800,
               fontSize: 15,
               color: "white",

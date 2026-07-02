@@ -12,13 +12,38 @@ export type MemberWithOrg = {
   organizations: { id: string; name: string; slug: string } | null;
 };
 
+// The subset of auth user fields this app reads. All of them live inside the
+// access-token JWT, so they can be pulled from locally verified claims without
+// a round-trip to the auth server.
+export type SessionUser = {
+  id: string;
+  email: string;
+  user_metadata: Record<string, any>;
+};
+
+// Verify the session locally via getClaims(): the JWT signature is checked
+// against the project's public signing keys (JWKS, cached in-process) instead
+// of calling the auth server — getUser() costs a ~300ms network round-trip on
+// EVERY request. Expired sessions still refresh over the network as before.
+export async function getClaimsUser(
+  supabase: ReturnType<typeof createClient>
+): Promise<SessionUser | null> {
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return null;
+  return {
+    id: claims.sub,
+    email: (claims.email as string | undefined) ?? "",
+    user_metadata: (claims.user_metadata as Record<string, any>) ?? {},
+  };
+}
+
 // cache() dedupes within a single server render. The (app) layout AND the page
-// both call these, and getUser() is a network round-trip to the Supabase Auth
-// server — without caching that (and the team_members query) runs twice per
-// navigation. Cached, it runs once.
+// both call these — without caching, the auth check (and the team_members
+// query) runs twice per navigation. Cached, it runs once.
 export const requireUser = cache(async () => {
   const supabase = createClient(await cookies());
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getClaimsUser(supabase);
   if (!user) redirect("/auth/login");
   return { user, supabase };
 });

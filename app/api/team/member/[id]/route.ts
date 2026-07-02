@@ -1,3 +1,4 @@
+import { getClaimsUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
@@ -8,9 +9,7 @@ type Role = (typeof ROLES)[number];
 // Resolve the caller's membership (org + role) for authorization checks.
 async function getActor() {
   const supabase = createClient(await cookies());
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getClaimsUser(supabase);
   if (!user) return { error: "Unauthorized", status: 401 as const };
 
   const { data: actor } = await supabase

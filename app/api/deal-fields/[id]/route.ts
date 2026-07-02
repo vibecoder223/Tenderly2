@@ -1,9 +1,10 @@
+import { getClaimsUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 
 async function requireAdmin(supabase: any) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getClaimsUser(supabase);
   if (!user) return { error: "Unauthorized", status: 401 as const };
   const { data: member } = await supabase
     .from("team_members")

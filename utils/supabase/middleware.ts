@@ -19,22 +19,37 @@ export async function updateSession(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet: CookieToSet[]) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
+  // Fast path: no Supabase auth cookie means no session — skip client creation
+  // and the auth check entirely (this runs on every request, incl. health checks).
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user: { sub?: string } | null = null;
+
+  if (hasAuthCookie) {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    });
+
+    // getClaims verifies the JWT locally against the project's public signing
+    // keys (JWKS, cached in-process) instead of a network round-trip to the
+    // auth server on every request. Expired sessions are still refreshed over
+    // the network, and the refreshed cookies land via setAll above.
+    const { data } = await supabase.auth.getClaims();
+    user = data?.claims ?? null;
+  }
 
   const path = request.nextUrl.pathname;
   const isPublic =
@@ -42,6 +57,7 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/auth") ||
     path.startsWith("/api/auth") ||
     path.startsWith("/api/jobs/drain") ||
+    path.startsWith("/design-drafts") ||
     path.startsWith("/_next") ||
     path.startsWith("/favicon");
 

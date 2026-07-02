@@ -1,3 +1,4 @@
+import { getClaimsUser } from "@/utils/auth";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -63,7 +64,7 @@ export default async function AcceptPage({
   }
 
   const orgName = (invite as any).organizations?.name ?? "this workspace";
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getClaimsUser(supabase);
 
   // If user is signed in with a different email, ask them to switch.
   if (user && user.email?.toLowerCase() !== invite.email.toLowerCase()) {

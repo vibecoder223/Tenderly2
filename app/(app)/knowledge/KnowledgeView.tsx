@@ -283,7 +283,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
               />
               <DocIcon size={26} color="var(--accent)" />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontSize: 14, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.015em", marginBottom: 2 }}>
+                <div style={{ fontFamily: "'Geist', sans-serif", fontSize: 14, fontWeight: 600, color: "var(--fg)", letterSpacing: "-0.015em", marginBottom: 2 }}>
                   Drop files
                 </div>
                 <div style={{ fontSize: 12, color: "var(--fg-4)" }}>
@@ -297,7 +297,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                 style={{
                   fontSize: 10.5,
                   color: "var(--fg-5)",
-                  fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                  fontFamily: "'Geist Mono', ui-monospace, monospace",
                   marginTop: 2,
                   letterSpacing: "0.04em",
                 }}
@@ -347,7 +347,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: "0.06em", color: "var(--fg-5)", textTransform: "uppercase", fontWeight: 600 }}>
+            <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: "0.06em", color: "var(--fg-5)", textTransform: "uppercase", fontWeight: 600 }}>
               add as
             </span>
             <div style={{ display: "inline-flex" }}>
@@ -372,7 +372,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                       cursor: "pointer",
                       position: active ? "relative" : "static",
                       zIndex: active ? 1 : 0,
-                      fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                      fontFamily: "'Geist Mono', ui-monospace, monospace",
                       letterSpacing: "0.01em",
                       transition: "all 120ms ease",
                     }}
@@ -446,7 +446,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                         {d.is_sample && (
                           <span
                             style={{
-                              fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                              fontFamily: "'Geist Mono', ui-monospace, monospace",
                               fontSize: 9.5,
                               fontWeight: 600,
                               letterSpacing: "0.04em",
@@ -472,7 +472,7 @@ export default function KnowledgeView({ initial }: { initial: KDoc[] }) {
                       )}
                     </td>
                     <td className="px-5 py-3">
-                      <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.01em" }}>
+                      <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.01em" }}>
                         {docTypeLabel[d.doc_type] ?? d.doc_type}
                       </span>
                     </td>
