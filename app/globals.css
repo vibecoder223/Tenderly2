@@ -907,10 +907,11 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 }
 .queue-row:last-child { border-bottom: none; }
 .queue-row:hover { background: var(--bg); }
-.queue-sig { width: 7px; height: 7px; border-radius: 2px; justify-self: center; }
+.queue-sig { width: 7px; height: 7px; border-radius: 2px; justify-self: center; background: var(--fg-4); }
 .queue-sig.warn { background: var(--warn); }
 .queue-sig.err  { background: var(--err); }
 .queue-sig.accent { background: var(--accent); }
+.queue-sig.ok   { background: var(--ok); }
 .queue-say { font-size: 12.5px; font-weight: 500; color: var(--fg-2); }
 .queue-say small { display: block; font-weight: 400; font-size: 11.5px; color: var(--fg-4); margin-top: 1px; }
 .queue-ref {

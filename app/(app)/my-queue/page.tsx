@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
-import StatusBadge from "@/components/StatusBadge";
+
+const STATUS_META: Record<string, { tone: "" | "warn" | "err" | "accent"; ref: string; act: string }> = {
+  todo:     { tone: "",       ref: "TO DO",     act: "Draft" },
+  drafting: { tone: "accent", ref: "DRAFTING",  act: "Continue" },
+  review:   { tone: "warn",   ref: "IN REVIEW", act: "Review" },
+  blocked:  { tone: "err",    ref: "BLOCKED",   act: "Resolve" },
+};
 
 export default async function MyQueuePage() {
   const { supabase, user } = await requireMembership();
@@ -102,35 +108,21 @@ export default async function MyQueuePage() {
                     {qs.length} {qs.length === 1 ? "item" : "items"}
                   </span>
                 </div>
-                <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                  {[...qs].sort(reviewFirst).map((q) => (
-                    <li
-                      key={q.id}
-                      style={{
-                        borderTop: "1px solid var(--divider)",
-                        padding: "10px 16px",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 12,
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Link
-                          href={`/deals/${deal.id}/questions/${q.id}`}
-                          className="line-clamp-2"
-                          style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", textDecoration: "none", lineHeight: 1.4 }}
-                        >
-                          {q.question_text}
-                        </Link>
-                        {q.due_date && (
-                          <div className="meta-mono" style={{ marginTop: 3 }}>
-                            due {q.due_date.slice(0, 10)}
-                          </div>
-                        )}
-                      </div>
-                      <StatusBadge status={q.status} />
-                    </li>
-                  ))}
+                <ul className="queue">
+                  {[...qs].sort(reviewFirst).map((q) => {
+                    const meta = STATUS_META[q.status] ?? STATUS_META.todo;
+                    return (
+                      <Link key={q.id} href={`/deals/${deal.id}/questions/${q.id}`} className="queue-row">
+                        <span className={`queue-sig ${meta.tone}`} aria-hidden="true" />
+                        <span className="queue-say">
+                          <span className="block line-clamp-2">{q.question_text}</span>
+                          {q.due_date && <small>due {q.due_date.slice(0, 10)}</small>}
+                        </span>
+                        <span className="queue-ref">{meta.ref}</span>
+                        <span className="queue-act">{meta.act}</span>
+                      </Link>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
