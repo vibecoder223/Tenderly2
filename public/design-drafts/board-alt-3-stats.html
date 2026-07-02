@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Alt 3 · Mini stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;550;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.985 0.002 110); --surface: oklch(1 0 0);
+    --ink: oklch(0.17 0.010 110); --ink-2: oklch(0.32 0.009 110);
+    --ink-3: oklch(0.47 0.008 110); --ink-4: oklch(0.61 0.007 110);
+    --border: oklch(0.885 0.005 110); --divider: oklch(0.935 0.004 110);
+    --accent: oklch(0.42 0.13 152); --accent-3: oklch(0.31 0.11 152); --accent-tint: oklch(0.96 0.03 152);
+    --warn: oklch(0.56 0.13 72); --err: oklch(0.52 0.17 27); --ok: oklch(0.52 0.12 158);
+    --sans: 'Geist', sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13px; }
+  .page { padding: 28px; max-width: 1560px; }
+  h1 { font-size: 20px; font-weight: 650; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 4px; }
+  .sub { font-size: 12.5px; color: var(--ink-4); margin-bottom: 20px; }
+  .board { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }
+  .col { min-width: 268px; width: 268px; flex-shrink: 0; }
+  .col-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px 10px; }
+  .col-title { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .col-count {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-4);
+    background: var(--divider); padding: 1px 6px; border-radius: 999px;
+  }
+  .dealcard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; margin-bottom: 8px; cursor: grab;
+    transition: border-color 100ms var(--ease), box-shadow 100ms var(--ease);
+  }
+  .dealcard:hover { border-color: var(--ink-4); box-shadow: 0 2px 8px oklch(0.17 0.01 110 / 0.06); }
+  .dealcard .toprow { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+  .dealcard .name { font-size: 13px; font-weight: 550; color: var(--ink); line-height: 1.3; }
+  .avatar {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent-tint); color: var(--accent-3);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+  }
+  .dealcard .client { font-size: 11px; color: var(--ink-4); margin-bottom: 10px; }
+  .ministat { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding-top: 9px; border-top: 1px solid var(--divider); }
+  .ministat .cell { text-align: left; }
+  .ministat .k { font-family: var(--mono); font-size: 8px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 2px; }
+  .ministat .v { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .ministat .v.soon { color: var(--warn); font-weight: 600; }
+  .ministat .v.full { color: var(--ok); }
+  .empty { font-size: 11px; color: var(--ink-4); text-align: center; padding: 22px 0; border: 1.5px dashed var(--divider); border-radius: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Deals</h1>
+  <div class="sub">Board · mini-stats — richer card with a 3-up value/completion/due strip and an assignee avatar</div>
+  <div class="board">
+    <div class="col">
+      <div class="col-head"><span class="col-title">New</span><span class="col-count">2</span></div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">MoPH Health Data Exchange</span><span class="avatar">SA</span></div>
+        <div class="client">Ministry of Public Health</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">—</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v">0%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v">02 Aug</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">Milaha Fleet Telemetry</span><span class="avatar">FM</span></div>
+        <div class="client">Qatar Navigation</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">$210K</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v">23%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v">30 Jul</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="col-title">In progress</span><span class="col-count">2</span></div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">Ashghal Intelligent Transport</span><span class="avatar">KH</span></div>
+        <div class="client">Public Works Authority</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">$1.4M</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v">41%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v soon">29 Jun</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">Ooredoo Managed Security</span><span class="avatar">SA</span></div>
+        <div class="client">Ooredoo Qatar</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">$680K</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v">57%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v">21 Jul</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="col-title">Submitted</span><span class="col-count">2</span></div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">QNB Digital Banking</span><span class="avatar">FM</span></div>
+        <div class="client">Qatar National Bank</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">$2.1M</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v">82%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v">14 Jul</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">QF Campus Wayfinding</span><span class="avatar">KH</span></div>
+        <div class="client">Qatar Foundation</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">$95K</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v">94%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v">08 Jul</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="col-title">Won</span><span class="col-count">1</span></div>
+      <div class="dealcard">
+        <div class="toprow"><span class="name">Hello</span><span class="avatar">KH</span></div>
+        <div class="client">Hi</div>
+        <div class="ministat">
+          <div class="cell"><div class="k">Value</div><div class="v">$213</div></div>
+          <div class="cell"><div class="k">Done</div><div class="v full">100%</div></div>
+          <div class="cell"><div class="k">Due</div><div class="v">20 May</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-head"><span class="col-title">Lost</span><span class="col-count">0</span></div>
+      <div class="empty">Drop here</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

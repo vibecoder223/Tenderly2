@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Alt 5 · Count pill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;550;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.985 0.002 110); --bg-2: oklch(0.968 0.003 110); --surface: oklch(1 0 0);
+    --ink: oklch(0.17 0.010 110); --ink-2: oklch(0.32 0.009 110);
+    --ink-3: oklch(0.47 0.008 110); --ink-4: oklch(0.61 0.007 110);
+    --border: oklch(0.885 0.005 110); --divider: oklch(0.935 0.004 110);
+    --accent: oklch(0.42 0.13 152); --accent-3: oklch(0.31 0.11 152); --accent-tint: oklch(0.96 0.03 152);
+    --warn: oklch(0.56 0.13 72); --warn-tint: oklch(0.97 0.035 78);
+    --err: oklch(0.52 0.17 27); --err-tint: oklch(0.96 0.035 27);
+    --ok: oklch(0.52 0.12 158); --ok-tint: oklch(0.96 0.035 158);
+    --sans: 'Geist', sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13px; }
+  .page { padding: 28px; max-width: 1560px; }
+  h1 { font-size: 20px; font-weight: 650; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 4px; }
+  .sub { font-size: 12.5px; color: var(--ink-4); margin-bottom: 20px; }
+
+  .board { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }
+  .col { min-width: 270px; width: 270px; flex-shrink: 0; }
+
+  /* Everything neutral except one small colored chip: the count pill.
+     Distinguishes at a glance without touching the header background. */
+  .col-head { padding: 2px 2px 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--ink); margin-bottom: 10px; }
+  .col-title { font-size: 12.5px; font-weight: 600; color: var(--ink); flex: 1; }
+  .col-sub { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); }
+
+  .pill {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    padding: 2px 7px; border-radius: 999px; font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .col.new .pill        { background: var(--bg-2); color: var(--ink-3); }
+  .col.inprogress .pill { background: var(--accent-tint); color: var(--accent-3); }
+  .col.submitted .pill  { background: var(--warn-tint); color: var(--warn); }
+  .col.won .pill          { background: var(--ok-tint); color: var(--ok); }
+  .col.lost .pill         { background: var(--err-tint); color: var(--err); }
+
+  .dealcard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; margin-bottom: 8px; cursor: grab;
+    transition: border-color 100ms var(--ease), box-shadow 100ms var(--ease);
+  }
+  .dealcard:last-child { margin-bottom: 0; }
+  .dealcard:hover { border-color: var(--ink-4); box-shadow: 0 3px 10px oklch(0.17 0.01 110 / 0.07); }
+  .dealcard .name { font-size: 13px; font-weight: 550; color: var(--ink); line-height: 1.3; margin-bottom: 2px; }
+  .dealcard .client { font-size: 11px; color: var(--ink-4); margin-bottom: 10px; }
+  .ministat { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding-top: 9px; border-top: 1px solid var(--divider); }
+  .ministat .k { font-family: var(--mono); font-size: 8px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 2px; }
+  .ministat .v { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .ministat .v.soon { color: var(--warn); font-weight: 600; }
+  .ministat .v.full { color: var(--ok); }
+  .empty { font-size: 11px; color: var(--ink-4); text-align: center; padding: 16px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Deals</h1>
+  <div class="sub">Board · count pill — everything stays neutral white except a small colored count chip per column. Most restrained of the three.</div>
+  <div class="board">
+
+    <div class="col new">
+      <div class="col-head">
+        <span class="col-title">New</span>
+        <span class="col-sub">$210K</span>
+        <span class="pill">2</span>
+      </div>
+      <div class="dealcard">
+        <div class="name">MoPH Health Data Exchange</div>
+        <div class="client">Ministry of Public Health</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">—</div></div>
+          <div><div class="k">Done</div><div class="v">0%</div></div>
+          <div><div class="k">Due</div><div class="v">02 Aug</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="name">Milaha Fleet Telemetry</div>
+        <div class="client">Qatar Navigation</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$210K</div></div>
+          <div><div class="k">Done</div><div class="v">23%</div></div>
+          <div><div class="k">Due</div><div class="v">30 Jul</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col inprogress">
+      <div class="col-head">
+        <span class="col-title">In progress</span>
+        <span class="col-sub">$2.1M</span>
+        <span class="pill">2</span>
+      </div>
+      <div class="dealcard">
+        <div class="name">Ashghal Intelligent Transport</div>
+        <div class="client">Public Works Authority</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$1.4M</div></div>
+          <div><div class="k">Done</div><div class="v">41%</div></div>
+          <div><div class="k">Due</div><div class="v soon">29 Jun</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="name">Ooredoo Managed Security</div>
+        <div class="client">Ooredoo Qatar</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$680K</div></div>
+          <div><div class="k">Done</div><div class="v">57%</div></div>
+          <div><div class="k">Due</div><div class="v">21 Jul</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col submitted">
+      <div class="col-head">
+        <span class="col-title">Submitted</span>
+        <span class="col-sub">$2.2M</span>
+        <span class="pill">2</span>
+      </div>
+      <div class="dealcard">
+        <div class="name">QNB Digital Banking</div>
+        <div class="client">Qatar National Bank</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$2.1M</div></div>
+          <div><div class="k">Done</div><div class="v">82%</div></div>
+          <div><div class="k">Due</div><div class="v">14 Jul</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="name">QF Campus Wayfinding</div>
+        <div class="client">Qatar Foundation</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$95K</div></div>
+          <div><div class="k">Done</div><div class="v">94%</div></div>
+          <div><div class="k">Due</div><div class="v">08 Jul</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col won">
+      <div class="col-head">
+        <span class="col-title">Won</span>
+        <span class="col-sub">$213</span>
+        <span class="pill">1</span>
+      </div>
+      <div class="dealcard">
+        <div class="name">Hello</div>
+        <div class="client">Hi</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$213</div></div>
+          <div><div class="k">Done</div><div class="v full">100%</div></div>
+          <div><div class="k">Due</div><div class="v">20 May</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col lost">
+      <div class="col-head">
+        <span class="col-title">Lost</span>
+        <span class="col-sub"></span>
+        <span class="pill">0</span>
+      </div>
+      <div class="empty">Drop here</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

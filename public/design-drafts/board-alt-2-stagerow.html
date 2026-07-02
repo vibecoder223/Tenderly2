@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Alt 2 · Stage row</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;550;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.985 0.002 110); --surface: oklch(1 0 0);
+    --ink: oklch(0.17 0.010 110); --ink-2: oklch(0.32 0.009 110);
+    --ink-3: oklch(0.47 0.008 110); --ink-4: oklch(0.61 0.007 110);
+    --border: oklch(0.885 0.005 110); --divider: oklch(0.935 0.004 110);
+    --accent: oklch(0.42 0.13 152); --accent-3: oklch(0.31 0.11 152); --accent-tint: oklch(0.96 0.03 152);
+    --warn: oklch(0.56 0.13 72); --err: oklch(0.52 0.17 27); --ok: oklch(0.52 0.12 158);
+    --sans: 'Geist', sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13px; }
+  .page { padding: 28px; max-width: 1500px; }
+  h1 { font-size: 20px; font-weight: 650; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 4px; }
+  .sub { font-size: 12.5px; color: var(--ink-4); margin-bottom: 20px; }
+  .board { display: flex; gap: 14px; overflow-x: auto; align-items: flex-start; }
+  .col { min-width: 250px; width: 250px; flex-shrink: 0; }
+  .col-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 2px 10px; border-bottom: 1px solid var(--ink);
+    margin-bottom: 8px;
+  }
+  .stagedot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4); flex-shrink: 0; }
+  .col.inprogress .stagedot { background: var(--accent); }
+  .col.submitted .stagedot { background: var(--warn); }
+  .col.won .stagedot { background: var(--ok); }
+  .col.lost .stagedot { background: var(--err); }
+  .col-title { font-size: 12.5px; font-weight: 600; color: var(--ink); flex: 1; }
+  .col-count { font-family: var(--mono); font-size: 10.5px; color: var(--ink-4); }
+  .col-sum { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); padding: 0 2px 10px; }
+  .dealrow {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 6px; cursor: pointer;
+    transition: border-color 100ms var(--ease);
+  }
+  .dealrow:hover { border-color: var(--ink-4); }
+  .dealrow .top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+  .dealrow .name { font-size: 12.5px; font-weight: 550; color: var(--ink); }
+  .dealrow .pct { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .dealrow .client { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 3px; }
+  .dealrow .meta { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--mono); font-size: 10px; }
+  .dealrow .meta .val { color: var(--ink-3); }
+  .dealrow .meta .due { color: var(--ink-4); }
+  .dealrow .meta .due.soon { color: var(--warn); font-weight: 600; }
+  .empty { font-size: 11px; color: var(--ink-4); text-align: center; padding: 20px 0; border: 1.5px dashed var(--divider); border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Deals</h1>
+  <div class="sub">Board · stage-row — heavy top rule per column (like a table header), column value subtotal shown, cards keep full chrome</div>
+  <div class="board">
+    <div class="col">
+      <div class="col-head"><span class="stagedot"></span><span class="col-title">New</span><span class="col-count">2</span></div>
+      <div class="col-sum">$210K IN PLAY</div>
+      <div class="dealrow">
+        <div class="top"><span class="name">MoPH Health Data Exchange</span></div>
+        <div class="client">MINISTRY OF PUBLIC HEALTH</div>
+        <div class="meta"><span class="val">—</span><span class="due">02 AUG</span></div>
+      </div>
+      <div class="dealrow">
+        <div class="top"><span class="name">Milaha Fleet Telemetry</span><span class="pct">23%</span></div>
+        <div class="client">QATAR NAVIGATION</div>
+        <div class="meta"><span class="val">$210,000</span><span class="due">30 JUL</span></div>
+      </div>
+    </div>
+    <div class="col inprogress">
+      <div class="col-head"><span class="stagedot"></span><span class="col-title">In progress</span><span class="col-count">2</span></div>
+      <div class="col-sum">$2.1M IN PLAY</div>
+      <div class="dealrow">
+        <div class="top"><span class="name">Ashghal Intelligent Transport</span><span class="pct">41%</span></div>
+        <div class="client">PUBLIC WORKS AUTHORITY</div>
+        <div class="meta"><span class="val">$1.4M</span><span class="due soon">29 JUN</span></div>
+      </div>
+      <div class="dealrow">
+        <div class="top"><span class="name">Ooredoo Managed Security</span><span class="pct">57%</span></div>
+        <div class="client">OOREDOO QATAR</div>
+        <div class="meta"><span class="val">$680,000</span><span class="due">21 JUL</span></div>
+      </div>
+    </div>
+    <div class="col submitted">
+      <div class="col-head"><span class="stagedot"></span><span class="col-title">Submitted</span><span class="col-count">2</span></div>
+      <div class="col-sum">$2.2M IN PLAY</div>
+      <div class="dealrow">
+        <div class="top"><span class="name">QNB Digital Banking</span><span class="pct">82%</span></div>
+        <div class="client">QATAR NATIONAL BANK</div>
+        <div class="meta"><span class="val">$2.1M</span><span class="due">14 JUL</span></div>
+      </div>
+      <div class="dealrow">
+        <div class="top"><span class="name">QF Campus Wayfinding</span><span class="pct">94%</span></div>
+        <div class="client">QATAR FOUNDATION</div>
+        <div class="meta"><span class="val">$95,000</span><span class="due">08 JUL</span></div>
+      </div>
+    </div>
+    <div class="col won">
+      <div class="col-head"><span class="stagedot"></span><span class="col-title">Won</span><span class="col-count">1</span></div>
+      <div class="col-sum">$213 CLOSED</div>
+      <div class="dealrow">
+        <div class="top"><span class="name">Hello</span><span class="pct">100%</span></div>
+        <div class="client">HI</div>
+        <div class="meta"><span class="val">$213</span><span class="due">20 MAY</span></div>
+      </div>
+    </div>
+    <div class="col lost">
+      <div class="col-head"><span class="stagedot"></span><span class="col-title">Lost</span><span class="col-count">0</span></div>
+      <div class="col-sum">—</div>
+      <div class="empty">Drop here</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

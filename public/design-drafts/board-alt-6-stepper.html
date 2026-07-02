@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Alt 6 · Stepper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;550;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.985 0.002 110); --bg-2: oklch(0.968 0.003 110); --surface: oklch(1 0 0);
+    --ink: oklch(0.17 0.010 110); --ink-2: oklch(0.32 0.009 110);
+    --ink-3: oklch(0.47 0.008 110); --ink-4: oklch(0.61 0.007 110);
+    --border: oklch(0.885 0.005 110); --divider: oklch(0.935 0.004 110);
+    --accent: oklch(0.42 0.13 152); --accent-3: oklch(0.31 0.11 152);
+    --warn: oklch(0.56 0.13 72); --err: oklch(0.52 0.17 27); --ok: oklch(0.52 0.12 158);
+    --sans: 'Geist', sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13px; }
+  .page { padding: 28px; max-width: 1560px; }
+  h1 { font-size: 20px; font-weight: 650; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 4px; }
+  .sub { font-size: 12.5px; color: var(--ink-4); margin-bottom: 20px; }
+
+  .board { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }
+  .col { min-width: 270px; width: 270px; flex-shrink: 0; }
+
+  /* Numbered stepper badge shows pipeline sequence (1→2→3), with a
+     connecting line across columns like a process flow. Won/Lost break
+     off the line as terminal states, colored ok/err. */
+  .col-head { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; position: relative; }
+  .step {
+    width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    border: 1.5px solid var(--border); color: var(--ink-4); background: var(--surface);
+    position: relative; z-index: 1;
+  }
+  .col.inprogress .step, .col.submitted .step { border-color: var(--accent); color: var(--accent-3); background: var(--surface); }
+  .col.won .step { border-color: var(--ok); background: var(--ok); color: white; }
+  .col.lost .step { border-color: var(--err); background: var(--err); color: white; }
+
+  /* Connector line: sits behind the steps, spans the row of columns. */
+  .connector { height: 1.5px; background: var(--border); position: absolute; top: 9.5px; left: -12px; right: -12px; z-index: 0; }
+  .col:first-child .connector { left: 12px; }
+  .col.terminal .connector { display: none; }
+
+  /* Sit above .connector: an absolutely-positioned z-index:0 sibling still
+     paints after static content in the same stacking context, so without
+     this the line draws over the text. Also gives the title an opaque
+     backdrop so the line visually stops at the badge, not through the label. */
+  .col-title {
+    font-size: 12.5px; font-weight: 600; color: var(--ink); flex: 1;
+    position: relative; z-index: 2; background: var(--bg); padding-right: 6px;
+  }
+  .col-count { font-family: var(--mono); font-size: 11px; color: var(--ink-4); font-variant-numeric: tabular-nums; position: relative; z-index: 2; }
+  .col-sub { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); padding: 0 0 10px 26px; margin-top: -6px; }
+
+  .dealcard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; margin-bottom: 8px; cursor: grab;
+    transition: border-color 100ms var(--ease), box-shadow 100ms var(--ease);
+  }
+  .dealcard:last-child { margin-bottom: 0; }
+  .dealcard:hover { border-color: var(--ink-4); box-shadow: 0 3px 10px oklch(0.17 0.01 110 / 0.07); }
+  .dealcard .name { font-size: 13px; font-weight: 550; color: var(--ink); line-height: 1.3; margin-bottom: 2px; }
+  .dealcard .client { font-size: 11px; color: var(--ink-4); margin-bottom: 10px; }
+  .ministat { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding-top: 9px; border-top: 1px solid var(--divider); }
+  .ministat .k { font-family: var(--mono); font-size: 8px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 2px; }
+  .ministat .v { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .ministat .v.soon { color: var(--warn); font-weight: 600; }
+  .ministat .v.full { color: var(--ok); }
+  .empty { font-size: 11px; color: var(--ink-4); text-align: center; padding: 16px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Deals</h1>
+  <div class="sub">Board · numbered stepper — a process-flow line runs through New → In progress → Submitted, with a filled ok/err badge marking the two terminal states (Won, Lost) that break off the line.</div>
+  <div class="board">
+
+    <div class="col new">
+      <div class="col-head"><div class="connector"></div><span class="step">1</span><span class="col-title">New</span><span class="col-count">2</span></div>
+      <div class="col-sub">$210K in play</div>
+      <div class="dealcard">
+        <div class="name">MoPH Health Data Exchange</div>
+        <div class="client">Ministry of Public Health</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">—</div></div>
+          <div><div class="k">Done</div><div class="v">0%</div></div>
+          <div><div class="k">Due</div><div class="v">02 Aug</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="name">Milaha Fleet Telemetry</div>
+        <div class="client">Qatar Navigation</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$210K</div></div>
+          <div><div class="k">Done</div><div class="v">23%</div></div>
+          <div><div class="k">Due</div><div class="v">30 Jul</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col inprogress">
+      <div class="col-head"><div class="connector"></div><span class="step">2</span><span class="col-title">In progress</span><span class="col-count">2</span></div>
+      <div class="col-sub">$2.1M in play</div>
+      <div class="dealcard">
+        <div class="name">Ashghal Intelligent Transport</div>
+        <div class="client">Public Works Authority</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$1.4M</div></div>
+          <div><div class="k">Done</div><div class="v">41%</div></div>
+          <div><div class="k">Due</div><div class="v soon">29 Jun</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="name">Ooredoo Managed Security</div>
+        <div class="client">Ooredoo Qatar</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$680K</div></div>
+          <div><div class="k">Done</div><div class="v">57%</div></div>
+          <div><div class="k">Due</div><div class="v">21 Jul</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col submitted">
+      <div class="col-head"><div class="connector"></div><span class="step">3</span><span class="col-title">Submitted</span><span class="col-count">2</span></div>
+      <div class="col-sub">$2.2M in play</div>
+      <div class="dealcard">
+        <div class="name">QNB Digital Banking</div>
+        <div class="client">Qatar National Bank</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$2.1M</div></div>
+          <div><div class="k">Done</div><div class="v">82%</div></div>
+          <div><div class="k">Due</div><div class="v">14 Jul</div></div>
+        </div>
+      </div>
+      <div class="dealcard">
+        <div class="name">QF Campus Wayfinding</div>
+        <div class="client">Qatar Foundation</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$95K</div></div>
+          <div><div class="k">Done</div><div class="v">94%</div></div>
+          <div><div class="k">Due</div><div class="v">08 Jul</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col won terminal">
+      <div class="col-head"><span class="step">✓</span><span class="col-title">Won</span><span class="col-count">1</span></div>
+      <div class="col-sub">$213 closed</div>
+      <div class="dealcard">
+        <div class="name">Hello</div>
+        <div class="client">Hi</div>
+        <div class="ministat">
+          <div><div class="k">Value</div><div class="v">$213</div></div>
+          <div><div class="k">Done</div><div class="v full">100%</div></div>
+          <div><div class="k">Due</div><div class="v">20 May</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col lost terminal">
+      <div class="col-head"><span class="step">✕</span><span class="col-title">Lost</span><span class="col-count">0</span></div>
+      <div class="col-sub">—</div>
+      <div class="empty">Drop here</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

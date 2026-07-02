@@ -17,16 +17,35 @@ type Deal = {
   is_sample?: boolean;
 };
 
-const COLUMNS: { key: string; label: string; aliases: string[] }[] = [
-  { key: "new",         label: "New",         aliases: ["new"] },
-  { key: "in_progress", label: "In progress", aliases: ["in_progress"] },
-  { key: "submitted",   label: "Submitted",   aliases: ["submitted"] },
-  { key: "won",         label: "Won",         aliases: ["won"] },
-  { key: "lost",        label: "Lost",        aliases: ["lost"] },
+type Tone = "neutral" | "accent" | "warn" | "ok" | "err";
+
+const COLUMNS: { key: string; label: string; aliases: string[]; tone: Tone }[] = [
+  { key: "new",         label: "New",         aliases: ["new"],         tone: "neutral" },
+  { key: "in_progress", label: "In progress", aliases: ["in_progress"], tone: "accent" },
+  { key: "submitted",   label: "Submitted",   aliases: ["submitted"],   tone: "warn" },
+  { key: "won",         label: "Won",         aliases: ["won"],         tone: "ok" },
+  { key: "lost",        label: "Lost",        aliases: ["lost"],        tone: "err" },
 ];
+
+// Count-pill colors — reuses the app's existing status tones (StatusBadge),
+// applied only to the small count chip so the rest of the column stays
+// neutral white. See public/design-drafts/board-alt-5-countpill.html.
+const PILL_TONE: Record<Tone, { bg: string; fg: string }> = {
+  neutral: { bg: "var(--bg-2)",         fg: "var(--fg-3)" },
+  accent:  { bg: "var(--accent-tint)",  fg: "var(--accent-3)" },
+  warn:    { bg: "var(--warn-tint)",    fg: "var(--warn)" },
+  ok:      { bg: "var(--ok-tint)",      fg: "var(--ok)" },
+  err:     { bg: "var(--err-tint)",     fg: "var(--err)" },
+};
 
 function resolveColumn(status: string): string {
   return COLUMNS.find((c) => c.aliases.includes(status))?.key ?? "new";
+}
+
+function fmtCompact(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (n >= 1_000) return `$${Math.round(n / 1_000)}K`;
+  return `$${n.toLocaleString()}`;
 }
 
 async function patchStatus(dealId: string, status: string) {
@@ -519,23 +538,39 @@ export default function DealsBoard({
         {COLUMNS.map((col) => {
           const items = grouped.get(col.key) ?? [];
           const isOver = overCol === col.key;
+          const pillTone = PILL_TONE[col.tone];
+          const subtotal = items.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
 
           return (
             <div
               key={col.key}
-              style={{ minWidth: 240, width: 240, flexShrink: 0 }}
+              style={{ minWidth: 262, width: 262, flexShrink: 0 }}
               onDragOver={(e) => onDragOverCol(e, col.key)}
               onDragLeave={onDragLeaveCol}
               onDrop={(e) => onDrop(e, col.key)}
             >
-              <div className="flex items-center justify-between px-1 mb-2">
-                <span
-                  className="text-[11.5px] uppercase tracking-wider font-semibold"
-                  style={{ color: "var(--fg-4)" }}
-                >
+              <div
+                className="flex items-center gap-2 px-1 mb-2.5"
+                style={{ borderBottom: "1px solid var(--fg)", paddingBottom: 9 }}
+              >
+                <span className="text-[12.5px] font-semibold" style={{ color: "var(--fg)", flex: 1 }}>
                   {col.label}
                 </span>
-                <span className="num text-[11.5px]" style={{ color: "var(--fg-5)" }}>
+                <span className="mono text-[9.5px]" style={{ color: "var(--fg-4)" }}>
+                  {subtotal > 0 ? fmtCompact(subtotal) : ""}
+                </span>
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    padding: "2px 7px",
+                    borderRadius: 999,
+                    background: pillTone.bg,
+                    color: pillTone.fg,
+                    flexShrink: 0,
+                  }}
+                >
                   {items.length}
                 </span>
               </div>
@@ -588,7 +623,9 @@ export default function DealsBoard({
                         onClick={(e) => {
                           if (draggingId.current) e.preventDefault();
                         }}
-                        style={{ userSelect: "none" }}
+                        style={{ userSelect: "none", transition: "border-color 100ms var(--ease), box-shadow 100ms var(--ease)" }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 3px 10px oklch(0.17 0.01 110 / 0.07)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
                       >
                         {/* Header: title + actions menu */}
                         <div className="flex items-start gap-2 mb-1">
@@ -608,28 +645,33 @@ export default function DealsBoard({
                             onDeleted={() => removeFromList(d.id)}
                           />
                         </div>
-                        <div className="text-[11.5px] mb-2" style={{ color: "var(--fg-4)" }}>
+                        <div className="text-[11px] mb-2.5" style={{ color: "var(--fg-4)" }}>
                           {d.client_name ?? "No client"}
                         </div>
-                        {t.total > 0 && (
-                          <div className="rounded-full mb-2" style={{ height: 3, background: "var(--bg-2)" }}>
-                            <div
-                              style={{
-                                width: `${pct}%`,
-                                height: "100%",
-                                background: pct >= 100 ? "var(--ok)" : "var(--accent)",
-                                borderRadius: 999,
-                              }}
-                            />
+
+                        {/* Mini-stat strip: Value / Done / Due */}
+                        <div
+                          className="grid grid-cols-3 gap-1"
+                          style={{ paddingTop: 9, borderTop: "1px solid var(--divider)" }}
+                        >
+                          <div>
+                            <div className="mono" style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 2 }}>Value</div>
+                            <div className="mono" style={{ fontSize: 11.5, color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>
+                              {d.value ? fmtCompact(Number(d.value)) : "—"}
+                            </div>
                           </div>
-                        )}
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span style={{ color: "var(--fg-4)" }}>
-                            {d.value ? `$${Number(d.value).toLocaleString()}` : "—"}
-                          </span>
-                          <span style={{ color: dueSoon ? "var(--warn)" : "var(--fg-4)" }}>
-                            {d.due_date ? d.due_date.slice(0, 10) : "—"}
-                          </span>
+                          <div>
+                            <div className="mono" style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 2 }}>Done</div>
+                            <div className="mono" style={{ fontSize: 11.5, color: pct >= 100 ? "var(--ok)" : "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>
+                              {t.total > 0 ? `${pct}%` : "—"}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mono" style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 2 }}>Due</div>
+                            <div className="mono" style={{ fontSize: 11.5, color: dueSoon ? "var(--warn)" : "var(--fg-2)", fontWeight: dueSoon ? 600 : 400, fontVariantNumeric: "tabular-nums" }}>
+                              {d.due_date ? d.due_date.slice(5, 10) : "—"}
+                            </div>
+                          </div>
                         </div>
                       </Link>
                     </div>
