@@ -551,7 +551,7 @@ export default function DealsBoard({
             >
               <div
                 className="flex items-center gap-2 px-1 mb-2.5"
-                style={{ borderBottom: "1px solid var(--fg)", paddingBottom: 9 }}
+                style={{ borderBottom: "1px solid var(--divider)", paddingBottom: 9 }}
               >
                 <span className="text-[12.5px] font-semibold" style={{ color: "var(--fg)", flex: 1 }}>
                   {col.label}
