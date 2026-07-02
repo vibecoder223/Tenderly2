@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
+import { Meter } from "@/components/ui";
 import Select from "@/components/Select";
 
 type Deal = {
@@ -469,19 +470,14 @@ export default function DealsBoard({
                     <td><StatusBadge status={d.status} /></td>
                     <td style={{ minWidth: 140 }}>
                       {t.total > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <div style={{ width: 64, height: 4, background: "var(--bg-2)", borderRadius: 2, overflow: "hidden" }}>
-                            <div style={{ width: `${pct}%`, height: "100%", background: pct >= 100 ? "var(--ok)" : "var(--accent)" }} />
-                          </div>
-                          <span className="mono num" style={{ color: "var(--fg-4)", fontSize: 11 }}>{pct}%</span>
-                        </div>
+                        <Meter pct={pct} width={64} />
                       ) : <span className="mono" style={{ color: "var(--fg-5)", fontSize: 11 }}>—</span>}
                     </td>
                     <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11.5 }}>{d.due_date ? d.due_date.slice(0, 10) : "—"}</td>
-                    <td style={{ textAlign: "right", fontFamily: "'Geist', sans-serif", fontWeight: 700, color: "var(--fg)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.018em" }}>
+                    <td style={{ textAlign: "right", fontFamily: "'Geist Mono', monospace", fontWeight: 500, fontSize: 12, color: "var(--fg)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
                       {d.value ? (
                         <>
-                          <span style={{ fontFamily: "'Geist Mono', monospace", fontSize: 10.5, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
+                          <span style={{ fontSize: 10.5, color: "var(--fg-4)", marginRight: 1 }}>$</span>
                           {Number(d.value).toLocaleString()}
                         </>
                       ) : "—"}

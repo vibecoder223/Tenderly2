@@ -66,25 +66,20 @@ const tone: Record<string, "ok" | "warn" | "err" | "accent" | "default"> = {
   pending: "default",
 };
 
+// In-progress states get a subtle pulsing dot to signal live pipeline work.
+const liveStatuses = new Set([
+  "extracting", "chunked", "analyzing", "structured", "parsing",
+  "chunking", "embedding", "storing", "drafting",
+]);
+
 export default function StatusBadge({ status, label }: { status: string; label?: string }) {
-  const cls = tone[status] || "default";
+  const t = tone[status] || "default";
   const resolved =
     label ??
     dealStatusLabels[status] ??
     questionStatusLabels[status] ??
     status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
-  return (
-    <span className={`badge ${cls === "default" ? "" : `badge-${cls}`}`}>
-      <span
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: 999,
-          background: "currentColor",
-          opacity: 0.7,
-        }}
-      />
-      {resolved}
-    </span>
-  );
+  const toneClass = t === "default" ? "" : ` st-${t}`;
+  const liveClass = liveStatuses.has(status) ? " st-live" : "";
+  return <span className={`st${toneClass}${liveClass}`}>{resolved}</span>;
 }

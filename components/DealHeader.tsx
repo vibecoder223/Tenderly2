@@ -1,5 +1,6 @@
 import Link from "next/link";
 import StatusBadge, { dealStatusLabels } from "@/components/StatusBadge";
+import { Meter } from "@/components/ui";
 import CloneDealButton from "@/components/CloneDealButton";
 
 export default function DealHeader({
@@ -47,10 +48,10 @@ export default function DealHeader({
 
       <div className="flex items-end gap-x-5 gap-y-3 flex-wrap md:items-start md:self-start">
         <Meta label="value">
-          <span style={{ fontFamily: "'Geist', sans-serif", fontWeight: 700, letterSpacing: "-0.022em", fontSize: 17, color: "var(--fg)" }}>
+          <span style={{ fontFamily: "'Geist Mono', monospace", fontWeight: 500, letterSpacing: "-0.03em", fontSize: 17, color: "var(--fg)", fontVariantNumeric: "tabular-nums" }}>
             {deal.value ? (
               <>
-                <span style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11, color: "var(--fg-4)", fontWeight: 500, marginRight: 1 }}>$</span>
+                <span style={{ fontSize: 11, color: "var(--fg-4)", marginRight: 1 }}>$</span>
                 {Number(deal.value).toLocaleString()}
               </>
             ) : "—"}
@@ -68,18 +69,7 @@ export default function DealHeader({
           {pct == null ? (
             <span className="mono" style={{ fontSize: 13, color: "var(--fg-4)" }}>—</span>
           ) : (
-            <div className="flex items-center gap-2">
-              <div style={{ width: 72, height: 4, background: "var(--bg-2)", borderRadius: 2, overflow: "hidden" }}>
-                <div
-                  style={{
-                    width: `${pct}%`,
-                    height: "100%",
-                    background: pct >= 100 ? "var(--ok)" : "var(--accent)",
-                  }}
-                />
-              </div>
-              <span className="mono num" style={{ fontSize: 12, color: "var(--fg-3)" }}>{pct}%</span>
-            </div>
+            <Meter pct={pct} />
           )}
         </Meta>
         <div className="self-center md:self-start md:mt-1">
@@ -96,11 +86,12 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
       <div
         style={{
           fontFamily: "'Geist Mono', monospace",
-          fontSize: 10,
+          fontSize: 9,
+          fontWeight: 500,
           textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          color: "var(--fg-5)",
-          marginBottom: 3,
+          letterSpacing: "0.16em",
+          color: "var(--fg-4)",
+          marginBottom: 4,
         }}
       >
         {label}
