@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
+import { ReadingsBand } from "@/components/ui";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 export default async function DashboardPage() {
@@ -247,43 +248,36 @@ export default async function DashboardPage() {
         }
       />
       {!isEmpty && !showOnboarding && (
-        <div className="band" role="list" aria-label="Pipeline summary">
-          <div className="band-cell" role="listitem">
-            <span className="band-label">Active deals</span>
-            <div className="band-reading">
-              <span className="band-n">{activeDeals.length}</span>
-              <span className="band-delta">{questionTotals.total} questions</span>
-            </div>
-          </div>
-          <div className="band-cell" role="listitem">
-            <span className="band-label">Awaiting approval</span>
-            <div className="band-reading">
-              <span className={`band-n${questionTotals.inReview > 0 ? " warn" : ""}`}>{questionTotals.inReview}</span>
-              <span className="band-delta">in review</span>
-            </div>
-          </div>
-          <div className="band-cell" role="listitem">
-            <span className="band-label">Due this week</span>
-            <div className="band-reading">
-              <span className={`band-n${dueSoon.length > 0 ? " warn" : ""}`}>{dueSoon.length}</span>
-              <span className="band-delta">next 7 days</span>
-            </div>
-          </div>
-          <div className="band-cell" role="listitem">
-            <span className="band-label">Overdue</span>
-            <div className="band-reading">
-              <span className={`band-n${overdue.length > 0 ? " err" : ""}`}>{overdue.length}</span>
-              <span className="band-delta">past due date</span>
-            </div>
-          </div>
-          <div className="band-cell" role="listitem">
-            <span className="band-label">Mandatory unanswered</span>
-            <div className="band-reading">
-              <span className={`band-n${mandatoryUnanswered > 0 ? " err" : ""}`}>{mandatoryUnanswered}</span>
-              <span className="band-delta">must-have items</span>
-            </div>
-          </div>
-        </div>
+        <ReadingsBand
+          maxWidth={1300}
+          items={[
+            { label: "Active deals", value: activeDeals.length, delta: `${questionTotals.total} questions` },
+            {
+              label: "Awaiting approval",
+              value: questionTotals.inReview,
+              delta: "in review",
+              tone: questionTotals.inReview > 0 ? "warn" : undefined,
+            },
+            {
+              label: "Due this week",
+              value: dueSoon.length,
+              delta: "next 7 days",
+              tone: dueSoon.length > 0 ? "warn" : undefined,
+            },
+            {
+              label: "Overdue",
+              value: overdue.length,
+              delta: "past due date",
+              tone: overdue.length > 0 ? "err" : undefined,
+            },
+            {
+              label: "Mandatory unanswered",
+              value: mandatoryUnanswered,
+              delta: "must-have items",
+              tone: mandatoryUnanswered > 0 ? "err" : undefined,
+            },
+          ]}
+        />
       )}
 
       <div className="p-7 pt-0 max-w-[1300px] space-y-6">

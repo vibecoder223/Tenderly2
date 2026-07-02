@@ -829,17 +829,46 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
  * Readings band, action queue, deal meter, activity feed, telemetry.
  * ──────────────────────────────────────────────────────────────── */
 
-/* Full-width readings band under the topbar */
+/* Full-width readings band under the topbar. The border/background span the
+ * full content width (instrument-panel look); .band-inner constrains the
+ * cell grid to the same max-width as the page content below it and stays
+ * flush left (the page content isn't centered either — it's anchored next
+ * to the sidebar), so the two edges line up instead of the band overhanging
+ * on wide screens. */
 .band {
-  display: grid;
-  grid-template-columns: repeat(var(--band-cols, 5), 1fr);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   margin-bottom: 24px;
 }
-.band-cell { padding: 16px 20px 15px; border-right: 1px solid var(--divider); }
-.band-cell:last-child { border-right: none; }
+.band-inner {
+  display: grid;
+  grid-template-columns: repeat(var(--band-cols, 5), 1fr);
+  max-width: var(--band-max-width, 1300px);
+}
+.band-cell { padding: 16px 20px 15px 0; margin-left: 20px; border-right: 1px solid var(--divider); }
+.band-cell:first-child { margin-left: 28px; }
+.band-cell:last-child { border-right: none; padding-right: 28px; }
+
+/* Tablet: 5 columns get cramped once cells drop under ~150px — wrap to a
+ * 3-up grid so labels and deltas stay readable instead of squeezing. */
+@media (max-width: 900px) {
+  .band-inner { grid-template-columns: repeat(3, 1fr); }
+  .band-cell { border-right: 1px solid var(--divider); }
+  .band-cell:nth-child(3n) { border-right: none; }
+}
+/* Mobile: matches the app's 768px sidebar/page-padding breakpoint. */
+@media (max-width: 768px) {
+  .band-inner { grid-template-columns: repeat(2, 1fr); }
+  .band-cell { margin-left: 16px; padding-right: 0; }
+  .band-cell:first-child { margin-left: 16px; }
+  .band-cell:nth-child(3n) { border-right: 1px solid var(--divider); }
+  .band-cell:nth-child(2n) { border-right: none; padding-right: 16px; }
+}
+@media (max-width: 420px) {
+  .band-inner { grid-template-columns: 1fr; }
+  .band-cell { border-right: none !important; padding-right: 16px !important; }
+}
 .band-label {
   display: block;
   font-family: 'Geist Mono', ui-monospace, monospace;

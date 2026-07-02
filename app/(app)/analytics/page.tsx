@@ -372,6 +372,7 @@ export default async function AnalyticsPage({
       />
 
       <ReadingsBand
+        maxWidth={1200}
         items={[
           {
             label: "Win rate",

@@ -25,19 +25,29 @@ export type Reading = {
 };
 
 /** Full-width readings band for overview screens: mono micro-label + big mono
- *  number + context delta, divided by hairlines. */
-export function ReadingsBand({ items }: { items: Reading[] }) {
+ *  number + context delta, divided by hairlines. `maxWidth` must match the
+ *  max-width of the page content below it (dashboard: 1300, analytics: 1200)
+ *  so the band's cell grid lines up with the content instead of overhanging
+ *  it on wide screens — the outer bar still spans full width. */
+export function ReadingsBand({ items, maxWidth = 1300 }: { items: Reading[]; maxWidth?: number }) {
   return (
-    <div className="band" role="list" aria-label="Summary" style={{ ["--band-cols" as any]: items.length }}>
-      {items.map((r, i) => (
-        <div className="band-cell" role="listitem" key={i}>
-          <span className="band-label">{r.label}</span>
-          <div className="band-reading">
-            <span className={`band-n${r.tone ? " " + r.tone : ""}`}>{r.value}</span>
-            {r.delta != null && <span className="band-delta">{r.delta}</span>}
+    <div className="band">
+      <div
+        className="band-inner"
+        role="list"
+        aria-label="Summary"
+        style={{ ["--band-cols" as any]: items.length, ["--band-max-width" as any]: `${maxWidth}px` }}
+      >
+        {items.map((r, i) => (
+          <div className="band-cell" role="listitem" key={i}>
+            <span className="band-label">{r.label}</span>
+            <div className="band-reading">
+              <span className={`band-n${r.tone ? " " + r.tone : ""}`}>{r.value}</span>
+              {r.delta != null && <span className="band-delta">{r.delta}</span>}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
