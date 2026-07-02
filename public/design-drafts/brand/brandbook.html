@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propello — brandbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.985 0.002 110); --surface: oklch(1 0 0);
+    --ink: oklch(0.17 0.010 110); --ink-2: oklch(0.32 0.009 110); --ink-3: oklch(0.47 0.008 110); --ink-4: oklch(0.61 0.007 110);
+    --rule: oklch(0.885 0.005 110); --rule-soft: oklch(0.935 0.004 110);
+    --accent: oklch(0.50 0.135 149); --accent-3: oklch(0.37 0.12 149); --accent-tint: oklch(0.965 0.032 149);
+    --warn: oklch(0.56 0.13 72); --err: oklch(0.52 0.17 27); --ok: oklch(0.52 0.12 158);
+    --pine: oklch(0.30 0.09 155); --leaf: oklch(0.72 0.17 149);
+    --sans: 'Geist', sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 14px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 56px 32px 100px; }
+  .eyebrow { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4); }
+  section { padding: 44px 0; border-bottom: 1px solid var(--rule-soft); }
+  section h2 { font-size: 22px; font-weight: 650; letter-spacing: -0.02em; color: var(--ink); margin: 8px 0 24px; }
+  .top h1 { font-size: 15px; font-weight: 650; margin-top: 6px; }
+
+  .logorow { display: flex; align-items: center; gap: 48px; margin-bottom: 32px; flex-wrap: wrap; }
+  .marksize { display: flex; align-items: center; justify-content: center; border-radius: 22%; background: var(--pine); color: #fff; font-family: var(--mono); font-weight: 600; }
+  .lockup { display: flex; align-items: center; gap: 9px; }
+  .lockup .wordmark { font-weight: 650; letter-spacing: -0.02em; color: var(--ink); }
+  .clearspace { border: 1px dashed var(--rule); padding: 24px; display: inline-flex; align-items: center; gap: 9px; }
+
+  .swatches { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+  .swatch { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .swatch .fill { height: 64px; }
+  .swatch .meta { padding: 8px 10px; }
+  .swatch .name { font-family: var(--mono); font-size: 10.5px; color: var(--ink); }
+  .swatch .hex { font-family: var(--mono); font-size: 9.5px; color: var(--ink-4); }
+
+  .typespec .row { display: flex; align-items: baseline; gap: 20px; padding: 14px 0; border-top: 1px solid var(--rule-soft); }
+  .typespec .row:first-child { border-top: none; }
+  .typespec .label { width: 130px; flex-shrink: 0; font-family: var(--mono); font-size: 10px; color: var(--ink-4); }
+  .disp { font-weight: 650; letter-spacing: -0.03em; color: var(--ink); }
+
+  .patterns { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+  .pat { border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
+  .pat .l { font-family: var(--mono); font-size: 9px; color: var(--ink-4); margin-bottom: 10px; }
+  .microlabel-demo { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-4); }
+  .band-demo { display: flex; align-items: baseline; gap: 8px; }
+  .band-demo .n { font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--ink); letter-spacing: -0.03em; }
+  .stage-demo { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--accent-3); }
+  .stage-demo::before { content:''; width:5px; height:5px; border-radius:50%; background: var(--accent); }
+  .pill-demo { font-family: var(--mono); font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--accent-tint); color: var(--accent-3); }
+
+  table.dd { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.dd th { text-align: left; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); padding-bottom: 10px; }
+  table.dd td { padding: 8px 0; border-top: 1px solid var(--rule-soft); }
+  table.dd .no { color: var(--err); } table.dd .yes { color: var(--ok); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="eyebrow">Propello</span>
+    <h1>Brandbook</h1>
+  </div>
+
+  <section>
+    <span class="eyebrow">Logo</span>
+    <h2>Mark + wordmark</h2>
+    <div class="logorow">
+      <div class="marksize" style="width:56px;height:56px;font-size:26px;">P</div>
+      <div class="marksize" style="width:36px;height:36px;font-size:17px;">P</div>
+      <div class="marksize" style="width:20px;height:20px;font-size:10px;">P</div>
+      <div class="lockup"><div class="marksize" style="width:32px;height:32px;font-size:16px;">P</div><span class="wordmark" style="font-size:22px;">propello</span></div>
+    </div>
+    <span class="eyebrow">Clearspace — 0.5x mark-height on every side</span><br><br>
+    <div class="clearspace"><div class="marksize" style="width:28px;height:28px;font-size:14px;">P</div><span class="wordmark" style="font-size:18px;">propello</span></div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Color</span>
+    <h2>Palette</h2>
+    <div class="swatches">
+      <div class="swatch"><div class="fill" style="background:var(--accent)"></div><div class="meta"><div class="name">--accent</div><div class="hex">#107734</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-3)"></div><div class="meta"><div class="name">--accent-3</div><div class="hex">#005016</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-tint)"></div><div class="meta"><div class="name">--accent-tint</div><div class="hex">#e5fae8</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--pine)"></div><div class="meta"><div class="name">--pine</div><div class="hex">#0f3d21</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--leaf)"></div><div class="meta"><div class="name">--leaf</div><div class="hex">#3ecf6a</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--warn)"></div><div class="meta"><div class="name">--warn</div><div class="hex">state</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--err)"></div><div class="meta"><div class="name">--err</div><div class="hex">state</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--ink)"></div><div class="meta"><div class="name">--ink</div><div class="hex">text</div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Type</span>
+    <h2>Specimen</h2>
+    <div class="typespec">
+      <div class="row"><span class="label">Display 68</span><span class="disp" style="font-size:44px;">300 questions.</span></div>
+      <div class="row"><span class="label">Heading 34</span><span class="disp" style="font-size:28px;">Grounded drafting</span></div>
+      <div class="row"><span class="label">Body 15.5</span><span style="font-size:15.5px; color:var(--ink-3);">Every draft cites your own documents.</span></div>
+      <div class="row"><span class="label">Mono eyebrow</span><span class="eyebrow" style="color:var(--accent-3);">AI-powered RFP response</span></div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Signature patterns</span>
+    <h2>The vocabulary</h2>
+    <div class="patterns">
+      <div class="pat"><div class="l">MICRO-LABEL</div><div class="microlabel-demo">Active deals</div></div>
+      <div class="pat"><div class="l">READING</div><div class="band-demo"><span class="n">351</span><span style="font-family:var(--mono); font-size:10px; color:var(--ink-4);">questions</span></div></div>
+      <div class="pat"><div class="l">STAGE TAG</div><div class="stage-demo">Drafting</div></div>
+      <div class="pat"><div class="l">COUNT PILL</div><div class="pill-demo">8</div></div>
+    </div>
+  </section>
+
+  <section style="border-bottom:none;">
+    <span class="eyebrow">Guardrails</span>
+    <h2>Do / don't</h2>
+    <table class="dd">
+      <tr><th>Do</th><th>Don't</th></tr>
+      <tr><td class="yes">One drenched-green CTA band per page</td><td class="no">Green wash on every section</td></tr>
+      <tr><td class="yes">Mono numbers as proof points</td><td class="no">Adjective-stacked claims</td></tr>
+      <tr><td class="yes">Browser-framed real UI</td><td class="no">Abstract gradient blobs</td></tr>
+      <tr><td class="yes">Sentence case</td><td class="no">Title Case headlines</td></tr>
+      <tr><td class="yes">Sage green, one hue</td><td class="no">A second "friendly" accent color</td></tr>
+      <tr><td class="yes">Real product screenshots</td><td class="no">Stock photography</td></tr>
+    </table>
+  </section>
+</div>
+</body>
+</html>
