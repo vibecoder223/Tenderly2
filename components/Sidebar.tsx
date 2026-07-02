@@ -163,8 +163,8 @@ export default function Sidebar({
       className={`fixed inset-y-0 left-0 z-30 flex flex-col sidebar-rail${mobileOpen ? " sidebar-open" : ""}`}
       style={{
         width: "var(--sidebar)",
-        background: "var(--bg-2)",
-        borderRight: "1px solid var(--divider)",
+        background: "var(--sidebar-bg)",
+        borderRight: "1px solid var(--sidebar-line)",
       }}
     >
       {/* Brand */}
@@ -172,7 +172,7 @@ export default function Sidebar({
         className="flex items-center gap-2.5 px-4"
         style={{
           height: "var(--topbar)",
-          borderBottom: "1px solid var(--divider)",
+          borderBottom: "1px solid var(--sidebar-line)",
         }}
       >
         <Mark />
@@ -194,7 +194,7 @@ export default function Sidebar({
           <label style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "6px 10px", borderRadius: 5,
-            background: "var(--surface)", border: "1px solid var(--border)",
+            background: "var(--sidebar-active)", border: "1px solid var(--sidebar-line)",
             cursor: "text",
           }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-5)", flexShrink: 0 }}>
@@ -233,7 +233,7 @@ export default function Sidebar({
                 {group.title}
               </div>
             ) : (
-              <div style={{ height: 1, background: "var(--divider)", margin: "0 16px 8px" }} />
+              <div style={{ height: 1, background: "var(--sidebar-line)", margin: "0 16px 8px" }} />
             )}
             <nav style={{ display: "flex", flexDirection: "column", gap: 1, padding: "0 8px" }}>
               {group.items.map((it) => (
@@ -253,7 +253,7 @@ export default function Sidebar({
       <div
         style={{
           padding: "8px",
-          borderTop: "1px solid var(--divider)",
+          borderTop: "1px solid var(--sidebar-line)",
         }}
       >
         <nav style={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -268,7 +268,7 @@ export default function Sidebar({
         className="flex items-center gap-2.5"
         style={{
           padding: "10px 12px",
-          borderTop: "1px solid var(--divider)",
+          borderTop: "1px solid var(--sidebar-line)",
           background: "transparent",
         }}
       >

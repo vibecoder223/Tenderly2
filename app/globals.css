@@ -81,6 +81,13 @@
   /* Shell */
   --sidebar: 216px;
   --topbar:  44px;
+
+  /* Sidebar surface — matches the page canvas exactly (was a darker gray
+   * panel before) so nav blends into the app instead of reading as a
+   * separate box. Hairline border still marks the edge. */
+  --sidebar-bg:     var(--bg);
+  --sidebar-line:   var(--border);
+  --sidebar-active: var(--surface);
 }
 
 /* ──────────────── Base */
