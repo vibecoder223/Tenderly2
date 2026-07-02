@@ -905,6 +905,9 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   padding: 11px 16px; border-bottom: 1px solid var(--divider);
   transition: background var(--dur-fast) var(--ease);
 }
+/* Rows with no leading signal dot (e.g. My queue) — status is carried by
+   the colored mono ref label instead, so a redundant dot isn't needed. */
+.queue-row.no-sig { grid-template-columns: 1fr auto auto; }
 .queue-row:last-child { border-bottom: none; }
 .queue-row:hover { background: var(--bg); }
 .queue-sig { width: 7px; height: 7px; border-radius: 2px; justify-self: center; background: var(--fg-4); }
@@ -918,6 +921,10 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 10px; color: var(--fg-4); white-space: nowrap;
 }
+.queue-ref.warn   { color: var(--warn); }
+.queue-ref.err    { color: var(--err); }
+.queue-ref.accent { color: var(--accent-3); }
+.queue-ref.ok     { color: var(--ok); }
 .queue-act {
   font-size: 11px; font-weight: 500; color: var(--accent-3);
   border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px;

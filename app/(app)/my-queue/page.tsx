@@ -112,13 +112,12 @@ export default async function MyQueuePage() {
                   {[...qs].sort(reviewFirst).map((q) => {
                     const meta = STATUS_META[q.status] ?? STATUS_META.todo;
                     return (
-                      <Link key={q.id} href={`/deals/${deal.id}/questions/${q.id}`} className="queue-row">
-                        <span className={`queue-sig ${meta.tone}`} aria-hidden="true" />
+                      <Link key={q.id} href={`/deals/${deal.id}/questions/${q.id}`} className="queue-row no-sig">
                         <span className="queue-say">
                           <span className="block line-clamp-2">{q.question_text}</span>
                           {q.due_date && <small>due {q.due_date.slice(0, 10)}</small>}
                         </span>
-                        <span className="queue-ref">{meta.ref}</span>
+                        <span className={`queue-ref ${meta.tone}`}>{meta.ref}</span>
                         <span className="queue-act">{meta.act}</span>
                       </Link>
                     );
