@@ -1,9 +1,9 @@
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
+import { ReadingsBand } from "@/components/ui";
 import {
   TimeRangeFilter,
   TrendChart,
-  KpiCard,
   DealsAtRisk,
   FunnelSection,
   type DealRiskRow,
@@ -371,7 +371,38 @@ export default async function AnalyticsPage({
         actions={<TimeRangeFilter from={sp.from ?? null} to={sp.to ?? null} />}
       />
 
-      <div className="p-4 sm:p-7" style={{ maxWidth: 1200 }}>
+      <ReadingsBand
+        items={[
+          {
+            label: "Win rate",
+            value: winRate != null ? `${winRate}%` : "—",
+            delta: `${won.length}W / ${lost.length}L`,
+            tone: winRate != null && winRate >= 60 ? "ok" : undefined,
+          },
+          {
+            label: "Pipeline value",
+            value: fmt$(pipelineValue),
+            delta: `${activeDeals.length} active`,
+          },
+          {
+            label: "Avg cycle time",
+            value: avgCompletionDays != null ? fmtDays(avgCompletionDays) : "—",
+            delta: "open to export",
+            tone: avgCompletionDays != null && avgCompletionDays > 14 ? "warn" : undefined,
+          },
+          {
+            label: "AI quality",
+            value: avgConfidence != null ? `${Math.round(avgConfidence * 100)}%` : "—",
+            delta: noSourceRate != null ? `${Math.round(noSourceRate * 100)}% no-source` : "confidence",
+            tone:
+              avgConfidence != null && avgConfidence < 0.5 ? "err"
+              : avgConfidence != null && avgConfidence >= 0.75 ? "ok"
+              : undefined,
+          },
+        ]}
+      />
+
+      <div className="p-4 sm:p-7 pt-0" style={{ maxWidth: 1200 }}>
 
         <div className="page-header">
           <div className="page-title-row">
@@ -381,39 +412,7 @@ export default async function AnalyticsPage({
           <p className="page-sub">Pipeline health, conversion, cycle time, AI quality.</p>
         </div>
 
-        {/* 1. KPI strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-          <KpiCard
-            label="Win rate"
-            value={winRate != null ? `${winRate}%` : "—"}
-            sub={`${won.length}W / ${lost.length}L`}
-            tone={winRate != null && winRate >= 60 ? "ok" : undefined}
-            sparkData={winRateTrend.map((p) => ({ v: p.value }))}
-            sparkColor="var(--ok)"
-          />
-          <KpiCard
-            label="Pipeline value"
-            value={fmt$(pipelineValue)}
-            sub={`${activeDeals.length} active`}
-            sparkData={[]}
-          />
-          <KpiCard
-            label="Avg cycle time"
-            value={avgCompletionDays != null ? fmtDays(avgCompletionDays) : "—"}
-            sub="open to export"
-            tone={avgCompletionDays != null && avgCompletionDays > 14 ? "warn" : undefined}
-            sparkData={completionTrend.map((p) => ({ v: p.value }))}
-            sparkColor="var(--accent)"
-          />
-          <KpiCard
-            label="AI quality"
-            value={avgConfidence != null ? `${Math.round(avgConfidence * 100)}%` : "—"}
-            sub={noSourceRate != null ? `${Math.round(noSourceRate * 100)}% no-source` : "confidence"}
-            tone={avgConfidence != null && avgConfidence < 0.5 ? "err" : avgConfidence != null && avgConfidence >= 0.75 ? "ok" : undefined}
-          />
-        </div>
-
-        {/* 2+3. Deals at risk + Funnel — side by side on desktop */}
+        {/* Deals at risk + Funnel — side by side on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
           <Section title="Deals at risk" subtitle="Active deals sorted by urgency">
             <DealsAtRisk rows={dealRiskRows} />
@@ -429,23 +428,11 @@ export default async function AnalyticsPage({
             <Empty>No activity in range</Empty>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 480 }}>
+              <table className="data-table" style={{ minWidth: 480 }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid var(--divider)" }}>
+                  <tr>
                     {["Member", "Assigned", "Approved", "Rate", "Avg response"].map((h) => (
-                      <th
-                        key={h}
-                        style={{
-                          textAlign: h === "Member" ? "left" : "right",
-                          padding: "6px 12px 8px",
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                          color: "var(--fg-3)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.04em",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                      <th key={h} style={{ textAlign: h === "Member" ? "left" : "right" }}>
                         {h}
                       </th>
                     ))}
@@ -455,16 +442,16 @@ export default async function AnalyticsPage({
                   {teamRows.map((row) => {
                     const rate = row.assigned > 0 ? row.completed / row.assigned : 0;
                     return (
-                      <tr key={row.member.user_id} style={{ borderBottom: "1px solid var(--divider)" }}>
-                        <td style={{ padding: "9px 12px", color: "var(--fg)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <tr key={row.member.user_id}>
+                        <td style={{ color: "var(--fg)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {row.member.name ?? row.member.email}
                         </td>
-                        <td className="num" style={{ padding: "9px 12px", textAlign: "right", color: "var(--fg-2)" }}>{row.assigned}</td>
-                        <td className="num" style={{ padding: "9px 12px", textAlign: "right", color: "var(--fg-2)" }}>{row.completed}</td>
-                        <td className="num" style={{ padding: "9px 12px", textAlign: "right", color: rate >= 0.8 ? "var(--ok)" : rate >= 0.5 ? "var(--warn)" : "var(--fg-2)" }}>
+                        <td className="mono" style={{ textAlign: "right", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{row.assigned}</td>
+                        <td className="mono" style={{ textAlign: "right", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{row.completed}</td>
+                        <td className="mono" style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: rate >= 0.8 ? "var(--ok)" : rate >= 0.5 ? "var(--warn)" : "var(--fg-2)" }}>
                           {row.assigned > 0 ? `${Math.round(rate * 100)}%` : "—"}
                         </td>
-                        <td className="num" style={{ padding: "9px 12px", textAlign: "right", color: "var(--fg-3)" }}>
+                        <td className="mono" style={{ textAlign: "right", color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
                           {row.avgResponseHrs != null
                             ? row.avgResponseHrs < 24
                               ? `${row.avgResponseHrs.toFixed(1)}h`
@@ -525,13 +512,17 @@ function Section({
   className?: string;
 }) {
   return (
-    <div className={`card ${className ?? ""}`} style={{ padding: "18px 20px", minWidth: 0 }}>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>{title}</div>
-        {subtitle && <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>{subtitle}</div>}
+    <section className={`section-card ${className ?? ""}`} style={{ minWidth: 0 }}>
+      <div className="section-card-head">
+        <div>
+          <span className="section-card-title">{title}</span>
+          {subtitle && (
+            <span style={{ fontSize: 11.5, color: "var(--fg-4)", marginLeft: 8 }}>{subtitle}</span>
+          )}
+        </div>
       </div>
-      {children}
-    </div>
+      <div style={{ padding: "16px 20px" }}>{children}</div>
+    </section>
   );
 }
 

@@ -6,6 +6,10 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell,
 } from "recharts";
+import { Meter } from "@/components/ui";
+
+// Mono axis ticks so charts match the app's data typography.
+const axisTick = { fontSize: 10, fill: "var(--fg-5)", fontFamily: "'Geist Mono', ui-monospace, monospace" } as const;
 
 /* ─── Time range filter ─────────────────────────────────────────────────── */
 
@@ -139,7 +143,6 @@ export function DealsAtRisk({ rows }: { rows: DealRiskRow[] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       {rows.map((row) => {
-        const barFill = row.pctDone >= 0.8 ? "var(--ok)" : row.pctDone >= 0.5 ? "var(--accent)" : "var(--fg-5)";
         const daysLabel =
           row.daysLeft == null ? null :
           row.daysLeft < 0 ? `${Math.abs(row.daysLeft)}d overdue` :
@@ -152,28 +155,26 @@ export function DealsAtRisk({ rows }: { rows: DealRiskRow[] }) {
             style={{ padding: "10px 0", borderBottom: "1px solid var(--divider)" }}
           >
             {/* Top row: name + action */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}>
                 {row.name}
               </div>
               <a
                 href={`/deals/${row.id}/questions`}
-                style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none", flexShrink: 0 }}
+                className="block-more"
+                style={{ flexShrink: 0 }}
               >
                 Open →
               </a>
             </div>
-            {/* Progress bar */}
-            <div style={{ height: 4, borderRadius: 2, background: "var(--border)", overflow: "hidden", marginBottom: 5 }}>
-              <div style={{ width: `${Math.round(row.pctDone * 100)}%`, height: "100%", background: barFill, borderRadius: 2 }} />
-            </div>
-            {/* Stats row */}
+            {/* Meter + days */}
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <span className="num" style={{ fontSize: 12, color: "var(--fg-4)" }}>
-                {Math.round(row.pctDone * 100)}% done
-              </span>
+              <Meter pct={Math.round(row.pctDone * 100)} width={120} />
               {daysLabel && (
-                <span style={{ fontSize: 12, color: riskColor[row.risk], fontWeight: row.risk === "red" ? 600 : 400 }}>
+                <span
+                  className="mono"
+                  style={{ fontSize: 11, color: riskColor[row.risk], fontWeight: row.risk === "red" ? 600 : 400, fontVariantNumeric: "tabular-nums" }}
+                >
                   {daysLabel}
                 </span>
               )}
@@ -242,8 +243,8 @@ export function FunnelSection({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dwellData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={18}>
                 <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}d`} />
+                <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
+                <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}d`} />
                 <Tooltip
                   contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
                   formatter={(v: unknown) => [`${v}d`, "avg days"]}
@@ -288,8 +289,8 @@ export function TrendChart({
       <ResponsiveContainer width="100%" height={160}>
         <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: "var(--fg-5)" }} axisLine={false} tickLine={false} tickFormatter={format} />
+          <XAxis dataKey="month" tick={axisTick} axisLine={false} tickLine={false} />
+          <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={format} />
           <Tooltip
             contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12, boxShadow: "var(--shadow-2)" }}
             formatter={(v: unknown) => [format(v as number), label]}

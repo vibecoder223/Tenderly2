@@ -21,7 +21,7 @@ export type Reading = {
   label: string;
   value: React.ReactNode;
   delta?: React.ReactNode;
-  tone?: "warn" | "err";
+  tone?: "warn" | "err" | "ok";
 };
 
 /** Full-width readings band for overview screens: mono micro-label + big mono

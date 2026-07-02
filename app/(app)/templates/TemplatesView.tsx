@@ -154,6 +154,27 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
   const [editing, setEditing] = useState<T | null>(null);
   const [creating, setCreating] = useState(false);
   const [tab, setTab] = useState<"all" | "ai" | "text" | "docx">("all");
+  const [view, setView] = useState<"list" | "board">("list");
+
+  async function duplicate(t: T) {
+    const res = await fetch("/api/templates", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: `${t.name} (copy)`,
+        description: t.description,
+        intro: t.intro,
+        footer: t.footer,
+        accent_color: t.accent_color,
+        font_family: t.font_family,
+        is_default: false,
+      }),
+    });
+    if (res.ok) {
+      const { template } = await res.json();
+      setTemplates([template, ...templates]);
+    }
+  }
 
   function openNew(type: "sections" | "text" | "docx") {
     setCreating(true);
@@ -304,7 +325,27 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
             );
           })}
         </div>
-        <AddTemplateMenu onSelect={openNew} />
+        <div className="flex items-center gap-2" style={{ paddingBottom: 6 }}>
+          {templates.length > 0 && (
+            <div className="seg" role="tablist" aria-label="View">
+              <button
+                className={`seg-btn${view === "list" ? " active" : ""}`}
+                onClick={() => setView("list")}
+                aria-selected={view === "list"}
+              >
+                List
+              </button>
+              <button
+                className={`seg-btn${view === "board" ? " active" : ""}`}
+                onClick={() => setView("board")}
+                aria-selected={view === "board"}
+              >
+                Board
+              </button>
+            </div>
+          )}
+          <AddTemplateMenu onSelect={openNew} />
+        </div>
       </div>
 
       {templates.length === 0 ? (
@@ -312,6 +353,32 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
       ) : visible.length === 0 ? (
         <div className="card p-10 text-center text-[13px]" style={{ color: "var(--fg-4)" }}>
           No templates in this category yet.
+        </div>
+      ) : view === "list" ? (
+        <div className="section-card">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Template</th>
+                <th>Kind</th>
+                <th>Detail</th>
+                <th style={{ textAlign: "right" }}>Updated</th>
+                <th style={{ width: 40 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((t) => (
+                <TemplateRow
+                  key={t.id}
+                  t={t}
+                  onEdit={() => openEditor(t)}
+                  onDelete={() => del(t.id)}
+                  onSetDefault={() => setDefault(t.id)}
+                  onDuplicate={() => duplicate(t)}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div
@@ -325,30 +392,79 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
               onEdit={() => openEditor(t)}
               onDelete={() => del(t.id)}
               onSetDefault={() => setDefault(t.id)}
-              onDuplicate={async () => {
-                const res = await fetch("/api/templates", {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: JSON.stringify({
-                    name: `${t.name} (copy)`,
-                    description: t.description,
-                    intro: t.intro,
-                    footer: t.footer,
-                    accent_color: t.accent_color,
-                    font_family: t.font_family,
-                    is_default: false,
-                  }),
-                });
-                if (res.ok) {
-                  const { template } = await res.json();
-                  setTemplates([template, ...templates]);
-                }
-              }}
+              onDuplicate={() => duplicate(t)}
             />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+// ---- List row (mirrors the deals list vocabulary) ----
+
+function TemplateRow({
+  t,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  onSetDefault,
+}: {
+  t: T;
+  onEdit: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onSetDefault: () => void;
+}) {
+  const kind = classifyTemplate(t);
+  const { label: kindLabel } = KIND_META[kind];
+  const updated = formatUpdated(t.updated_at ?? t.created_at ?? null);
+  const sections = kind === "ai" ? introToSections(t.intro) : null;
+  const canEdit = kind !== "docx";
+  const detail =
+    kind === "docx" ? (t.file_name || "uploaded.docx")
+    : kind === "text" ? (t.intro ? t.intro.replace(/\n+/g, " ").slice(0, 70) : "No intro text")
+    : `${sections?.length ?? 0} section${sections?.length === 1 ? "" : "s"}`;
+
+  return (
+    <tr
+      style={{ cursor: canEdit ? "pointer" : "default" }}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("[data-card-menu]")) return;
+        if (canEdit) onEdit();
+      }}
+    >
+      <td>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span style={{ color: "var(--fg)", fontWeight: 550 }}>{t.name || "Untitled template"}</span>
+          {t.is_default && (
+            <span className="st st-ok" title="Default export template" style={{ fontSize: 9 }}>
+              Default
+            </span>
+          )}
+        </span>
+      </td>
+      <td>
+        <span className={`st${kind === "ai" ? " st-accent" : ""}`}>{kindLabel}</span>
+      </td>
+      <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {detail}
+      </td>
+      <td className="mono" style={{ textAlign: "right", color: "var(--fg-4)", fontSize: 10.5, fontVariantNumeric: "tabular-nums" }}>
+        {updated}
+      </td>
+      <td>
+        <div data-card-menu onClick={(e) => e.stopPropagation()}>
+          <CardMenu
+            isDefault={t.is_default}
+            onEdit={canEdit ? onEdit : null}
+            onDuplicate={onDuplicate}
+            onSetDefault={onSetDefault}
+            onDelete={onDelete}
+          />
+        </div>
+      </td>
+    </tr>
   );
 }
 
