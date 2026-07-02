@@ -198,22 +198,23 @@ export default function TeamView({
         </div>
       )}
 
-      <div className="card" style={{ overflow: "visible" }}>
-        <div className="px-5 py-3.5 border-b flex items-center justify-between" style={{ borderColor: "var(--divider)" }}>
-          <h3 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>
-            Members ({members.length})
-          </h3>
+      <div className="section-card" style={{ overflow: "visible" }}>
+        <div className="section-card-head">
+          <div>
+            <span className="section-card-title">Members</span>
+            <span className="section-card-count">{members.length}</span>
+          </div>
           {rowErr && <span className="text-xs" style={{ color: "var(--err)" }}>{rowErr}</span>}
         </div>
         <div className="overflow-x-auto lg:overflow-x-visible">
-        <table className="w-full text-[13px] min-w-[560px]">
+        <table className="data-table" style={{ minWidth: 560 }}>
           <thead>
-            <tr style={{ color: "var(--fg-4)" }}>
-              <th className="text-left font-medium px-5 py-2.5">Name</th>
-              <th className="text-left font-medium px-5 py-2.5">Email</th>
-              <th className="text-left font-medium px-5 py-2.5">Role</th>
-              <th className="text-left font-medium px-5 py-2.5">Joined</th>
-              {canManage && <th className="text-right font-medium px-5 py-2.5"></th>}
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Joined</th>
+              {canManage && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -223,17 +224,17 @@ export default function TeamView({
               const editable = canManage && (m.role !== "owner" || isOwner);
               const lastOwner = m.role === "owner" && members.filter((x) => x.role === "owner").length <= 1;
               return (
-                <tr key={m.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
-                  <td className="px-5 py-3 font-medium" style={{ color: "var(--fg)" }}>
+                <tr key={m.id}>
+                  <td style={{ fontWeight: 550, color: "var(--fg)" }}>
                     {m.name || "—"}
                     {isSelf && (
                       <span className="text-[11px] ml-2" style={{ color: "var(--fg-4)" }}>(you)</span>
                     )}
                   </td>
-                  <td className="px-5 py-3 mono text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                  <td className="mono" style={{ fontSize: 11.5, color: "var(--fg-3)" }}>
                     {m.email}
                   </td>
-                  <td className="px-5 py-3">
+                  <td>
                     {editable ? (
                       <Select
                         value={m.role}
@@ -243,14 +244,14 @@ export default function TeamView({
                         options={assignableRoles.map((r) => ({ value: r, label: cap(r) }))}
                       />
                     ) : (
-                      <span className="badge">{m.role}</span>
+                      <span className={`st${m.role === "owner" ? " st-accent" : ""}`}>{m.role}</span>
                     )}
                   </td>
-                  <td className="px-5 py-3" style={{ color: "var(--fg-4)" }}>
+                  <td className="mono" style={{ fontSize: 10.5, color: "var(--fg-4)", fontVariantNumeric: "tabular-nums" }}>
                     {m.created_at.slice(0, 10)}
                   </td>
                   {canManage && (
-                    <td className="px-5 py-3 text-right">
+                    <td style={{ textAlign: "right" }}>
                       {editable && !isSelf && !lastOwner && (
                         <button
                           className="btn btn-danger"
@@ -271,35 +272,36 @@ export default function TeamView({
       </div>
 
       {invites.length > 0 && (
-        <div className="card overflow-hidden">
-          <div className="px-5 py-3.5 border-b" style={{ borderColor: "var(--divider)" }}>
-            <h3 className="text-sm font-semibold" style={{ color: "var(--fg)" }}>
-              Pending invites ({invites.length})
-            </h3>
+        <div className="section-card overflow-hidden">
+          <div className="section-card-head">
+            <div>
+              <span className="section-card-title">Pending invites</span>
+              <span className="section-card-count">{invites.length}</span>
+            </div>
           </div>
           <div className="overflow-x-auto">
-          <table className="w-full text-[13px] min-w-[480px]">
+          <table className="data-table" style={{ minWidth: 480 }}>
             <thead>
-              <tr style={{ color: "var(--fg-4)" }}>
-                <th className="text-left font-medium px-5 py-2.5">Email</th>
-                <th className="text-left font-medium px-5 py-2.5">Role</th>
-                <th className="text-left font-medium px-5 py-2.5">Expires</th>
-                <th className="text-right font-medium px-5 py-2.5"></th>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Expires</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {invites.map((inv) => {
                 const url = `${origin}/auth/accept?token=${inv.token}`;
                 return (
-                  <tr key={inv.id} className="border-t" style={{ borderColor: "var(--divider)" }}>
-                    <td className="px-5 py-3 mono text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+                  <tr key={inv.id}>
+                    <td className="mono" style={{ fontSize: 11.5, color: "var(--fg-2)" }}>
                       {inv.email}
                     </td>
-                    <td className="px-5 py-3"><span className="badge">{inv.role}</span></td>
-                    <td className="px-5 py-3" style={{ color: "var(--fg-4)" }}>
+                    <td><span className="st">{inv.role}</span></td>
+                    <td className="mono" style={{ fontSize: 10.5, color: "var(--fg-4)", fontVariantNumeric: "tabular-nums" }}>
                       {inv.expires_at.slice(0, 10)}
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td style={{ textAlign: "right" }}>
                       <div className="inline-flex gap-2">
                         <button
                           className="btn"
