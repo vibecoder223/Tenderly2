@@ -29,15 +29,17 @@
   --fg-4: oklch(0.61 0.007 110);
   --fg-5: oklch(0.74 0.006 110);
 
-  /* Accent — forest green. State and action only, never chrome. */
-  --accent:        oklch(0.42 0.13 152);
-  --accent-2:      oklch(0.34 0.13 152);
-  --accent-3:      oklch(0.31 0.11 152);
-  --accent-tint:   oklch(0.960 0.030 152);
-  --accent-tint2:  oklch(0.925 0.045 152);
-  --accent-soft:   oklch(0.88 0.07 152);
-  --accent-line:   oklch(0.78 0.10 152);
-  --accent-glow:   oklch(0.42 0.13 152 / 0.18);
+  /* Accent — sage green (lightened from forest per user request, still
+     WCAG AA at 5.6:1 on white for the many small-text link usages).
+     State and action only, never chrome. */
+  --accent:        oklch(0.50 0.135 149);
+  --accent-2:      oklch(0.41 0.13 149);
+  --accent-3:      oklch(0.37 0.12 149);
+  --accent-tint:   oklch(0.965 0.032 149);
+  --accent-tint2:  oklch(0.930 0.048 149);
+  --accent-soft:   oklch(0.90 0.075 149);
+  --accent-line:   oklch(0.80 0.105 149);
+  --accent-glow:   oklch(0.50 0.135 149 / 0.18);
 
   /* Status — always paired with a label, never color alone */
   --ok:        oklch(0.52 0.12 158);
