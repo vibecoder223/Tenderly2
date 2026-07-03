@@ -1,75 +1,192 @@
-# Brand
+# Propello — Brand & Design System
 
-## Positioning
+This is the single source of truth. It drives both the marketing surfaces and
+the product UI. The token table maps 1:1 to CSS custom properties in
+`app/globals.css`, so changing a value here is a spec change for the whole app.
 
-Propello turns a 300-question RFP into a reviewed, exportable response in days instead of weeks, by extracting requirements, drafting grounded answers from your knowledge base, and routing everything through human review. For bid teams who need speed without losing citation-level trust.
+Direction: **Cobalt**. Warm-white canvas, one confident cobalt-blue brand color
+carrying actions and identity, a warm amber as an energy accent. Modern SaaS in
+the register of Upwork (friendly, light, human), Pipedrive (colorful confident
+CTAs), and Cursor (typographic discipline). Not green. Not dark.
 
-## Personality
+---
 
-Precise. Confident. Quietly technical. Professional equipment, not office software — the marketing layer is the same discipline as the product, just louder in scale, not tone.
+## 1. Positioning
 
-## Voice
+Propello turns a 300-question RFP into a reviewed, exportable response in days
+instead of weeks: extract every requirement, draft grounded answers from your
+knowledge base, route through human review, export. For bid and presales teams
+who need speed without losing citation-level trust.
 
-- Outcome-first, plain sentences. Contractions fine. No exclamation marks.
-- Mono numerals carry the proof: "300 questions. 3 days." not "blazing fast."
-- Sentence case everywhere — headlines, buttons, nav.
-- Banned words: seamless, unlock, empower, leverage, revolutionize, effortless.
-- No em dashes in copy — commas, periods, colons.
+One-liner: **"300 questions. 3 days, not 3 weeks."**
+
+---
+
+## 2. Personality
+
+Confident, warm, precise. Three words: **capable, direct, unfussy.**
+
+- Capable: the product does real work; the brand shows the work (mono numbers,
+  real screenshots, visible citations), it doesn't gesture at "AI magic".
+- Direct: plain sentences, outcome first. No hedging, no hype.
+- Unfussy: clean surfaces, one brand color, generous whitespace. Nothing
+  decorative that isn't doing a job.
+
+---
+
+## 3. Voice
+
+- Sentence case everywhere: headlines, buttons, nav, labels.
+- Outcome-first. Lead with what the user gets, not what the software is.
+- Mono numerals carry proof: "300 questions. 3 days." never "blazing fast".
+- Contractions are fine. No exclamation marks. No em dashes (use commas, periods, colons).
+- Banned words: seamless, unlock, empower, leverage, revolutionize, effortless, supercharge, magic.
 
 | Don't | Do |
 |---|---|
-| "Seamlessly unlock AI-powered RFP magic" | "Extract requirements. Draft grounded answers. Ship the response." |
-| "Empower your team to work smarter" | "Your SMEs review, not retype." |
-| "Effortless collaboration at scale" | "Assign, draft, approve. One thread per question." |
-| "Revolutionize your proposal process" | "300 questions. 3 days." |
+| "Seamlessly unlock AI-powered RFP magic" | "Extract requirements. Draft answers. Ship the response." |
+| "Empower your team to work smarter" | "Your SMEs review, they don't retype." |
 | "Get Started Now!" | "Start free" |
+| "Revolutionize your proposal workflow" | "300 questions. 3 days, not 3 weeks." |
 
-## Logo
+---
 
-**Mark**: rounded-square tile, radius ~22% of size, sage green fill (`--pine` on light, or solid `--accent` at small sizes), a Geist Mono "P" in white centered inside, weight 600.
+## 4. Logo
 
-**Wordmark**: lowercase `propello`, Geist 650, letter-spacing -0.02em.
+- **Mark**: rounded-square tile, corner radius = 24% of size, `--brand` fill,
+  a Geist Mono "P" in white, weight 600, optically centered.
+- **Wordmark**: lowercase `propello`, Geist 650, letter-spacing -0.02em, `--ink`.
+- **Lockup**: mark + 8px gap + wordmark, wordmark vertically centered on mark.
+- **Clearspace**: 0.5x mark-height minimum on all sides.
+- **Minimum size**: mark alone never below 16px; lockup never below 20px mark-height.
+- **Misuse**: never recolor the mark to a non-brand hue, never stretch or skew,
+  never set the wordmark in another typeface, never Title Case or UPPERCASE it,
+  never place the mark on a background under 3:1 contrast with the tile.
 
-Lockup: mark + wordmark, 8px gap, wordmark baseline-aligned to mark's vertical center.
+---
 
-**Clearspace**: minimum 0.5x mark-height on all sides. **Minimum size**: mark alone never below 16px; lockup never below 20px mark-height.
+## 5. Color tokens
 
-**Misuse**: never recolor the mark, never stretch/skew, never place on a background under 3:1 contrast with the tile, never set the wordmark in anything but Geist, never uppercase or title-case the wordmark.
+OKLCH. Never pure `#000` or `#fff`. Neutrals carry a faint cool-blue tint (hue
+265) so they sit under the cobalt without going gray-corporate. These names are
+the CSS variable names.
 
-## Color
+### Neutrals
+| Token | OKLCH | Hex | Role |
+|---|---|---|---|
+| `--bg` | `oklch(0.99 0.003 90)` | `#fcfcf9` | Page canvas (warm white) |
+| `--bg-2` | `oklch(0.972 0.004 265)` | `#f4f5f8` | Sidebar / second layer |
+| `--surface` | `oklch(1 0 0)` | `#ffffff` | Cards, tables, inputs |
+| `--ink` | `oklch(0.20 0.015 265)` | `#13161d` | Primary text |
+| `--ink-2` | `oklch(0.38 0.012 265)` | `#3a3f4b` | Secondary text |
+| `--ink-3` | `oklch(0.52 0.010 265)` | `#5f6472` | Tertiary text |
+| `--ink-4` | `oklch(0.64 0.008 265)` | `#868b98` | Muted / labels |
+| `--rule` | `oklch(0.90 0.005 265)` | `#dfe1e7` | Hairline borders |
+| `--rule-soft` | `oklch(0.945 0.004 265)` | `#edeef2` | Faint dividers |
 
-App tokens (unchanged, `app/globals.css`):
-- `--accent` `oklch(0.50 0.135 149)` `#107734` — action, state, links
-- `--accent-3` `oklch(0.37 0.12 149)` `#005016` — text on tint
-- `--accent-tint` `oklch(0.965 0.032 149)` `#e5fae8` — wash
+### Brand (cobalt) — action, identity, links, primary CTAs
+| Token | OKLCH | Hex | Role |
+|---|---|---|---|
+| `--brand` | `oklch(0.52 0.19 262)` | `#245fd4` | Primary buttons, links, brand fill |
+| `--brand-hover` | `oklch(0.47 0.18 262)` | `#1c53c1` | Hover state |
+| `--brand-deep` | `oklch(0.44 0.17 262)` | `#1649ae` | Text on tint, small labels (7.8:1) |
+| `--brand-tint` | `oklch(0.955 0.03 262)` | `#e5f1ff` | Wash, active-nav bg, badges |
+| `--brand-glow` | `oklch(0.52 0.19 262 / 0.16)` | — | Focus ring |
 
-Marketing-only additions (hero/CTA scale, not used in-app):
-- `--leaf` `oklch(0.72 0.17 149)` `#3ecf6a` — bright accent for dark/drenched sections only. Contrast on `--pine`: 5.1:1 (AA for large text/UI).
-- `--pine` `oklch(0.30 0.09 155)` `#0f3d21` — deep anchor for the drenched CTA band and dark hero variant. Contrast with white text: 11.8:1.
+### Amber — energy accent (highlights, "new", streaks). Never for body text.
+| Token | OKLCH | Hex | Role |
+|---|---|---|---|
+| `--amber` | `oklch(0.75 0.15 65)` | `#ee9733` | Highlight fills, decorative accent |
+| `--amber-deep` | `oklch(0.55 0.14 62)` | `#a95a00` | Text on amber tint (4.9:1) |
+| `--amber-tint` | `oklch(0.965 0.04 70)` | `#fdf1df` | Wash |
 
-Never a second brand hue. Never use `--leaf` on white (fails AA — it's a dark-surface accent only).
+### Status — one meaning each, always paired with a label, never color alone
+| Token | OKLCH | Role |
+|---|---|---|
+| `--warn` | `oklch(0.62 0.14 62)` | Review / pending |
+| `--err` | `oklch(0.55 0.19 27)` | Overdue / failed |
+| `--ok` | `oklch(0.60 0.14 155)` | Approved / done |
 
-## Typography
+Color strategy: **Restrained in-app** (cobalt well under 10% of surface, spent on
+action + state), **Committed on marketing** (cobalt carries hero and CTAs). One
+drenched-cobalt CTA band per marketing page maximum.
 
-- App scale unchanged (13px base, DESIGN.md owns it).
-- Marketing display: Geist 600–650, 56–88px, letter-spacing -0.03em to -0.045em, line-height 1.05.
-- Marketing subhead: Geist 400, 18–20px, `--ink-3`, line-height 1.5, max 60ch.
-- Eyebrow: Geist Mono 11px, 500, 0.14em tracking, uppercase — the brand's signature move, lifted straight from the app's micro-label pattern.
+---
 
-## Signature pattern
+## 6. Typography
 
-The micro-label (mono, uppercase, wide tracking) is the one motif that must appear on every brand surface: hero eyebrow, section labels, stat labels, pricing tier eyebrows. It's what makes marketing and product feel like the same company.
+One family drives the whole system: **Geist** (UI, body, display) + **Geist Mono**
+(numbers, labels, IDs, timestamps). Keeping one family is what lets a single
+BRAND.md govern both app and site.
 
-## Imagery
+### Type scale
+| Name | Font | Size | Weight | Tracking | Use |
+|---|---|---|---|---|---|
+| Display | Geist | 56–80px (clamp) | 650 | -0.04em | Marketing hero |
+| Title | Geist | 32–40px | 650 | -0.03em | Marketing section heads |
+| H1 (app) | Geist | 20px | 650 | -0.02em | Page titles |
+| H2 | Geist | 15px | 600 | -0.012em | Block titles |
+| Body-lg | Geist | 18px | 400 | 0 | Marketing subheads (max 60ch) |
+| Body | Geist | 13–15px | 400 | 0 | UI + prose |
+| Reading | Geist Mono | 26px | 500 | -0.03em | Big numbers (readings band) |
+| Micro-label | Geist Mono | 9–11px | 500 | 0.14–0.16em, uppercase | Eyebrows, table headers, stat labels |
 
-Product screenshots only — real (or realistically reconstructed) UI, framed in a plain browser chrome. No stock photography, no abstract 3D renders, no illustration system (not yet scoped).
+### The signature move
+The mono micro-label (uppercase, wide tracking) appears on every surface: hero
+eyebrow, section labels, stat labels, table headers, nav group labels. It's the
+one motif that makes marketing and product read as the same company.
 
-## Do / Don't
+---
+
+## 7. Components (product)
+
+- **Buttons**: radius 6px, 12–13px/500. **Primary = `--brand` fill + white text**
+  (colorful confident CTA, the SaaS move). Secondary = surface + rule border.
+  Ghost = transparent. Trailing mono kbd hint where a shortcut exists.
+- **Links**: `--brand`, no underline until hover.
+- **Nav item (active)**: white surface + inset rule ring + leading 4px `--brand` dot.
+- **Status tag**: mono uppercase label + 5px dot, tone-colored (brand/warn/err/ok). Never color alone.
+- **Count pill**: mono, `--brand-tint` bg + `--brand-deep` text.
+- **Readings band**: 5 cells, mono micro-label + big mono number + context delta.
+- **Meter**: 72×4px track + `--brand` fill + mono percentage. Never a ring.
+- **Segmented tabs**: active = `--brand-tint` bg + `--brand-deep` text.
+- Radius: 6px controls, 10px cards, 24% for the logo tile.
+- Every control has default, hover, focus-visible (2px `--brand` ring), active, disabled.
+
+---
+
+## 8. Layout & motion
+
+- App shell: ~216px sidebar (`--bg-2`, right rule) + 44px white topbar.
+- Marketing: left-aligned or centered hero, one idea per fold, generous whitespace, browser-framed real product screenshots (never abstract UI).
+- Radius rhythm, 24px page gutters, 16px block padding.
+- Motion: 100–150ms, exponential ease-out `cubic-bezier(0.22,1,0.36,1)`, on color/background/border only. No layout animation. Honor `prefers-reduced-motion`.
+
+---
+
+## 9. Imagery
+
+Real product screenshots only, framed in plain browser chrome. No stock photos,
+no abstract 3D, no gradient blobs, no illustration system (not scoped yet).
+
+---
+
+## 10. Accessibility
+
+WCAG AA: 4.5:1 body text, 3:1 large text and UI. Cobalt `--brand` is 5.6:1 on
+white; use `--brand-deep` (7.8:1) for small text on tints. Amber is decorative
+only, never body text. Status never by color alone. Full keyboard nav, visible
+focus rings, reduced-motion honored.
+
+---
+
+## 11. Do / Don't
 
 | Do | Don't |
 |---|---|
-| One drenched-green CTA band per page | Green wash on every section |
-| Mono numbers as proof points | Adjective-stacked claims |
-| Browser-framed real UI | Abstract gradient blobs |
+| Cobalt CTA fills | Ink/black CTAs (that was the old system) |
+| Warm-white canvas | Stark white or gray-corporate |
+| One brand hue (cobalt) + amber energy | A third brand color |
+| Mono numbers as proof | Adjective-stacked claims |
+| Browser-framed real UI | Abstract gradient hero art |
 | Sentence case | Title Case headlines |
-| Sage green, one hue | A second "friendly" accent color |
