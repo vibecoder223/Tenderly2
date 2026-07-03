@@ -3,50 +3,52 @@
 @tailwind utilities;
 
 /* ──────────────────────────────────────────────────────────────
- * Propello — design tokens · "Instrument" (DESIGN.md, draft B)
- * Light canvas, neutral panel chrome, forest green spent only on
- * state and action. Geist for UI, Geist Mono for data/meta.
- * OKLCH for consistent saturation across lightness.
+ * Propello — design tokens · BRAND.md "Green" (locked direction)
+ * Warm-white canvas, one confident green brand color carrying every
+ * action/identity moment. No second accent color. Geist for UI,
+ * Geist Mono for data/meta. OKLCH for consistent saturation.
+ * Token values here must match BRAND.md section 5 — that file is the
+ * spec, this is the implementation.
  * ──────────────────────────────────────────────────────────── */
 
 :root {
-  /* Canvas + panel: cool-neutral near-white (hue 110, whisper chroma).
+  /* Canvas + panel: warm white bg, green-tinted second layer (hue 152).
    * --bg-2 is the second neutral layer (sidebar, table heads). */
-  --bg:        oklch(0.985 0.002 110);
-  --bg-2:      oklch(0.968 0.003 110);
+  --bg:        oklch(0.99  0.003 90 );
+  --bg-2:      oklch(0.972 0.004 152);
   --surface:   oklch(1     0     0  );
   --elevated:  oklch(1     0     0  );
 
   /* Hairline borders */
-  --border:        oklch(0.885 0.005 110);
-  --border-strong: oklch(0.800 0.007 110);
-  --divider:       oklch(0.935 0.004 110);
+  --border:        oklch(0.90  0.005 152);
+  --border-strong: oklch(0.80  0.007 152);
+  --divider:       oklch(0.945 0.004 152);
 
   /* Ink ramp */
-  --fg:   oklch(0.17 0.010 110);
-  --fg-2: oklch(0.32 0.009 110);
-  --fg-3: oklch(0.47 0.008 110);
-  --fg-4: oklch(0.61 0.007 110);
-  --fg-5: oklch(0.74 0.006 110);
+  --fg:   oklch(0.20 0.015 152);
+  --fg-2: oklch(0.38 0.012 152);
+  --fg-3: oklch(0.52 0.010 152);
+  --fg-4: oklch(0.64 0.008 152);
+  --fg-5: oklch(0.76 0.006 152);
 
-  /* Accent — sage green (lightened from forest per user request, still
-     WCAG AA at 5.6:1 on white for the many small-text link usages).
-     State and action only, never chrome. */
-  --accent:        oklch(0.50 0.135 149);
-  --accent-2:      oklch(0.41 0.13 149);
-  --accent-3:      oklch(0.37 0.12 149);
-  --accent-tint:   oklch(0.965 0.032 149);
-  --accent-tint2:  oklch(0.930 0.048 149);
-  --accent-soft:   oklch(0.90 0.075 149);
-  --accent-line:   oklch(0.80 0.105 149);
-  --accent-glow:   oklch(0.50 0.135 149 / 0.18);
+  /* Accent — brand green (BRAND.md §5). The only accent color in the
+     system. State and action only, never chrome. */
+  --accent:        oklch(0.53 0.18 152);
+  --accent-2:      oklch(0.47 0.17 152);
+  --accent-3:      oklch(0.44 0.16 152);
+  --accent-tint:   oklch(0.955 0.045 152);
+  --accent-tint2:  oklch(0.92  0.06  152);
+  --accent-soft:   oklch(0.88  0.09  152);
+  --accent-line:   oklch(0.78  0.12  152);
+  --accent-glow:   oklch(0.53 0.18 152 / 0.16);
 
-  /* Status — always paired with a label, never color alone */
-  --ok:        oklch(0.52 0.12 158);
-  --ok-tint:   oklch(0.96 0.035 158);
-  --warn:      oklch(0.56 0.13 72);
-  --warn-tint: oklch(0.97 0.035 78);
-  --err:       oklch(0.52 0.17 27);
+  /* Status — always paired with a label, never color alone. "ok" reuses
+     the brand green per BRAND.md (no second green shade). */
+  --ok:        var(--accent-3);
+  --ok-tint:   var(--accent-tint);
+  --warn:      oklch(0.62 0.14 62);
+  --warn-tint: oklch(0.97 0.035 70);
+  --err:       oklch(0.55 0.19 27);
   --err-tint:  oklch(0.96 0.035 27);
 
   /* Type scale — tight; hierarchy via weight + mono/sans contrast */
@@ -424,17 +426,17 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 .btn:hover { background: var(--bg-2); border-color: var(--border-strong); color: var(--fg); }
 .btn:active { background: var(--bg); }
 
-/* Primary is ink, not green: green is state, not chrome (DESIGN.md). */
+/* Primary = brand green fill + white text (BRAND.md §7). */
 .btn-primary {
-  background: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
-  font-weight: 500;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
 }
 .btn-primary:hover {
-  background: var(--fg-2);
-  border-color: var(--fg-2);
-  color: var(--bg);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: #fff;
 }
 
 .btn-ghost {
