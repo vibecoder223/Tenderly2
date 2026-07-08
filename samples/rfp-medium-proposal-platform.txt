@@ -1,0 +1,75 @@
+REQUEST FOR PROPOSAL — ENTERPRISE PROPOSAL AUTOMATION PLATFORM
+RFP Reference: QG-2026-114 | Issued: June 2026 | Issuing Entity: State Procurement Authority
+
+SECTION 1 — INTRODUCTION
+The Authority invites proposals from qualified vendors for the supply, implementation, and
+support of an enterprise proposal automation platform. Vendors must respond to every
+requirement in Sections 3 through 7, indicating full compliance, partial compliance, or
+non-compliance, with supporting evidence. Non-responsive submissions will be disqualified.
+
+SECTION 2 — BACKGROUND
+The Authority processes approximately 400 tenders annually across 12 departments. The
+current process is manual, relying on spreadsheets and shared drives, resulting in
+inconsistent compliance tracking and slow turnaround. The Authority seeks a platform to
+automate document analysis, response drafting, and compliance tracking end to end.
+
+SECTION 3 — SECURITY REQUIREMENTS
+3.1 The vendor MUST hold a current ISO 27001 certification and provide the certificate
+    number and validity period.
+3.2 The vendor MUST provide evidence of an independent SOC 2 Type II audit completed within
+    the last 12 months.
+3.3 All data MUST be encrypted at rest and in transit. Describe the encryption standards and
+    key management approach, including support for customer-managed keys.
+3.4 The solution MUST support single sign-on via SAML 2.0 or OIDC with the Authority's
+    Azure Active Directory.
+3.5 Describe the role-based access control model, including custom roles and audit logging
+    capabilities.
+3.6 The vendor MUST describe its penetration testing regime and remediation timelines.
+3.7 Describe your vulnerability management program, including scanning frequency and patch
+    SLAs for critical findings.
+3.8 Confirm whether multi-factor authentication is enforced for all user accounts.
+
+SECTION 4 — DATA GOVERNANCE REQUIREMENTS
+4.1 All Authority data MUST reside within the State of Qatar or, subject to approval, within
+    the GCC. Specify available hosting regions and residency guarantees.
+4.2 Confirm compliance with Qatar Law No. 13 of 2016 on Personal Data Privacy Protection and
+    describe your data protection governance.
+4.3 Describe your backup and disaster recovery capabilities, including RPO and RTO
+    commitments and testing frequency.
+4.4 Confirm whether an on-premises or sovereign deployment option is available for
+    classified workloads.
+4.5 Describe your sub-processor disclosure and change-notification practices.
+4.6 Confirm data retention and deletion practices upon contract termination.
+
+SECTION 5 — TECHNICAL REQUIREMENTS
+5.1 The solution MUST provide a documented REST API for integration with the Authority's
+    existing systems.
+5.2 Describe available native integrations, specifically with Microsoft 365 and SharePoint.
+5.3 The solution MUST support automated user provisioning and deprovisioning via SCIM.
+5.4 Describe the platform's uptime commitment and the service credit regime applicable to
+    SLA breaches.
+5.5 Confirm API rate limits and describe how the platform scales under peak concurrent load.
+5.6 Describe the system architecture's approach to high availability and failover.
+
+SECTION 6 — IMPLEMENTATION AND SUPPORT REQUIREMENTS
+6.1 Describe your implementation methodology, typical timeline for a 300-user deployment,
+    and the project team you would assign.
+6.2 Describe the training approach, including Arabic-language support and post-go-live
+    adoption tracking.
+6.3 Describe your support tiers, response times for priority-1 incidents, and escalation
+    procedures.
+6.4 Provide details of at least three comparable reference implementations, preferably
+    within the GCC region.
+6.5 Describe your product roadmap process and how customer feedback is incorporated.
+6.6 Confirm the availability of a dedicated technical account manager for enterprise
+    accounts.
+
+SECTION 7 — COMMERCIAL REQUIREMENTS
+7.1 Provide your pricing model, including subscription tiers, implementation fees, and any
+    volume or multi-year discounts applicable to a 300-user deployment.
+7.2 Confirm the company's financial standing, years in operation, and total staff dedicated
+    to delivery.
+7.3 Confirm standard payment terms and whether local-law contract governance is available.
+7.4 Confirm professional indemnity and cyber liability insurance coverage levels.
+
+END OF RFP

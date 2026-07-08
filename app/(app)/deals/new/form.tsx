@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import CustomFieldInputs, { type Person } from "@/components/CustomFieldInputs";
 import Select from "@/components/Select";
@@ -29,6 +29,15 @@ export default function NewDealForm({
   const [custom, setCustom] = useState<Record<string, unknown>>({});
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // True only after hydration. Until then the submit button stays disabled so
+  // a fast click can't fire a native form POST (which would bypass the fetch
+  // handler below and 307 through the middleware to the login page).
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Org custom-field definitions, editable inline (Microsoft-Lists style).
   const [defs, setDefs] = useState<DealFieldDef[]>(fields.filter((f) => !f.archived));
@@ -147,7 +156,7 @@ export default function NewDealForm({
 
       {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
       <div className="pt-1">
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button type="submit" className="btn btn-primary" disabled={loading || !hydrated}>
           {loading ? "Creating…" : "Create deal"}
         </button>
       </div>

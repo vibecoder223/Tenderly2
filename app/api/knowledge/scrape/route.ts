@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
 import { ingestKnowledgeDocument } from "@/lib/ingest";
+import { safeFetch } from "@/lib/safe-fetch";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -123,9 +124,10 @@ export async function POST(req: Request) {
 
   try {
     const fetchUrl = drive?.exportUrl ?? url;
-    const res = await fetch(fetchUrl, {
+    // safeFetch blocks private/internal/metadata addresses (SSRF), re-validates
+    // every redirect hop, and caps the response size.
+    const { res, body } = await safeFetch(fetchUrl, {
       headers: { "User-Agent": "Mozilla/5.0 Propello/1.0" },
-      redirect: "follow",
       signal: AbortSignal.timeout(30_000),
     });
     if (!res.ok) throw new Error(`Fetch returned ${res.status}: ${res.statusText}`);
@@ -133,7 +135,7 @@ export async function POST(req: Request) {
     if (drive) {
       filename = drive.filename;
       mimeType = drive.mime;
-      const raw = Buffer.from(await res.arrayBuffer());
+      const raw = body;
       // Drive sometimes redirects to a "Download anyway" HTML warning page for large files
       if (raw.slice(0, 20).toString("utf8").toLowerCase().startsWith("<!doctype") ||
           raw.slice(0, 5).toString("utf8").toLowerCase() === "<html") {
@@ -145,7 +147,7 @@ export async function POST(req: Request) {
       bytes = raw;
     } else {
       // Web page — strip HTML
-      const html = await res.text();
+      const html = body.toString("utf-8");
       const text = htmlToText(html);
       if (text.length < 100) throw new Error("Page returned too little text to be useful.");
       const urlObj = new URL(url);

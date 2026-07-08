@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     description: body.description ?? null,
     intro: body.intro ?? null,
     footer: body.footer ?? null,
-    accent_color: body.accent_color || "#3B47D6",
+    accent_color: body.accent_color || "#00872F",
     font_family: body.font_family || "default",
     is_default: !!body.is_default,
     created_by: user.id,

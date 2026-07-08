@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
+import { Page, PageHeader } from "@/components/ui";
 import DealsBoard from "./DealsBoard";
 
 export default async function DealsPage({
@@ -108,9 +109,10 @@ export default async function DealsPage({
           </div>
         }
       />
-      <div className={v === "board" ? "p-7" : "p-7 max-w-[1200px]"}>
+      <Page>
+        <PageHeader title="Deals" sub="Track every RFP from triage to submission." />
         <DealsBoard view={v} deals={(deals ?? []) as any[]} totals={totals} />
-      </div>
+      </Page>
     </>
   );
 }

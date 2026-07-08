@@ -13,8 +13,10 @@ import {
   runChunkingAgent,
   runExtractionAgent,
   runStructuringAgent,
+  recordRun,
 } from "./agents";
-import { generateAndPersistAnswer } from "./rag";
+import { generateAndPersistAnswer, generateBatchAnswers, type BatchQuestion } from "./rag";
+import { MODEL_FAST } from "./mistral";
 
 export type JobStage = "ingest" | "extract" | "structure" | "generate";
 export type JobStatus = "pending" | "claimed" | "done" | "failed" | "dead";
@@ -140,8 +142,14 @@ export async function runJob(admin: SupabaseClient, job: Job): Promise<void> {
       return;
     }
     case "generate": {
-      if (!job.target_id) throw new Error("generate job missing target_id (question_id)");
-      await runGenerate(admin, job);
+      // New shape: one doc-level job (target_id null) answers every question in
+      // grouped batch calls. Legacy per-question rows (target_id set) may still
+      // exist from before the cutover — run those through the single path.
+      if (job.target_id) {
+        await runGenerate(admin, job);
+      } else {
+        await runGenerateBatched(admin, job);
+      }
       return;
     }
   }
@@ -160,17 +168,12 @@ export async function enqueueSuccessors(admin: SupabaseClient, job: Job): Promis
     case "extract":
       await enqueueJob(admin, { ...base, stage: "structure" });
       return;
-    case "structure": {
-      // Fan out: one generate job per question on this document.
-      const { data: questions } = await admin
-        .from("questions")
-        .select("id")
-        .eq("document_id", job.document_id);
-      for (const q of questions ?? []) {
-        await enqueueJob(admin, { ...base, stage: "generate", targetId: (q as { id: string }).id });
-      }
+    case "structure":
+      // ONE doc-level generate job answers all questions in grouped batch
+      // calls (see runGenerateBatched) — replaces the old per-question fan-out
+      // that cost one LLM call per question.
+      await enqueueJob(admin, { ...base, stage: "generate" });
       return;
-    }
     case "generate":
       return;
   }
@@ -289,4 +292,155 @@ async function runGenerate(admin: SupabaseClient, job: Job): Promise<void> {
     org_name: orgName,
     tone: "technical",
   });
+}
+
+/** Questions per batched LLM call. 5 keeps the shared-source list relevant to
+ *  every question in the group and the JSON output well under max_tokens. */
+const GENERATE_BATCH_SIZE = 5;
+
+/**
+ * Doc-level generate: answer every unanswered question in grouped batch calls.
+ * Idempotent — questions that already have a response are skipped, so a retry
+ * after a mid-run failure only redoes the unanswered remainder. The job lease
+ * is 5 minutes; a heartbeat extends it while sub-batches are in flight so a
+ * long free-tier-paced run isn't reclaimed as stuck mid-work.
+ */
+async function runGenerateBatched(admin: SupabaseClient, job: Job): Promise<void> {
+  const { data: qRows, error } = await admin
+    .from("questions")
+    .select("id, question_text, category, documents(deals(organizations(name)))")
+    .eq("document_id", job.document_id);
+  if (error) throw new Error(`load questions: ${error.message}`);
+  const questions = (qRows ?? []) as any[];
+  if (questions.length === 0) return;
+
+  const orgName =
+    questions[0]?.documents?.deals?.organizations?.name ??
+    questions[0]?.documents?.deals?.[0]?.organizations?.[0]?.name ??
+    "Workspace";
+
+  // Skip questions that already have a response (idempotent retry).
+  const { data: existing } = await admin
+    .from("responses")
+    .select("question_id")
+    .in("question_id", questions.map((q) => q.id));
+  const answered = new Set((existing ?? []).map((r: any) => r.question_id));
+  const pending = questions.filter((q) => !answered.has(q.id));
+  if (pending.length === 0) return;
+
+  // Group by category so each batch shares a topical source pool, then split
+  // into fixed-size sub-batches.
+  const byCategory = new Map<string, typeof pending>();
+  for (const q of pending) {
+    const key = q.category ?? "general";
+    if (!byCategory.has(key)) byCategory.set(key, []);
+    byCategory.get(key)!.push(q);
+  }
+  const subBatches: BatchQuestion[][] = [];
+  for (const group of byCategory.values()) {
+    for (let i = 0; i < group.length; i += GENERATE_BATCH_SIZE) {
+      subBatches.push(
+        group.slice(i, i + GENERATE_BATCH_SIZE).map((q) => ({
+          question_id: q.id,
+          question_text: q.question_text,
+        }))
+      );
+    }
+  }
+
+  // Lease heartbeat — extend while working so recover_stuck_jobs leaves us be.
+  const heartbeat = setInterval(() => {
+    void admin
+      .from("jobs")
+      .update({ lease_until: new Date(Date.now() + 5 * 60_000).toISOString() })
+      .eq("id", job.id)
+      .then(() => {});
+  }, 60_000);
+
+  const startedAt = Date.now();
+  let totalIn = 0;
+  let totalOut = 0;
+
+  const runBatches = async (batches: BatchQuestion[][]) => {
+    const settled = await Promise.allSettled(
+      batches.map((batch) =>
+        generateBatchAnswers(admin, {
+          org_id: job.org_id,
+          org_name: orgName,
+          tone: "technical",
+          questions: batch,
+        })
+      )
+    );
+    const stillFailed: BatchQuestion[][] = [];
+    settled.forEach((r, i) => {
+      if (r.status === "fulfilled") {
+        totalIn += r.value.input_tokens;
+        totalOut += r.value.output_tokens;
+      } else {
+        stillFailed.push(batches[i]);
+      }
+    });
+    return stillFailed;
+  };
+
+  try {
+    // Fire all sub-batches; the process-wide rate gate in lib/mistral.ts paces
+    // request starts. Any sub-batch that throws (e.g. an exhausted rate-limit
+    // retry) is retried once inline — no re-answering of questions that already
+    // succeeded, since generateBatchAnswers skips persisted responses.
+    let failedBatches = await runBatches(subBatches);
+    if (failedBatches.length > 0) {
+      failedBatches = await runBatches(failedBatches);
+    }
+
+    // Resilience: a document must never end in a hard failure just because a
+    // few sub-batches couldn't complete. Count how many questions actually got
+    // a response. If ANY did, complete the stage — the unanswered remainder is
+    // left as regenerable "todo" rather than condemning the whole document. We
+    // only fail the stage (which lets the job retry, then surface an error) when
+    // ZERO answers were produced, i.e. a real systemic failure (bad key, etc.).
+    const { data: answeredRows } = await admin
+      .from("responses")
+      .select("question_id")
+      .in("question_id", pending.map((q) => q.id));
+    const answeredCount = (answeredRows ?? []).length;
+
+    if (answeredCount === 0) {
+      throw new Error(
+        `generation produced no answers: ${failedBatches.length}/${subBatches.length} sub-batches failed`
+      );
+    }
+
+    await recordRun(admin, {
+      document_id: job.document_id,
+      agent_type: "generate",
+      status: "completed",
+      input_tokens: totalIn,
+      output_tokens: totalOut,
+      result: {
+        questions: pending.length,
+        answered: answeredCount,
+        unanswered: pending.length - answeredCount,
+        sub_batches: subBatches.length,
+        failed_sub_batches: failedBatches.length,
+        model: MODEL_FAST,
+      },
+      startedAt,
+    });
+  } catch (e: any) {
+    await recordRun(admin, {
+      document_id: job.document_id,
+      agent_type: "generate",
+      status: "failed",
+      input_tokens: totalIn,
+      output_tokens: totalOut,
+      error_message: e.message,
+      result: { questions: pending.length, sub_batches: subBatches.length, model: MODEL_FAST },
+      startedAt,
+    });
+    throw e;
+  } finally {
+    clearInterval(heartbeat);
+  }
 }

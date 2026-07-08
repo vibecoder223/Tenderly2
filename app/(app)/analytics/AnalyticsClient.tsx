@@ -6,10 +6,8 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell,
 } from "recharts";
-import { Meter } from "@/components/ui";
-
-// Mono axis ticks so charts match the app's data typography.
-const axisTick = { fontSize: 10, fill: "var(--fg-5)", fontFamily: "'Geist Mono', ui-monospace, monospace" } as const;
+// Sans axis ticks so charts match the app's typography (no mono numbers).
+const axisTick = { fontSize: 10.5, fill: "var(--fg-4)", fontFamily: "'Geist', sans-serif" } as const;
 
 /* ─── Time range filter ─────────────────────────────────────────────────── */
 
@@ -115,69 +113,35 @@ export function KpiCard({
   );
 }
 
-/* ─── Deals at risk ─────────────────────────────────────────────────────── */
+/* ─── Funnel + dwell (now two standalone cards, not one split-in-half card) ── */
 
-export type DealRiskRow = {
-  id: string;
-  name: string;
-  dueDate: string | null;
-  pctDone: number;
-  total: number;
-  approved: number;
-  daysLeft: number | null;
-  risk: "red" | "amber" | "green" | "none";
-};
+export type FunnelStep = { label: string; count: number; pctOfPrev: number | null };
+export type DwellBar = { label: string; days: number };
 
-export function DealsAtRisk({ rows }: { rows: DealRiskRow[] }) {
-  if (rows.length === 0) {
-    return <div style={{ fontSize: 13, color: "var(--fg-5)", padding: "8px 0" }}>No active deals</div>;
+export function FunnelChart({ steps }: { steps: FunnelStep[] }) {
+  if (steps.every((s) => s.count === 0)) {
+    return <div style={{ fontSize: 13, color: "var(--fg-5)" }}>No questions in range</div>;
   }
-
-  const riskColor = {
-    red: "var(--err)",
-    amber: "var(--warn)",
-    green: "var(--ok)",
-    none: "var(--fg-4)",
-  };
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-      {rows.map((row) => {
-        const daysLabel =
-          row.daysLeft == null ? null :
-          row.daysLeft < 0 ? `${Math.abs(row.daysLeft)}d overdue` :
-          row.daysLeft === 0 ? "due today" :
-          `${row.daysLeft}d left`;
-
+    <div>
+      {steps.map((step, i) => {
+        const maxCount = steps[0]?.count ?? 1;
+        const barW = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
         return (
-          <div
-            key={row.id}
-            style={{ padding: "10px 0", borderBottom: "1px solid var(--divider)" }}
-          >
-            {/* Top row: name + action */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}>
-                {row.name}
+          <div key={step.label} style={{ paddingBottom: 9, borderBottom: i < steps.length - 1 ? "1px solid var(--divider)" : "none", marginBottom: i < steps.length - 1 ? 9 : 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+              <span style={{ fontSize: 12.5, color: "var(--fg-3)" }}>{step.label}</span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span className="num" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{step.count.toLocaleString()}</span>
+                {step.pctOfPrev != null && (
+                  <span style={{ fontSize: 11.5, color: step.pctOfPrev >= 70 ? "var(--ok)" : step.pctOfPrev >= 40 ? "var(--warn)" : "var(--err)" }}>
+                    {step.pctOfPrev}%
+                  </span>
+                )}
               </div>
-              <a
-                href={`/deals/${row.id}/questions`}
-                className="block-more"
-                style={{ flexShrink: 0 }}
-              >
-                Open →
-              </a>
             </div>
-            {/* Meter + days */}
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <Meter pct={Math.round(row.pctDone * 100)} width={120} />
-              {daysLabel && (
-                <span
-                  className="mono"
-                  style={{ fontSize: 11, color: riskColor[row.risk], fontWeight: row.risk === "red" ? 600 : 400, fontVariantNumeric: "tabular-nums" }}
-                >
-                  {daysLabel}
-                </span>
-              )}
+            <div style={{ height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
+              <div style={{ width: `${barW}%`, height: "100%", background: i === steps.length - 1 ? "var(--ok)" : "var(--accent)", borderRadius: 3 }} />
             </div>
           </div>
         );
@@ -186,80 +150,64 @@ export function DealsAtRisk({ rows }: { rows: DealRiskRow[] }) {
   );
 }
 
-/* ─── Funnel section ─────────────────────────────────────────────────────── */
-
-export type FunnelStep = { label: string; count: number; pctOfPrev: number | null };
-export type DwellBar = { label: string; days: number };
-
-export function FunnelSection({
-  steps,
-  dwellData,
-}: {
-  steps: FunnelStep[];
-  dwellData: DwellBar[];
-}) {
+export function DwellChart({ dwellData }: { dwellData: DwellBar[] }) {
+  if (dwellData.length === 0) {
+    return <div style={{ fontSize: 13, color: "var(--fg-5)" }}>No completed stages in range yet</div>;
+  }
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-      {/* Funnel steps */}
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>
-          Conversion funnel
-        </div>
-        <div>
-          {steps.map((step, i) => {
-            const maxCount = steps[0]?.count ?? 1;
-            const barW = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
-            return (
-              <div key={step.label} style={{ paddingBottom: 7, borderBottom: i < steps.length - 1 ? "1px solid var(--divider)" : "none", marginBottom: i < steps.length - 1 ? 7 : 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: "var(--fg-3)" }}>{step.label}</span>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                    <span className="num" style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)" }}>{step.count.toLocaleString()}</span>
-                    {step.pctOfPrev != null && (
-                      <span style={{ fontSize: 11, color: step.pctOfPrev >= 70 ? "var(--ok)" : step.pctOfPrev >= 40 ? "var(--warn)" : "var(--err)" }}>
-                        {step.pctOfPrev}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div style={{ height: 4, borderRadius: 2, background: "var(--border)", overflow: "hidden" }}>
-                  <div style={{ width: `${barW}%`, height: "100%", background: i === steps.length - 1 ? "var(--ok)" : "var(--accent)", borderRadius: 2 }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    <div style={{ height: 160 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={dwellData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={28}>
+          <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
+          <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}d`} />
+          <Tooltip
+            contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
+            formatter={(v: unknown) => [`${v}d`, "avg days"]}
+            labelStyle={{ color: "var(--fg-4)", marginBottom: 4 }}
+          />
+          <Bar dataKey="days" radius={[3, 3, 0, 0]}>
+            {dwellData.map((_, idx) => (
+              <Cell key={idx} fill={idx === dwellData.length - 1 ? "var(--ok)" : "var(--accent)"} fillOpacity={0.85} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
-      {/* Dwell times — hidden on mobile to save vertical space */}
-      <div className="hidden sm:block">
-        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 8 }}>
-          Avg days per stage
-        </div>
-        {dwellData.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--fg-5)" }}>No data</div>
-        ) : (
-          <div style={{ height: 120 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dwellData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={18}>
-                <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
-                <YAxis tick={axisTick} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}d`} />
-                <Tooltip
-                  contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                  formatter={(v: unknown) => [`${v}d`, "avg days"]}
-                  labelStyle={{ color: "var(--fg-4)", marginBottom: 4 }}
-                />
-                <Bar dataKey="days" radius={[3, 3, 0, 0]}>
-                  {dwellData.map((_, idx) => (
-                    <Cell key={idx} fill={idx === dwellData.length - 1 ? "var(--ok)" : "var(--accent)"} fillOpacity={0.75} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+/* ─── Win / loss over time — the headline chart for a bid lead ─────────────
+ * Stacked won/lost bars per month. Deliberately not a win-rate line: with a
+ * handful of deals a month, a % line is noisy and implies more precision
+ * than the sample supports. Bar composition tells the same story plainly. */
+export type WinLossPoint = { month: string; won: number; lost: number };
+
+export function WinLossChart({ data, activeCount }: { data: WinLossPoint[]; activeCount: number }) {
+  const hasAny = data.some((d) => d.won > 0 || d.lost > 0);
+  if (!hasAny) {
+    return (
+      <div style={{ fontSize: 13, color: "var(--fg-4)", padding: "8px 0" }}>
+        Win and loss trends appear once deals are marked won or lost.{" "}
+        {activeCount > 0 && <>{activeCount} deal{activeCount === 1 ? "" : "s"} in flight now.</>}
       </div>
+    );
+  }
+  return (
+    <div style={{ height: 220 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={22}>
+          <CartesianGrid stroke="var(--divider)" strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="month" tick={axisTick} axisLine={false} tickLine={false} />
+          <YAxis tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} />
+          <Tooltip
+            contentStyle={{ background: "var(--elevated)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12, boxShadow: "var(--shadow-2)" }}
+            labelStyle={{ color: "var(--fg-4)", marginBottom: 4 }}
+          />
+          <Bar dataKey="won" stackId="wl" name="Won" fill="var(--ok)" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="lost" stackId="wl" name="Lost" fill="var(--err)" radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }

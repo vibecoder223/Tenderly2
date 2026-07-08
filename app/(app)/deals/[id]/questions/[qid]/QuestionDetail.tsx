@@ -151,7 +151,7 @@ export default function QuestionDetail({
 
   async function regenerate() {
     setSaving(true);
-    setInfo("Regenerating with Claude…");
+    setInfo("Regenerating with AI…");
     const res = await fetch(`/api/questions/${question.id}/regenerate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -281,7 +281,7 @@ export default function QuestionDetail({
               style={{ color: "var(--accent)" }}
               disabled={saving}
             >
-              ↻ Regenerate with Claude
+              ↻ Regenerate with AI
             </button>
           </div>
           <textarea
@@ -344,7 +344,7 @@ export default function QuestionDetail({
               <div key={c.id} className="flex gap-3">
                 <div
                   className="w-7 h-7 rounded-full text-[10.5px] font-semibold flex items-center justify-center text-white shrink-0"
-                  style={{ background: "linear-gradient(135deg,#3B47D6,#5C6BFA)" }}
+                  style={{ background: "linear-gradient(135deg,var(--accent),var(--accent-3))" }}
                 >
                   {(c.author_name || "??").slice(0, 2).toUpperCase()}
                 </div>

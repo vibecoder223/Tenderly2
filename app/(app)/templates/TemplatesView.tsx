@@ -125,6 +125,16 @@ const TYPE_COLORS: Record<SectionType, string> = {
   qa: "var(--warn)",
 };
 
+// Tint backgrounds for the section-type badge. Kept as explicit tokens rather
+// than computing an alpha from TYPE_COLORS (string-concatenating "22" onto a
+// var() reference produces an invalid CSS color, e.g. "var(--accent)22" —
+// the browser silently drops it and the badge renders with no background).
+const TYPE_TINT: Record<SectionType, string> = {
+  ai: "var(--accent-tint)",
+  static: "var(--bg-2)",
+  qa: "var(--warn-tint)",
+};
+
 const AVAILABLE_SECTIONS = [
   { name: "Executive Summary", type: "ai" as SectionType, instruction: "Write a persuasive executive summary for this RFP response." },
   { name: "Client Understanding", type: "ai" as SectionType, instruction: "Describe the client's business context, pain points and goals." },
@@ -356,29 +366,24 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
         </div>
       ) : view === "list" ? (
         <div className="section-card">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Template</th>
-                <th>Kind</th>
-                <th>Detail</th>
-                <th style={{ textAlign: "right" }}>Updated</th>
-                <th style={{ width: 40 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((t) => (
-                <TemplateRow
-                  key={t.id}
-                  t={t}
-                  onEdit={() => openEditor(t)}
-                  onDelete={() => del(t.id)}
-                  onSetDefault={() => setDefault(t.id)}
-                  onDuplicate={() => duplicate(t)}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="section-card-head">
+            <div>
+              <span className="section-card-title">Templates</span>
+              <span className="section-card-count">{visible.length}</span>
+            </div>
+          </div>
+          <ul className="queue">
+            {visible.map((t) => (
+              <TemplateRow
+                key={t.id}
+                t={t}
+                onEdit={() => openEditor(t)}
+                onDelete={() => del(t.id)}
+                onSetDefault={() => setDefault(t.id)}
+                onDuplicate={() => duplicate(t)}
+              />
+            ))}
+          </ul>
         </div>
       ) : (
         <div
@@ -401,7 +406,8 @@ export default function TemplatesView({ initial }: { initial: T[] }) {
   );
 }
 
-// ---- List row (mirrors the deals list vocabulary) ----
+// ---- List row — same shape as My Queue's queue-row: name + meta line on the
+// left, a status-style badge, then the row action, all inside <ul class="queue">.
 
 function TemplateRow({
   t,
@@ -417,54 +423,42 @@ function TemplateRow({
   onSetDefault: () => void;
 }) {
   const kind = classifyTemplate(t);
-  const { label: kindLabel } = KIND_META[kind];
+  const { label: kindLabel, tone } = KIND_META[kind];
   const updated = formatUpdated(t.updated_at ?? t.created_at ?? null);
   const sections = kind === "ai" ? introToSections(t.intro) : null;
   const canEdit = kind !== "docx";
   const detail =
-    kind === "docx" ? (t.file_name || "uploaded.docx")
+    kind === "docx" ? (t.file_name || "Uploaded .docx")
     : kind === "text" ? (t.intro ? t.intro.replace(/\n+/g, " ").slice(0, 70) : "No intro text")
     : `${sections?.length ?? 0} section${sections?.length === 1 ? "" : "s"}`;
 
   return (
-    <tr
+    <div
+      className="queue-row no-sig"
       style={{ cursor: canEdit ? "pointer" : "default" }}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("[data-card-menu]")) return;
         if (canEdit) onEdit();
       }}
     >
-      <td>
+      <span className="queue-say">
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: "var(--fg)", fontWeight: 550 }}>{t.name || "Untitled template"}</span>
-          {t.is_default && (
-            <span className="st st-ok" title="Default export template" style={{ fontSize: 9 }}>
-              Default
-            </span>
-          )}
+          {t.name || "Untitled template"}
+          {t.is_default && <span className="st st-ok">Default</span>}
         </span>
-      </td>
-      <td>
-        <span className={`st${kind === "ai" ? " st-accent" : ""}`}>{kindLabel}</span>
-      </td>
-      <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {detail}
-      </td>
-      <td className="mono" style={{ textAlign: "right", color: "var(--fg-4)", fontSize: 10.5, fontVariantNumeric: "tabular-nums" }}>
-        {updated}
-      </td>
-      <td>
-        <div data-card-menu onClick={(e) => e.stopPropagation()}>
-          <CardMenu
-            isDefault={t.is_default}
-            onEdit={canEdit ? onEdit : null}
-            onDuplicate={onDuplicate}
-            onSetDefault={onSetDefault}
-            onDelete={onDelete}
-          />
-        </div>
-      </td>
-    </tr>
+        <small>Updated {updated} · {detail}</small>
+      </span>
+      <span className={`st${tone ? " st-" + tone : ""}`}>{kindLabel}</span>
+      <div data-card-menu onClick={(e) => e.stopPropagation()}>
+        <CardMenu
+          isDefault={t.is_default}
+          onEdit={canEdit ? onEdit : null}
+          onDuplicate={onDuplicate}
+          onSetDefault={onSetDefault}
+          onDelete={onDelete}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -497,10 +491,10 @@ function EmptyState({ onAI, onWord }: { onAI: () => void; onWord: () => void }) 
 
 // ---- Template row (list view) ----
 
-const KIND_META: Record<TemplateKind, { label: string; color: string }> = {
-  ai:   { label: "ai",   color: "var(--accent)" },
-  text: { label: "text", color: "var(--fg-3)" },
-  docx: { label: "docx", color: "var(--fg-3)" },
+const KIND_META: Record<TemplateKind, { label: string; tone: "accent" | "" }> = {
+  ai:   { label: "AI-generated",  tone: "accent" },
+  text: { label: "Static text",   tone: "" },
+  docx: { label: "Word document", tone: "" },
 };
 
 function TemplateCard({
@@ -517,8 +511,7 @@ function TemplateCard({
   onSetDefault: () => void;
 }) {
   const kind = classifyTemplate(t);
-  const { label: kindLabel, color: kindColor } = KIND_META[kind];
-  const accent = t.accent_color || kindColor;
+  const { label: kindLabel } = KIND_META[kind];
   const updated = formatUpdated(t.updated_at ?? t.created_at ?? null);
   const sections = kind === "ai" ? introToSections(t.intro) : null;
 
@@ -563,13 +556,11 @@ function TemplateCard({
       <div className="flex items-start justify-between gap-2 px-5 pt-4">
         <span
           style={{
-            fontFamily: "'Geist Mono', ui-monospace, monospace",
-            fontSize: 11,
+            fontSize: 11.5,
             color: kind === "ai" ? "var(--accent-3)" : "var(--fg-4)",
             background: kind === "ai" ? "var(--accent-tint)" : "var(--bg-2)",
             padding: "2px 8px",
             borderRadius: 4,
-            letterSpacing: "0.02em",
             fontWeight: 500,
           }}
         >
@@ -1123,7 +1114,7 @@ function SectionBuilderForm({
                 onClick={() => setExpandedId(isExpanded ? null : sec.id)}
               >
                 <span className="text-[11px] mono" style={{ color: "var(--fg-5)", width: 16 }}>{i + 1}</span>
-                <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: TYPE_COLORS[sec.type] + "22", color: TYPE_COLORS[sec.type] }}>
+                <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: TYPE_TINT[sec.type], color: TYPE_COLORS[sec.type] }}>
                   {TYPE_LABELS[sec.type]}
                 </span>
                 <span className="text-[13px] font-medium" style={{ color: "var(--fg)", flex: 1 }}>{sec.name}</span>

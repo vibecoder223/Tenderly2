@@ -3,19 +3,115 @@
 @tailwind utilities;
 
 /* ──────────────────────────────────────────────────────────────
+ * Self-hosted Geist + Geist Mono (was Google Fonts CDN).
+ * Files live in public/fonts; latin subsets are preloaded in
+ * app/layout.tsx. font-display: swap keeps first paint unblocked.
+ * ──────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/Geist-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/Geist-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/Geist-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/Geist-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url('/fonts/Geist-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/GeistMono-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/GeistMono-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/GeistMono-symbols2.woff2') format('woff2');
+  unicode-range: U+2000-2001, U+2004-2008, U+200A, U+23B8-23BD, U+2500-259F;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/GeistMono-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/GeistMono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/GeistMono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+/* ──────────────────────────────────────────────────────────────
  * Propello — design tokens · BRAND.md "Green" (locked direction)
- * Warm-white canvas, one confident green brand color carrying every
- * action/identity moment. No second accent color. Geist for UI,
- * Geist Mono for data/meta. OKLCH for consistent saturation.
+ * Near-white canvas, one confident green brand color carrying every
+ * action/identity moment. No second accent color. Geist sans everywhere
+ * (numbers included); Geist Mono only in .kbd chips. OKLCH throughout.
  * Token values here must match BRAND.md section 5 — that file is the
  * spec, this is the implementation.
  * ──────────────────────────────────────────────────────────── */
 
 :root {
-  /* Canvas + panel: warm white bg, green-tinted second layer (hue 152).
-   * --bg-2 is the second neutral layer (sidebar, table heads). */
-  --bg:        oklch(0.99  0.003 90 );
-  --bg-2:      oklch(0.972 0.004 152);
+  /* Canvas + panel: near-white bg (matches the approved dashboard mockup —
+   * clean SaaS white, not a visible warm/gray tint), green-tinted second
+   * layer (hue 152) for --bg-2 (sidebar hover, table heads). */
+  --bg:        oklch(0.995 0.001 152);
+  --bg-2:      oklch(0.968 0.004 152);
   --surface:   oklch(1     0     0  );
   --elevated:  oklch(1     0     0  );
 
@@ -43,8 +139,12 @@
   --accent-glow:   oklch(0.53 0.18 152 / 0.16);
 
   /* Status — always paired with a label, never color alone. "ok" reuses
-     the brand green per BRAND.md (no second green shade). */
-  --ok:        var(--accent-3);
+     the SAME vivid brand green as primary buttons/active state (--accent),
+     not the darker --accent-3 — that muted shade read as an off-brand
+     "forest green" wherever it appeared as a standalone dot/indicator,
+     inconsistent with the brighter green used everywhere else. One shade
+     of green, everywhere "ok" appears. */
+  --ok:        var(--accent);
   --ok-tint:   var(--accent-tint);
   --warn:      oklch(0.62 0.14 62);
   --warn-tint: oklch(0.97 0.035 70);
@@ -137,17 +237,15 @@ html, body {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: var(--text-xs);
   color: var(--fg-3);
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  letter-spacing: 0.01em;
 }
 .status::before {
   content: ""; width: 7px; height: 7px; border-radius: 50%;
   flex-shrink: 0;
   background: var(--fg-5);
 }
-.status.ok::before     { background: var(--ok);     box-shadow: 0 0 0 2px oklch(0.55 0.13 162 / 0.22); }
-.status.warn::before   { background: var(--warn);   box-shadow: 0 0 0 2px oklch(0.62 0.14 71 / 0.22); }
-.status.err::before    { background: var(--err);    box-shadow: 0 0 0 2px oklch(0.56 0.18 25 / 0.22); }
+.status.ok::before     { background: var(--ok);     box-shadow: 0 0 0 2px color-mix(in oklch, var(--ok) 22%, transparent); }
+.status.warn::before   { background: var(--warn);   box-shadow: 0 0 0 2px color-mix(in oklch, var(--warn) 22%, transparent); }
+.status.err::before    { background: var(--err);    box-shadow: 0 0 0 2px color-mix(in oklch, var(--err) 22%, transparent); }
 .status.pending::before {
   background: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-glow);
@@ -159,10 +257,10 @@ html, body {
 }
 
 .meta-mono {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10.5px;
-  color: var(--fg-5);
-  letter-spacing: 0.02em;
+  font-family: 'Geist', sans-serif;
+  font-size: 11.5px;
+  color: var(--fg-4);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ──────────────── Headings — Geist, tight scale. No display family:
@@ -176,11 +274,11 @@ h1 { font-size: 20px; line-height: 1.2;  font-weight: 650; letter-spacing: -0.02
 h2 { font-size: 15px; line-height: 1.3;  font-weight: 600; letter-spacing: -0.012em; }
 h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.008em; }
 
-/* Large mono readings (band numbers, key figures) */
+/* Large readings (band numbers, key figures) — Geist sans, tabular */
 .display {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-weight: 500;
-  letter-spacing: -0.03em;
+  font-family: 'Geist', sans-serif;
+  font-weight: 550;
+  letter-spacing: -0.02em;
   line-height: 1;
   color: var(--fg);
   font-variant-numeric: tabular-nums;
@@ -207,9 +305,29 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
  *   </div>
  * ──────────────────────────────────────────────────────── */
 
-.page-header {
-  margin-bottom: 18px;
+/* Page shell — the one page container. 1280px, fixed gutters, vertical rhythm.
+ * Every page wraps its body in <Page>. Tightens gutters on mobile. */
+.page-shell {
+  max-width: 1280px;
+  padding: 24px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
+@media (max-width: 768px) { .page-shell { padding: 16px 16px 32px; } }
+
+.page-header {
+  margin-bottom: 0;
+}
+.section-card-sub { font-size: 12px; color: var(--fg-4); margin-top: 2px; }
+
+/* Empty / zero state — one canonical centered treatment */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; text-align: center; padding: 40px 24px; color: var(--fg-4);
+}
+.empty-state .es-title { font-size: 14px; font-weight: 600; color: var(--fg-2); }
+.empty-state .es-hint { font-size: 12.5px; color: var(--fg-4); max-width: 44ch; }
 .page-title-row {
   display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
 }
@@ -222,10 +340,10 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   margin: 0;
 }
 .page-meta {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 11.5px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12.5px;
   color: var(--fg-4);
-  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 .page-sub {
   font-size: 13.5px;
@@ -245,25 +363,24 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 .inline-stat { display: flex; flex-direction: column; gap: 2px; }
 .inline-stat-row { display: flex; align-items: baseline; gap: 7px; }
 .stat-val {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 22px; font-weight: 500;
+  font-family: 'Geist', sans-serif;
+  font-size: 24px; font-weight: 550;
   color: var(--fg);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.05;
 }
 .stat-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 9px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
   font-weight: 500;
   color: var(--fg-4);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 .stat-delta {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10.5px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
   color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
 .stat-delta.muted { color: var(--fg-4); }
 .stat-delta.warn  { color: var(--warn); }
@@ -299,49 +416,52 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   flex-wrap: wrap;
 }
 
-/* Section card — bordered container for tables / grouped content.
- * Replaces .card pattern when you want hairline elevation and zero shadow. */
+/* Section card — bordered white container for tables / grouped content.
+ * Lifts off the near-white canvas with a soft shadow (Clean SaaS elevation). */
 .section-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   overflow: hidden;
+  box-shadow: var(--shadow-2);
 }
 .section-card-head {
-  padding: 11px 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--divider);
   background: var(--surface);
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px;
 }
+/* Second head inside a merged card (e.g. output panel + activity stacked) —
+ * divides with a top rule instead of the card's own top border. */
+.section-card-head-divide { border-top: 1px solid var(--border); }
 .section-card-title {
   font-family: 'Geist', sans-serif;
-  font-size: 13px; font-weight: 600;
+  font-size: 13.5px; font-weight: 600;
   color: var(--fg);
   letter-spacing: -0.008em;
 }
 .section-card-count {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 11px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
   color: var(--fg-4);
   margin-left: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Data table — mono uppercase column headers, hairline dividers, dense rows */
+/* Data table — sentence-case column headers, hairline dividers, roomy rows */
 .data-table {
   width: 100%; border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 .data-table thead th {
   text-align: left; font-weight: 500;
-  padding: 8px 16px;
+  padding: 10px 16px;
   color: var(--fg-4);
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--surface);
 }
 .data-table tbody tr {
   border-bottom: 1px solid var(--divider);
@@ -582,12 +702,13 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   font-weight: 600;
 }
 .seg-count {
-  font-family: "Geist Mono", monospace;
-  font-size: var(--text-2xs);
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
   color: var(--fg-4);
-  background: var(--bg);
+  background: var(--bg-2);
   padding: 1px 6px;
   border-radius: 999px;
+  font-variant-numeric: tabular-nums;
 }
 .seg-btn.active .seg-count { color: var(--accent-3); background: var(--accent-tint2); }
 
@@ -636,14 +757,12 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 .badge-err    { background: var(--err-tint);    color: var(--err); }
 .badge-accent { background: var(--accent-tint); color: var(--accent-2); }
 
-/* ──────────────── Status tag (dot + mono label) — the app-wide status
+/* ──────────────── Status tag (dot + sentence label) — the app-wide status
  * vocabulary. Matches the dashboard stage dots. Used by StatusBadge so
  * deals, questions, review, and processing statuses all read the same. */
 .st {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
-  text-transform: uppercase; color: var(--fg-3);
+  font-size: 12px; font-weight: 500; color: var(--fg-3);
   white-space: nowrap;
 }
 .st::before {
@@ -882,22 +1001,21 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 }
 .band-label {
   display: block;
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 9px; font-weight: 500; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--fg-4); margin-bottom: 6px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12.5px; font-weight: 500; color: var(--fg-4); margin-bottom: 6px;
 }
 .band-reading { display: flex; align-items: baseline; gap: 8px; }
 .band-n {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 26px; font-weight: 500; color: var(--fg);
-  font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1;
+  font-family: 'Geist', sans-serif;
+  font-size: 27px; font-weight: 550; color: var(--fg);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1;
 }
 .band-n.warn { color: var(--warn); }
 .band-n.err  { color: var(--err); }
 .band-n.ok   { color: var(--ok); }
 .band-delta {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10px; color: var(--fg-4);
+  font-family: 'Geist', sans-serif;
+  font-size: 11.5px; color: var(--fg-4);
 }
 .band-delta.up { color: var(--accent); }
 
@@ -922,8 +1040,8 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 .queue-say { font-size: 12.5px; font-weight: 500; color: var(--fg-2); }
 .queue-say small { display: block; font-weight: 400; font-size: 11.5px; color: var(--fg-4); margin-top: 1px; }
 .queue-ref {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10px; color: var(--fg-4); white-space: nowrap;
+  font-family: 'Geist', sans-serif;
+  font-size: 11.5px; color: var(--fg-4); white-space: nowrap;
 }
 .queue-ref.warn   { color: var(--warn); }
 .queue-ref.err    { color: var(--err); }
@@ -937,12 +1055,20 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 }
 .queue-row:hover .queue-act { border-color: var(--accent); }
 
-/* Deal stage indicator (dot + mono label) */
+/* Primary queue action — the single most urgent row gets a solid brand-green
+   button instead of the default outline chip, so the eye lands on one CTA. */
+.queue-act-primary {
+  font-size: 11px; font-weight: 600; color: #fff;
+  background: var(--accent); border: 1px solid var(--accent);
+  border-radius: 4px; padding: 3px 8px; white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.queue-row:hover .queue-act-primary { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+
+/* Deal stage indicator (dot + sentence label) */
 .stage {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
-  color: var(--fg-3);
+  font-size: 12px; color: var(--fg-3);
 }
 .stage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--fg-4); }
 .stage.draft  { color: var(--accent-3); } .stage.draft::before  { background: var(--accent); }
@@ -956,31 +1082,158 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 
 /* Completion meter */
 .meter { display: flex; align-items: center; gap: 8px; }
-.meter-track { width: 72px; height: 4px; background: var(--divider); border-radius: 2px; overflow: hidden; }
+.meter-track { width: 72px; height: 6px; background: var(--divider); border-radius: 3px; overflow: hidden; }
 .meter-fill { height: 100%; background: var(--accent); }
 .meter-fill.full { background: var(--ok); }
 .meter-pct {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 11px; color: var(--fg-3); font-variant-numeric: tabular-nums;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px; color: var(--fg-3); font-variant-numeric: tabular-nums;
 }
 
-/* Activity feed */
+/* Activity feed — actor avatar + description + relative time */
 .feed { list-style: none; margin: 0; padding: 0; }
 .feed-row {
-  display: grid; grid-template-columns: 92px 1fr; gap: 10px;
-  padding: 9px 16px; border-bottom: 1px solid var(--divider);
+  display: flex; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--divider);
 }
 .feed-row:last-child { border-bottom: none; }
-.feed-t {
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 9.5px; color: var(--fg-4); padding-top: 2px; letter-spacing: 0.02em;
+.feed-avatar {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent-tint); color: var(--accent-3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Geist', sans-serif; font-weight: 600; font-size: 10px;
 }
-.feed-what { font-size: 12px; color: var(--fg-3); }
-.feed-what b { color: var(--fg); font-weight: 550; }
+.feed-body { flex: 1; min-width: 0; }
+.feed-what { font-size: 12.5px; color: var(--fg-2); line-height: 1.45; }
+.feed-what b { color: var(--fg); font-weight: 600; }
+.feed-time { font-size: 11px; color: var(--fg-4); margin-top: 2px; }
 
 /* Quiet block-head link */
 .block-more { font-size: 11.5px; font-weight: 500; color: var(--accent-3); }
 .block-more:hover { color: var(--accent); }
+
+/* ──────────────── Dashboard readings strip — big, scannable numbers.
+ * State colour only on the ones that carry risk (warn/err) so the eye
+ * catches them; everything else stays ink. Sans, not mono — these are
+ * headline figures, not data-table digits. */
+.readings {
+  display: grid; grid-template-columns: repeat(var(--cols, 4), 1fr);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  overflow: hidden; box-shadow: var(--shadow-2);
+}
+.reading { padding: 16px 20px; border-right: 1px solid var(--divider); }
+.reading:last-child { border-right: none; }
+.reading .n {
+  font-family: 'Geist', sans-serif; font-size: 27px; font-weight: 550;
+  color: var(--fg); letter-spacing: -0.02em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.reading .n.warn { color: var(--warn); }
+.reading .n.err  { color: var(--err); }
+.reading .n.ok   { color: var(--accent-3); }
+.reading .l { font-size: 12.5px; color: var(--fg-3); margin-top: 8px; }
+@media (max-width: 720px) {
+  .readings { grid-template-columns: repeat(2, 1fr); }
+  .reading:nth-child(2n) { border-right: none; }
+  .reading:nth-child(1), .reading:nth-child(2) { border-bottom: 1px solid var(--divider); }
+}
+
+/* Deals-by-deadline runway row — name/client, a time-buffer bar (short + red
+ * = little runway left), days-left + date. Replaces the plain data-table. */
+.rw-row {
+  display: grid; grid-template-columns: 1fr 200px 90px; align-items: center; gap: 16px;
+  padding: 11px 16px; border-bottom: 1px solid var(--divider);
+}
+.rw-row:last-child { border-bottom: none; }
+.rw-name { font-size: 13px; font-weight: 600; color: var(--fg); }
+.rw-client { font-weight: 400; color: var(--fg-4); font-size: 11px; margin-top: 1px; text-transform: none; }
+.rw-bar { height: 6px; border-radius: 99px; background: var(--divider); position: relative; overflow: hidden; }
+.rw-bar .fill { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--fg-4); }
+.rw-bar .fill.warn { background: var(--warn); }
+.rw-bar .fill.err  { background: var(--err); }
+.rw-when { text-align: right; }
+.rw-days {
+  font-family: 'Geist', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+.rw-days.warn { color: var(--warn); }
+.rw-days.err  { color: var(--err); }
+.rw-date { font-size: 11px; color: var(--fg-4); margin-top: 1px; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .rw-row { grid-template-columns: 1fr auto; }
+  .rw-bar { display: none; }
+}
+
+/* Trust panel rows ("This week's output") — key/value, sans figures */
+.trust-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 11px 16px; border-bottom: 1px solid var(--divider);
+}
+.trust-row:last-child { border-bottom: none; }
+.trust-k { font-size: 12.5px; color: var(--fg-3); }
+.trust-v {
+  font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 600; color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ──────────────── Deals board — pipeline kanban, Propello-specific.
+ * Columns sit on the plain canvas (no filled/tinted box per column — that
+ * read as heavy and did no communicative work). A stage dot on the header
+ * ties into the app's one status vocabulary (.stage/.st). Cards carry only
+ * ONE risk signal (the due-date text), not a redundant color bar. Empty
+ * fields (no client, no due date) are omitted rather than printed as filler.
+ * The quick-advance arrow is the one deliberately-Propello touch: move a
+ * deal to its next stage without a drag, useful when triaging many deals. */
+.deal-board { display: flex; gap: 0; overflow-x: auto; padding-bottom: 12px; align-items: flex-start; }
+.deal-col {
+  min-width: 268px; width: 268px; flex-shrink: 0;
+  padding: 0 14px; display: flex; flex-direction: column; gap: 10px;
+  border-right: 1px solid var(--divider);
+}
+.deal-col:first-child { padding-left: 0; }
+.deal-col:last-child { border-right: none; }
+.deal-col-head { display: flex; align-items: baseline; gap: 7px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.deal-col-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--fg-4); margin-bottom: 1px; }
+.deal-col-dot.accent { background: var(--accent); }
+.deal-col-dot.warn   { background: var(--warn); }
+.deal-col-dot.ok     { background: var(--ok); }
+.deal-col-dot.err    { background: var(--err); }
+.deal-col-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+.deal-col-count { font-size: 12px; color: var(--fg-4); font-variant-numeric: tabular-nums; }
+.deal-col-sub { margin-left: auto; font-size: 11.5px; color: var(--fg-4); font-variant-numeric: tabular-nums; }
+.deal-col-list {
+  display: flex; flex-direction: column; gap: 8px; min-height: 64px;
+  border-radius: 8px; transition: box-shadow var(--dur-fast) var(--ease);
+}
+.deal-col-list.over { box-shadow: inset 0 0 0 1.5px var(--accent-line); background: var(--accent-tint); }
+.deal-col-empty { font-size: 12px; text-align: center; padding: 20px 8px; color: var(--fg-5); }
+
+.deal-card {
+  display: block; position: relative;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 11px 12px 10px; box-shadow: var(--shadow-2);
+  user-select: none;
+  transition: box-shadow var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.deal-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-3); }
+.deal-card-title { font-size: 13px; font-weight: 600; color: var(--fg); line-height: 1.3; flex: 1; min-width: 0; }
+.deal-card-client { font-size: 11.5px; color: var(--fg-4); margin-top: 2px; }
+.deal-card-meter { display: flex; align-items: center; gap: 7px; margin-top: 9px; }
+.deal-card-meter .t { flex: 1; height: 6px; border-radius: 99px; background: var(--divider); overflow: hidden; }
+.deal-card-meter .f { height: 100%; background: var(--accent); border-radius: 99px; }
+.deal-card-meter .p { font-size: 11px; color: var(--fg-4); font-variant-numeric: tabular-nums; width: 30px; text-align: right; }
+.deal-card-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--divider); }
+.deal-card-val { font-size: 15px; font-weight: 650; color: var(--fg); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.deal-card-due { font-size: 11px; color: var(--fg-4); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.deal-card-due.warn { color: var(--warn); font-weight: 500; }
+.deal-card-due.err  { color: var(--err); font-weight: 600; }
+.deal-card-advance {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-2); color: var(--fg-4); border: 1px solid var(--border);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.deal-card:hover .deal-card-advance { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ──────────────── Reduced motion */
 

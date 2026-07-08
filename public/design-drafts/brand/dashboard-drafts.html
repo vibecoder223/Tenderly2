@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propello dashboard — 3 drafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.99 0.003 90); --panel: oklch(0.972 0.006 152); --surface: oklch(1 0 0);
+    --ink: oklch(0.20 0.015 152); --ink-2: oklch(0.38 0.012 152); --ink-3: oklch(0.52 0.010 152); --ink-4: oklch(0.64 0.008 152);
+    --rule: oklch(0.90 0.005 152); --rule-soft: oklch(0.945 0.004 152);
+    --brand: oklch(0.53 0.18 152); --deep: oklch(0.42 0.16 152); --tint: oklch(0.955 0.045 152);
+    --warn: oklch(0.58 0.14 62); --warn-tint: oklch(0.965 0.04 70);
+    --err: oklch(0.53 0.18 27); --err-tint: oklch(0.965 0.035 27);
+    --sans: 'Geist', -apple-system, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13.5px; line-height: 1.5; }
+  a { color: inherit; text-decoration: none; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .compare-banner {
+    background: var(--ink); color: var(--bg); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.02em; text-align: center; padding: 8px 12px;
+  }
+  .compare-banner b { color: oklch(0.80 0.14 152); }
+
+  .shell { display: flex; min-height: calc(100vh - 32px); }
+
+  /* ── Shared sidebar (matches approved v2) ───────────────────────── */
+  .side { width: 220px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--rule); display: flex; flex-direction: column; }
+  .side-brand { display: flex; align-items: center; gap: 9px; padding: 0 16px; height: 48px; border-bottom: 1px solid var(--rule); }
+  .side-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .side-mark svg { width: 10px; height: 10px; }
+  .side-word { font-size: 14.5px; font-weight: 650; letter-spacing: -0.012em; color: var(--ink); }
+  .side-search { padding: 8px 10px 4px; }
+  .side-search-box { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; color: var(--ink-4); font-size: 12.5px; }
+  .side-nav { flex: 1; padding: 8px 8px 4px; overflow-y: auto; }
+  .side-group { margin-bottom: 14px; }
+  .side-label { font-size: 11px; font-weight: 500; color: var(--ink-4); padding: 0 10px 6px; }
+  .side-item { display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-radius: 6px; margin-bottom: 1px; font-size: 13px; font-weight: 500; color: var(--ink-3); transition: background 120ms var(--ease), color 120ms var(--ease); }
+  .side-item svg { width: 15px; height: 15px; color: var(--ink-4); flex-shrink: 0; }
+  .side-item:hover { background: var(--surface); color: var(--ink); }
+  .side-item.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--rule); }
+  .side-item.on svg { color: var(--brand); }
+  .side-badge { margin-left: auto; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 99px; background: var(--tint); color: var(--deep); }
+  .side-user { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-top: 1px solid var(--rule); }
+  .side-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--tint); color: var(--deep); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0; }
+  .side-user-name { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .side-user-org { font-size: 11px; color: var(--ink-4); }
+
+  /* ── Main + tabs ─────────────────────────────────────────────────── */
+  .main { flex: 1; min-width: 0; }
+  .topbar { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid var(--rule); background: var(--surface); }
+  .crumbs { font-size: 12.5px; color: var(--ink-4); }
+  .crumbs b { color: var(--ink); font-weight: 500; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--brand); color: #fff; font-weight: 600; font-size: 13px; padding: 7px 13px; border-radius: 6px; transition: background 120ms var(--ease); }
+  .btn-primary:hover { background: var(--deep); }
+
+  .tabbar { display: flex; gap: 4px; padding: 10px 24px 0; background: var(--surface); border-bottom: 1px solid var(--rule); }
+  .tab { font-size: 12.5px; font-weight: 550; color: var(--ink-4); padding: 8px 14px; border-radius: 6px 6px 0 0; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms var(--ease); }
+  .tab:hover { color: var(--ink-2); }
+  .tab.on { color: var(--ink); border-bottom-color: var(--brand); font-weight: 650; }
+  .tab .k { font-family: var(--mono); color: var(--brand); margin-right: 6px; font-size: 11.5px; }
+
+  .content { padding: 24px 28px 48px; max-width: 1220px; }
+  .panel { display: none; }
+  .panel.on { display: block; animation: fade 220ms var(--ease); }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .greeting { margin-bottom: 8px; }
+  .greeting h1 { font-size: 21px; font-weight: 650; letter-spacing: -0.015em; color: var(--ink); margin-bottom: 3px; }
+  .greeting p { font-size: 13.5px; color: var(--ink-3); }
+  /* Quiet inline summary line — replaces the fat stat-card band */
+  .summary { display: flex; gap: 18px; flex-wrap: wrap; align-items: baseline; font-size: 12.5px; color: var(--ink-3); margin: 14px 0 22px; padding-bottom: 16px; border-bottom: 1px solid var(--rule-soft); }
+  .summary .s { display: inline-flex; align-items: baseline; gap: 6px; }
+  .summary .s b { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--ink); }
+  .summary .s.warn b { color: var(--warn); } .summary .s.err b { color: var(--err); }
+
+  .block { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .block-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--rule-soft); }
+  .block-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .block-title .count { color: var(--ink-4); font-weight: 400; margin-left: 6px; }
+  .block-more { font-size: 12.5px; font-weight: 500; color: var(--deep); }
+  .block-more:hover { color: var(--brand); }
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-4); text-transform: uppercase; margin: 24px 0 10px; }
+
+  /* stage token (dot + label) */
+  .stage { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+  .stage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--ink-4); }
+  .stage.draft { color: var(--deep); } .stage.draft::before { background: var(--brand); }
+  .stage.review { color: var(--warn); } .stage.review::before { background: var(--warn); }
+  .stage.ready { color: var(--deep); } .stage.ready::before { background: var(--brand); }
+  .prog { display: flex; align-items: center; gap: 7px; width: 104px; }
+  .prog-track { flex: 1; height: 4px; border-radius: 99px; background: var(--rule-soft); overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--brand); border-radius: 99px; }
+  .prog-pct { font-family: var(--mono); font-size: 11px; color: var(--ink-3); width: 30px; text-align: right; }
+  .due { font-family: var(--mono); font-size: 11px; color: var(--ink-4); white-space: nowrap; }
+  .due.soon { color: var(--warn); } .due.late { color: var(--err); font-weight: 500; }
+
+  /* ══ DRAFT A — Worklist ════════════════════════════════════════════ */
+  .work-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-top: 1px solid var(--rule-soft); transition: background 120ms var(--ease); }
+  .work-row:first-child { border-top: none; }
+  .work-row:hover { background: var(--panel); }
+  .work-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; background: var(--ink-4); }
+  .work-dot.warn { background: var(--warn); } .work-dot.err { background: var(--err); }
+  .work-body { flex: 1; min-width: 0; }
+  .work-title { font-size: 14px; font-weight: 550; color: var(--ink); }
+  .work-sub { font-size: 12px; color: var(--ink-4); margin-top: 2px; display: flex; gap: 10px; }
+  .work-sub .tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-4); }
+  .work-btn { font-size: 12.5px; font-weight: 550; color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); padding: 6px 13px; border-radius: 6px; white-space: nowrap; transition: border-color 120ms var(--ease), color 120ms var(--ease); }
+  .work-row:hover .work-btn:not(.solid) { border-color: var(--brand); color: var(--deep); }
+  .work-btn.solid { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .work-row:hover .work-btn.solid,
+  .work-btn.solid:hover { background: var(--deep); border-color: var(--deep); color: #fff; }
+  .mini-deals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mini-deal { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 7px; background: var(--surface); }
+  .mini-deal:hover { background: var(--panel); }
+  .mini-name { font-size: 12.5px; font-weight: 550; color: var(--ink); }
+  .mini-meta { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
+
+  /* ══ DRAFT B — Pipeline ════════════════════════════════════════════ */
+  .pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .pipe-col { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .pipe-colhead { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 2px; }
+  .pipe-colhead .t { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .pipe-colhead .t::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4); }
+  .pipe-colhead.draft .t::before { background: var(--brand); }
+  .pipe-colhead.review .t::before { background: var(--warn); }
+  .pipe-colhead.ready .t::before { background: var(--deep); }
+  .pipe-colhead .n { font-family: var(--mono); font-size: 11px; color: var(--ink-4); }
+  .pipe-tile { background: var(--surface); border: 1px solid var(--rule); border-radius: 7px; padding: 11px 12px; transition: border-color 120ms var(--ease); }
+  .pipe-tile:hover { border-color: var(--ink-4); }
+  .pipe-tile .nm { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .pipe-tile .cl { font-size: 11px; color: var(--ink-4); margin: 1px 0 9px; }
+  .pipe-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; }
+
+  /* ══ DRAFT C — Deadline runway ═════════════════════════════════════ */
+  .runway-legend { display: flex; gap: 16px; font-size: 11px; color: var(--ink-4); margin-bottom: 4px; }
+  .runway-legend .lg { display: inline-flex; align-items: center; gap: 5px; }
+  .runway-legend .lg::before { content: ''; width: 7px; height: 7px; border-radius: 2px; }
+  .runway-legend .lg.err::before { background: var(--err); }
+  .runway-legend .lg.warn::before { background: var(--warn); }
+  .runway-legend .lg.ok::before { background: var(--ink-4); }
+  .rw-row { display: grid; grid-template-columns: 210px 1fr 96px; align-items: center; gap: 16px; padding: 12px 16px; border-top: 1px solid var(--rule-soft); transition: background 120ms var(--ease); }
+  .rw-row:first-child { border-top: none; }
+  .rw-row:hover { background: var(--panel); }
+  .rw-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .rw-name .cl { font-weight: 400; color: var(--ink-4); font-size: 11px; margin-top: 1px; }
+  .rw-bar { height: 6px; border-radius: 99px; background: var(--rule-soft); position: relative; overflow: hidden; }
+  .rw-bar .fill { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--ink-4); }
+  .rw-bar .fill.warn { background: var(--warn); } .rw-bar .fill.err { background: var(--err); } .rw-bar .fill.ok { background: var(--brand); }
+  .rw-when { text-align: right; }
+  .rw-days { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+  .rw-days.warn { color: var(--warn); } .rw-days.err { color: var(--err); }
+  .rw-date { font-family: var(--mono); font-size: 10.5px; color: var(--ink-4); margin-top: 1px; }
+  .cols2 { display: grid; grid-template-columns: 1.75fr 1fr; gap: 16px; align-items: start; }
+  .trust-row { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--rule-soft); }
+  .trust-row:first-of-type { border-top: none; }
+  .trust-k { font-size: 12.5px; color: var(--ink-3); }
+  .trust-v { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--ink); }
+  .trust-v small { font-size: 11px; color: var(--ink-4); margin-left: 4px; }
+
+  @media (max-width: 1080px) { .pipe { grid-template-columns: repeat(2,1fr); } .cols2 { grid-template-columns: 1fr; } .mini-deals { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="compare-banner">3 DASHBOARD DRAFTS — restrained brand style (Geist only, green = action/state). Switch tabs below. Compare against <b>the current app</b> at localhost:3000/dashboard.</div>
+
+<div class="shell">
+  <aside class="side">
+    <div class="side-brand"><div class="side-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4 L18 12 L7 20 Z" fill="#fff"/></svg></div><span class="side-word">Propello</span></div>
+    <div class="side-search"><div class="side-search-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search…</div></div>
+    <nav class="side-nav">
+      <div class="side-group">
+        <div class="side-label">Workspace</div>
+        <div class="side-item on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</div>
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>Deals</div>
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>My queue<span class="side-badge">3</span></div>
+      </div>
+      <div class="side-group">
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Knowledge base</div>
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Templates</div>
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></svg>Analytics</div>
+      </div>
+      <div class="side-group">
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Team</div>
+        <div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+      </div>
+    </nav>
+    <div class="side-user"><div class="side-avatar">SA</div><div><div class="side-user-name">Sara Al-Amin</div><div class="side-user-org">Ferro Group</div></div></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="crumbs">Workspace / <b>Dashboard</b></div>
+      <a href="#" class="btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New deal</a>
+    </div>
+    <div class="tabbar">
+      <div class="tab on" data-p="a"><span class="k">A</span>Worklist</div>
+      <div class="tab" data-p="b"><span class="k">B</span>Pipeline</div>
+      <div class="tab" data-p="c"><span class="k">C</span>Deadline runway</div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ DRAFT A — WORKLIST ══════════════════════════════════════ -->
+      <section class="panel on" data-panel="a">
+        <div class="greeting">
+          <h1>Good morning, Sara</h1>
+          <p>3 things need you today. QNB is due in 3 days.</p>
+        </div>
+        <div class="summary">
+          <span class="s"><b>8</b> active deals</span>
+          <span class="s warn"><b>2</b> awaiting your approval</span>
+          <span class="s err"><b>2</b> overdue</span>
+          <span class="s"><b>38</b> answers drafted this week</span>
+        </div>
+
+        <div class="block">
+          <div class="block-head"><span class="block-title">Needs you now <span class="count">3</span></span><a href="#" class="block-more">Open my queue →</a></div>
+          <a href="#" class="work-row">
+            <span class="work-dot err"></span>
+            <div class="work-body">
+              <div class="work-title">Ashghal ITS tender is overdue by 3 days</div>
+              <div class="work-sub"><span>Submission date passed</span><span class="tag">Ashghal · SEC-4.1</span></div>
+            </div>
+            <span class="work-btn solid">Open deal</span>
+          </a>
+          <a href="#" class="work-row">
+            <span class="work-dot warn"></span>
+            <div class="work-body">
+              <div class="work-title">2 questions awaiting your approval</div>
+              <div class="work-sub"><span>Drafted, cited, ready to sign off</span><span class="tag">QNB Digital Banking</span></div>
+            </div>
+            <span class="work-btn">Review answers</span>
+          </a>
+          <a href="#" class="work-row">
+            <span class="work-dot err"></span>
+            <div class="work-body">
+              <div class="work-title">1 document failed to process</div>
+              <div class="work-sub"><span>Re-upload or retry extraction</span><span class="tag">Marlowe · knowledge base</span></div>
+            </div>
+            <span class="work-btn">Retry</span>
+          </a>
+        </div>
+
+        <div class="section-label">Your active deals</div>
+        <div class="mini-deals">
+          <a href="#" class="mini-deal"><div><div class="mini-name">QNB Digital Banking</div><div class="mini-meta">Review · 82% complete</div></div><span class="due soon">Nov 14</span></a>
+          <a href="#" class="mini-deal"><div><div class="mini-name">Ashghal Transport RFP</div><div class="mini-meta">Drafting · 41% complete</div></div><span class="due late">Overdue</span></a>
+          <a href="#" class="mini-deal"><div><div class="mini-name">Halcyon Security Review</div><div class="mini-meta">Drafting · 64% complete</div></div><span class="due">Nov 22</span></a>
+          <a href="#" class="mini-deal"><div><div class="mini-name">Ocean Analytics Platform</div><div class="mini-meta">Triage · 8% complete</div></div><span class="due">Dec 2</span></a>
+        </div>
+      </section>
+
+      <!-- ══ DRAFT B — PIPELINE ══════════════════════════════════════ -->
+      <section class="panel" data-panel="b">
+        <div class="greeting">
+          <h1>Ferro Group pipeline</h1>
+          <p>8 active deals across 4 stages. 2 are ready or nearly ready to submit.</p>
+        </div>
+        <div class="summary">
+          <span class="s"><b>8</b> active deals</span>
+          <span class="s warn"><b>2</b> awaiting approval</span>
+          <span class="s err"><b>2</b> overdue</span>
+          <span class="s"><b>1</b> ready to submit</span>
+        </div>
+
+        <div class="pipe">
+          <div class="pipe-col">
+            <div class="pipe-colhead"><span class="t">Triage</span><span class="n">2</span></div>
+            <div class="pipe-tile"><div class="nm">Ocean Analytics Platform</div><div class="cl">Ocean Analytics</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:8%"></span></span><span class="prog-pct">8%</span></div><div class="pipe-foot"><span class="due">Dec 2</span></div></div>
+            <div class="pipe-tile"><div class="nm">Ferro capability deck</div><div class="cl">Internal</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:0%"></span></span><span class="prog-pct">0%</span></div><div class="pipe-foot"><span class="due">Dec 20</span></div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-colhead draft"><span class="t">Drafting</span><span class="n">3</span></div>
+            <div class="pipe-tile"><div class="nm">Ashghal Transport RFP</div><div class="cl">Ashghal</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:41%"></span></span><span class="prog-pct">41%</span></div><div class="pipe-foot"><span class="due late">Overdue</span></div></div>
+            <div class="pipe-tile"><div class="nm">Halcyon Security Review</div><div class="cl">Halcyon</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:64%"></span></span><span class="prog-pct">64%</span></div><div class="pipe-foot"><span class="due">Nov 22</span></div></div>
+            <div class="pipe-tile"><div class="nm">Northwind Cloud Migration</div><div class="cl">Northwind</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:22%"></span></span><span class="prog-pct">22%</span></div><div class="pipe-foot"><span class="due">Dec 9</span></div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-colhead review"><span class="t">Review</span><span class="n">2</span></div>
+            <div class="pipe-tile"><div class="nm">QNB Digital Banking</div><div class="cl">QNB</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:82%"></span></span><span class="prog-pct">82%</span></div><div class="pipe-foot"><span class="due soon">Nov 14</span></div></div>
+            <div class="pipe-tile"><div class="nm">Ashford Systems Upgrade</div><div class="cl">Ashford</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:91%"></span></span><span class="prog-pct">91%</span></div><div class="pipe-foot"><span class="due">Nov 18</span></div></div>
+          </div>
+          <div class="pipe-col">
+            <div class="pipe-colhead ready"><span class="t">Ready</span><span class="n">1</span></div>
+            <div class="pipe-tile"><div class="nm">Marlowe Digital Platform</div><div class="cl">Marlowe Digital</div><div class="prog"><span class="prog-track"><span class="prog-fill" style="width:100%"></span></span><span class="prog-pct">100%</span></div><div class="pipe-foot"><span class="stage ready">Export ready</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ DRAFT C — DEADLINE RUNWAY ═══════════════════════════════ -->
+      <section class="panel" data-panel="c">
+        <div class="greeting">
+          <h1>Ferro Group</h1>
+          <p>Sorted by deadline. 1 overdue and 1 due this week need attention.</p>
+        </div>
+        <div class="cols2">
+          <div class="block">
+            <div class="block-head">
+              <span class="block-title">Deadline runway <span class="count">next 30 days</span></span>
+            </div>
+            <div style="padding:10px 16px 2px;"><div class="runway-legend"><span class="lg err">overdue / ≤3d</span><span class="lg warn">this week</span><span class="lg ok">on track</span></div></div>
+            <div class="rw-row">
+              <div class="rw-name">Ashghal Transport RFP<div class="cl">Ashghal · 41% drafted</div></div>
+              <div class="rw-bar"><span class="fill err" style="width:4%"></span></div>
+              <div class="rw-when"><div class="rw-days err">3d over</div><div class="rw-date">Nov 08</div></div>
+            </div>
+            <div class="rw-row">
+              <div class="rw-name">QNB Digital Banking<div class="cl">QNB · 82% in review</div></div>
+              <div class="rw-bar"><span class="fill err" style="width:10%"></span></div>
+              <div class="rw-when"><div class="rw-days err">3d left</div><div class="rw-date">Nov 14</div></div>
+            </div>
+            <div class="rw-row">
+              <div class="rw-name">Ashford Systems Upgrade<div class="cl">Ashford · 91% in review</div></div>
+              <div class="rw-bar"><span class="fill warn" style="width:23%"></span></div>
+              <div class="rw-when"><div class="rw-days warn">7d left</div><div class="rw-date">Nov 18</div></div>
+            </div>
+            <div class="rw-row">
+              <div class="rw-name">Halcyon Security Review<div class="cl">Halcyon · 64% drafting</div></div>
+              <div class="rw-bar"><span class="fill" style="width:37%"></span></div>
+              <div class="rw-when"><div class="rw-days">11d left</div><div class="rw-date">Nov 22</div></div>
+            </div>
+            <div class="rw-row">
+              <div class="rw-name">Ocean Analytics Platform<div class="cl">Ocean · 8% triage</div></div>
+              <div class="rw-bar"><span class="fill" style="width:70%"></span></div>
+              <div class="rw-when"><div class="rw-days">21d left</div><div class="rw-date">Dec 2</div></div>
+            </div>
+            <div class="rw-row">
+              <div class="rw-name">Northwind Cloud Migration<div class="cl">Northwind · 22% drafting</div></div>
+              <div class="rw-bar"><span class="fill" style="width:93%"></span></div>
+              <div class="rw-when"><div class="rw-days">28d left</div><div class="rw-date">Dec 9</div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="block">
+              <div class="block-head"><span class="block-title">Needs you <span class="count">3</span></span></div>
+              <a href="#" class="work-row" style="padding:11px 16px;"><span class="work-dot warn"></span><div class="work-body"><div class="work-title" style="font-size:13px;">2 questions awaiting approval</div><div class="work-sub"><span class="tag">QNB</span></div></div></a>
+              <a href="#" class="work-row" style="padding:11px 16px;"><span class="work-dot err"></span><div class="work-body"><div class="work-title" style="font-size:13px;">Ashghal tender overdue</div><div class="work-sub"><span class="tag">3 days</span></div></div></a>
+              <a href="#" class="work-row" style="padding:11px 16px;"><span class="work-dot err"></span><div class="work-body"><div class="work-title" style="font-size:13px;">1 document failed</div><div class="work-sub"><span class="tag">Marlowe KB</span></div></div></a>
+            </div>
+            <div class="block">
+              <div class="block-head"><span class="block-title">This week's output</span></div>
+              <div class="trust-row"><span class="trust-k">Answers drafted</span><span class="trust-v">38</span></div>
+              <div class="trust-row"><span class="trust-k">Average confidence</span><span class="trust-v">0.73</span></div>
+              <div class="trust-row"><span class="trust-k">Citations attached</span><span class="trust-v">112</span></div>
+              <div class="trust-row"><span class="trust-k">Mandatory unanswered</span><span class="trust-v" style="color:var(--err);">4</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var tabs = document.querySelectorAll('.tab');
+    var panels = document.querySelectorAll('.panel');
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        var p = t.getAttribute('data-p');
+        tabs.forEach(function (x) { x.classList.toggle('on', x === t); });
+        panels.forEach(function (pl) { pl.classList.toggle('on', pl.getAttribute('data-panel') === p); });
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

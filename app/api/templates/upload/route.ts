@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const file = form.get("file") as File | null;
   const name = (form.get("name") as string) || "";
   const description = (form.get("description") as string) || "";
-  const accent = (form.get("accent_color") as string) || "#3B47D6";
+  const accent = (form.get("accent_color") as string) || "#00872F";
   const isDefault = form.get("is_default") === "true";
 
   if (!file) return NextResponse.json({ error: "file required" }, { status: 400 });

@@ -1,189 +1,247 @@
-# Propello — Brand & Design System
+# Propello — Brand Book
 
-This is the single source of truth. It drives both the marketing surfaces and
-the product UI. The token table maps 1:1 to CSS custom properties in
-`app/globals.css`, so changing a value here is a spec change for the whole app.
-
-Direction: **Green** (locked, approved). Warm-white canvas, one confident green
-brand color carrying every action and identity moment. Modern SaaS in the
-register of Fiverr, Upwork, Pipedrive: light, colorful, confident CTAs. One hue,
-used everywhere, nothing else competing for attention. Simplicity over variety.
-
-Reference implementation: `public/design-drafts/brand/preview-fiverr-green.html`.
+A complete brand identity, written to be handed to a designer (human or AI) and
+built from directly. Colors are given as hex. Fonts are named with CDN links.
+Voice comes with real copy you can ship. This is the identity, not a token dump.
 
 ---
 
-## 1. Positioning
+## 0. The idea in one line
 
-Propello turns a 300-question RFP into a reviewed, exportable response in days
-instead of weeks: extract every requirement, draft grounded answers from your
-knowledge base, route through human review, export. For bid and presales teams
-who need speed without losing citation-level trust.
+**Green means go. Propello is the go button for bids.**
 
-One-liner: **"300 questions. 3 days, not 3 weeks."**
+The name is "propel." The product turns a 300-question RFP into a submitted
+response in days. The whole brand is about forward motion: the moment a
+bid stops being a wall of work and starts moving. Every design decision serves
+that feeling of momentum and relief.
+
+**Primary tagline:** Win the bid, not the busywork.
+**Proof line (use everywhere):** 300 questions. 3 days, not 3 weeks.
+
+---
+
+## 1. Who it's for
+
+Bid managers, presales leads, and proposal writers at B2B companies. They are
+buried under RFPs with hundreds of questions and impossible deadlines. They are
+smart people doing soul-crushing copy-paste. Propello gives them their week
+back. Talk to them like a sharp colleague who just handed them a shortcut, not
+like enterprise software.
 
 ---
 
 ## 2. Personality
 
-Confident, warm, precise. Three words: **capable, direct, unfussy.**
+Three words: **bold, human, unfussy.**
 
-- Capable: the product does real work; the brand shows the work (mono numbers,
-  real screenshots, visible citations), it doesn't gesture at "AI magic".
-- Direct: plain sentences, outcome first. No hedging, no hype.
-- Unfussy: clean surfaces, one brand color, generous whitespace. Nothing
-  decorative that isn't doing a job.
+- **Bold** like Fiverr: confident color, big type, short sentences, a real
+  opinion. Never beige, never hedge.
+- **Human** like Upwork: warm, plain-spoken, on the user's side. It respects
+  that a person under deadline is reading this.
+- **Unfussy:** one idea per screen, generous space, nothing decorative that
+  isn't doing a job. Confidence shows through restraint, not clutter.
+
+What it is NOT: not a sterile dev tool, not corporate-blue SaaS, not
+"AI magic" hype, not playful-to-the-point-of-unserious.
 
 ---
 
-## 3. Voice
+## 3. Voice and copy
 
-- Sentence case everywhere: headlines, buttons, nav, labels.
-- Outcome-first. Lead with what the user gets, not what the software is.
-- Mono numerals carry proof: "300 questions. 3 days." never "blazing fast".
-- Contractions are fine. No exclamation marks. No em dashes (use commas, periods, colons).
-- Banned words: seamless, unlock, empower, leverage, revolutionize, effortless, supercharge, magic.
+Rules: sentence case everywhere. Short sentences. Lead with the outcome. Numbers
+carry the proof. Contractions are fine. No exclamation marks. No em dashes.
+Banned words: seamless, unlock, empower, leverage, revolutionize, effortless,
+supercharge, magic, world-class, cutting-edge.
+
+**Tagline system** (pick per surface, all interchangeable):
+- Win the bid, not the busywork.
+- Answer every RFP. In days.
+- The bid moves. You don't grind.
+- Your best answer, every question, every time.
+
+**Hero headline candidates:**
+- 300 questions. 3 days, not 3 weeks.
+- Stop retyping. Start winning.
+- Every requirement, answered and cited.
+
+**Subheads (plain, outcome-first):**
+- Propello reads the RFP, drafts grounded answers from your knowledge base, and
+  routes them through review. Your team ships, it doesn't retype.
+
+**Buttons:** "Start free", "Book a demo", "See it work". Never "Get Started Now!"
+
+**CTA band copy:** Stop retyping. Start winning. / Upload your first RFP free.
+
+**Feature framing (verb-first, benefit-led):**
+- Extract every requirement, even on page 140.
+- Answers cite your own documents, not a guess.
+- Your SMEs review, they don't retype.
+
+**Voice do / don't:**
 
 | Don't | Do |
 |---|---|
-| "Seamlessly unlock AI-powered RFP magic" | "Extract requirements. Draft answers. Ship the response." |
-| "Empower your team to work smarter" | "Your SMEs review, they don't retype." |
-| "Get Started Now!" | "Start free" |
-| "Revolutionize your proposal workflow" | "300 questions. 3 days, not 3 weeks." |
+| "Seamlessly unlock AI-powered RFP magic." | "Answer 300 questions in 3 days." |
+| "Empower your team to collaborate smarter." | "Your SMEs review, they don't retype." |
+| "Revolutionize your proposal workflow." | "The bid moves. You don't grind." |
 
 ---
 
 ## 4. Logo
 
-- **Mark**: rounded-square tile, corner radius = 24% of size, `--brand` fill,
-  a Geist Mono "P" in white, weight 600, optically centered.
-- **Wordmark**: lowercase `propello`, Geist 650, letter-spacing -0.02em, `--ink`.
-- **Lockup**: mark + 8px gap + wordmark, wordmark vertically centered on mark.
-- **Clearspace**: 0.5x mark-height minimum on all sides.
-- **Minimum size**: mark alone never below 16px; lockup never below 20px mark-height.
-- **Misuse**: never recolor the mark to a non-brand hue, never stretch or skew,
-  never set the wordmark in another typeface, never Title Case or UPPERCASE it,
-  never place the mark on a background under 3:1 contrast with the tile.
+**Concept:** the go button. A rounded-square tile (the button) with a forward
+mark inside. Two acceptable marks:
+- **"P" mark:** lowercase-energy "P" in the brand green tile, white, bold. Simple, safe, works at 16px.
+- **Play/forward mark (preferred for marketing):** a right-pointing triangle or chevron reading as "go / forward / propel," white on the green tile.
+
+**Wordmark:** lowercase `propello`, set in the display face (Clash Display) at
+600-700 weight, tight tracking (-0.02em). Lowercase is deliberate: approachable,
+modern, Fiverr/Upwork-adjacent.
+
+**Lockup:** mark + 10px gap + wordmark, optically centered.
+**Clearspace:** 0.5x mark height on all sides. **Min size:** mark 16px, lockup 20px.
+**Misuse:** never a non-green tile, never stretch or skew, never a different
+typeface for the wordmark, never Title Case or ALL CAPS the wordmark, never
+place on a background under 3:1 contrast with the tile.
 
 ---
 
-## 5. Color tokens
+## 5. Color
 
-OKLCH. Never pure `#000` or `#fff`. Neutrals carry a faint green tint (hue 152)
-so they sit under the brand color without going gray-corporate. **One brand hue
-only** — no second accent color. These names are the CSS variable names.
+**One hue: green.** Green means go. It is the brand, the CTA, the energy. No
+second brand color. Neutrals are warm-white and near-black, faintly green-tinted
+so nothing reads corporate-gray. Marketing may run one drenched-green section
+per page; the app keeps green to actions and state only.
+
+### The greens (one family, three jobs)
+| Name | Hex | OKLCH | Job |
+|---|---|---|---|
+| Signal green | `#12B24A` | `oklch(0.68 0.17 152)` | Big marketing fills, hero graphics, logo tile. Vivid, Fiverr-energy. Pair with ink text or use at large sizes. |
+| Brand green | `#00872F` | `oklch(0.53 0.18 152)` | Primary buttons, links, in-app action. White text passes AA (4.9:1). |
+| Deep green | `#00681F` | `oklch(0.44 0.16 152)` | Small text on tint, labels (5.2:1 on white). |
+| Green tint | `#DCF7E3` | `oklch(0.955 0.045 152)` | Washes, badges, active-nav background, highlight blocks. |
 
 ### Neutrals
-| Token | OKLCH | Hex | Role |
+| Name | Hex | OKLCH | Job |
 |---|---|---|---|
-| `--bg` | `oklch(0.99 0.003 90)` | `#fcfcf9` | Page canvas (warm white) |
-| `--bg-2` | `oklch(0.972 0.004 152)` | `#f3f6f4` | Sidebar / second layer |
-| `--surface` | `oklch(1 0 0)` | `#ffffff` | Cards, tables, inputs |
-| `--ink` | `oklch(0.20 0.015 152)` | `#13201a` | Primary text |
-| `--ink-2` | `oklch(0.38 0.012 152)` | `#3a453f` | Secondary text |
-| `--ink-3` | `oklch(0.52 0.010 152)` | `#5f6a63` | Tertiary text |
-| `--ink-4` | `oklch(0.64 0.008 152)` | `#868f89` | Muted / labels |
-| `--rule` | `oklch(0.90 0.005 152)` | `#dfe4e1` | Hairline borders |
-| `--rule-soft` | `oklch(0.945 0.004 152)` | `#edf1ef` | Faint dividers |
+| Canvas | `#FCFCF9` | `oklch(0.99 0.003 90)` | Warm-white page background |
+| Panel | `#F3F6F4` | `oklch(0.972 0.004 152)` | Sidebar, second layer |
+| Surface | `#FFFFFF` | `oklch(1 0 0)` | Cards, tables, inputs |
+| Ink | `#13201A` | `oklch(0.20 0.015 152)` | Primary text |
+| Ink-2 | `#3A453F` | `oklch(0.38 0.012 152)` | Secondary text |
+| Ink-3 | `#5F6A63` | `oklch(0.52 0.010 152)` | Tertiary text |
+| Ink-4 | `#868F89` | `oklch(0.64 0.008 152)` | Muted, labels |
+| Rule | `#DFE4E1` | `oklch(0.90 0.005 152)` | Hairline borders |
 
-### Brand (green) — action, identity, links, primary CTAs. The only accent.
-| Token | OKLCH | Hex | Role |
-|---|---|---|---|
-| `--brand` | `oklch(0.53 0.18 152)` | `#00872f` | Primary buttons, links, brand fill (white text 4.9:1) |
-| `--brand-hover` | `oklch(0.47 0.17 152)` | `#00752a` | Hover state |
-| `--brand-deep` | `oklch(0.44 0.16 152)` | `#00681f` | Text on tint, small labels (5.2:1 on white) |
-| `--brand-tint` | `oklch(0.955 0.045 152)` | `#dcf7e3` | Wash, active-nav bg, badges |
-| `--brand-glow` | `oklch(0.53 0.18 152 / 0.16)` | — | Focus ring |
-
-### Status — one meaning each, always paired with a label, never color alone
-| Token | OKLCH | Role |
+### Status (paired with a label, never color alone)
+| Name | Hex | Job |
 |---|---|---|
-| `--warn` | `oklch(0.62 0.14 62)` | Review / pending |
-| `--err` | `oklch(0.55 0.19 27)` | Overdue / failed |
-| `--ok` | `--brand-deep` (reuse, don't invent a second green) | Approved / done |
-
-Color strategy: **Restrained in-app** (brand green well under 10% of surface,
-spent on action + state only), **Committed on marketing** (green carries hero
-CTA, nav CTA, highlighted word in the headline). One drenched-green band per
-marketing page maximum. No secondary accent color anywhere in the system.
+| Warn | `#C06F0A` | Review / pending |
+| Error | `#C9302D` | Overdue / failed |
+| OK | reuse Deep green `#00681F` | Approved / done. No separate green. |
 
 ---
 
 ## 6. Typography
 
-One family drives the whole system: **Geist** (UI, body, display) + **Geist Mono**
-(numbers, labels, IDs, timestamps). One family, one hue: that pairing is the
-whole simplicity argument.
+A two-font system: a display face with personality for the brand, a clean
+workhorse for the product. This is the fix for the old "too plain" problem: the
+marketing gets a voice, the app stays legible and dense.
 
-### Type scale
-| Name | Font | Size | Weight | Tracking | Use |
-|---|---|---|---|---|---|
-| Display | Geist | 56–80px (clamp) | 650–700 | -0.04em | Marketing hero |
-| Title | Geist | 32–40px | 650 | -0.03em | Marketing section heads |
-| H1 (app) | Geist | 20px | 650 | -0.02em | Page titles |
-| H2 | Geist | 15px | 600 | -0.012em | Block titles |
-| Body-lg | Geist | 18–19px | 400 | 0 | Marketing subheads (max 60ch) |
-| Body | Geist | 13–15px | 400 | 0 | UI + prose |
-| Reading | Geist Mono | 26px | 500 | -0.03em | Big numbers (readings band) |
-| Micro-label | Geist Mono | 9–11px | 500 | 0.14–0.16em, uppercase | Eyebrows, table headers, stat labels |
+- **Display / brand: Clash Display** (Fontshare, weights 600–700). Big, confident,
+  characterful. Used for hero headlines, section titles, the wordmark, campaign
+  moments. This is where the brand personality lives.
+  `https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap`
+- **Body / UI: Geist** (Google Fonts, 400–650). Neutral, modern, dense. Runs the
+  whole product UI and long-form body copy.
+  `https://fonts.googleapis.com/css2?family=Geist:wght@400..650&display=swap`
+- **Data / labels: Geist Mono** (Google Fonts). Numbers, IDs, timestamps, the
+  uppercase micro-labels that are the product's signature texture.
 
-### The signature move
-The mono micro-label (uppercase, wide tracking) appears on every surface: hero
-eyebrow, section labels, stat labels, table headers, nav group labels. It's the
-one motif that makes marketing and product read as the same company.
+### Scale
+| Use | Font | Size | Weight | Tracking |
+|---|---|---|---|---|
+| Hero display | Clash Display | 60–88px (clamp) | 700 | -0.03em |
+| Section title | Clash Display | 34–44px | 600 | -0.02em |
+| App page title | Geist | 20px | 650 | -0.02em |
+| Body large (marketing) | Geist | 18–19px | 400 | 0 |
+| Body / UI | Geist | 13–15px | 400 | 0 |
+| Big number (readings) | Geist Mono | 26px | 500 | -0.03em |
+| Micro-label (signature) | Geist Mono | 9–11px, uppercase | 500 | 0.16em |
 
----
-
-## 7. Components (product)
-
-- **Buttons**: radius 6–8px, 13–14px/600. **Primary = `--brand` fill + white
-  text.** Secondary = surface + rule border. Ghost = transparent. Trailing mono
-  kbd hint where a shortcut exists.
-- **Links**: `--brand-deep`, no underline until hover.
-- **Nav item (active)**: white surface + inset rule ring + leading 4px `--brand` dot.
-- **Status tag**: mono uppercase label + 5px dot, tone-colored (brand/warn/err). Never color alone.
-- **Count pill**: mono, `--brand-tint` bg + `--brand-deep` text.
-- **Readings band**: 5 cells, mono micro-label + big mono number + context delta.
-- **Meter**: 72×4px track + `--brand` fill + mono percentage. Never a ring.
-- **Segmented tabs**: active = `--brand-tint` bg + `--brand-deep` text.
-- Radius: 6–8px controls, 10–14px cards, 24% for the logo tile.
-- Every control has default, hover, focus-visible (2px `--brand` ring), active, disabled.
+**Signature move:** the uppercase mono micro-label above numbers and sections.
+It appears on both marketing and product, and it's what makes them read as the
+same company.
 
 ---
 
-## 8. Layout & motion
+## 7. Imagery and graphics
 
-- App shell: ~216px sidebar (`--bg-2`, right rule) + 44px white topbar.
-- Marketing: centered hero, one idea per fold, generous whitespace, browser-framed real product screenshots (never abstract UI).
-- Radius rhythm, 24px page gutters, 16px block padding.
-- Motion: 100–150ms, exponential ease-out `cubic-bezier(0.22,1,0.36,1)`, on color/background/border only. No layout animation. Honor `prefers-reduced-motion`.
+Upwork and Fiverr lean on people and bold graphic shapes. Propello's version:
 
----
-
-## 9. Imagery
-
-Real product screenshots only, framed in plain browser chrome. No stock photos,
-no abstract 3D, no gradient blobs, no illustration system (not scoped yet).
-
----
-
-## 10. Accessibility
-
-WCAG AA: 4.5:1 body text, 3:1 large text and UI. `--brand-deep` is 5.2:1 on
-white, safe for small text. White text on `--brand` fill is 4.9:1, safe for
-button labels. Status never by color alone. Full keyboard nav, visible focus
-rings, reduced-motion honored.
+- **Product-real screenshots** framed in clean browser chrome are the hero image.
+  Show the actual dashboard: readings band, requires-action queue, citations.
+  Never abstract 3D or gradient blobs.
+- **Bold green graphic accents:** oversized forward-chevrons, a single green
+  shape bleeding off the edge, big green number callouts. Used sparingly, one
+  per section, always meaningful (a stat, a step, an arrow of motion).
+- **Optional human moment:** one real photo of a bid team, warm and candid, on
+  the "customers" or "about" surface. If used, it must be real, not stock-generic.
+- **No illustration system yet.** If one is added later, it should be flat,
+  green-forward, geometric (motion arrows, document shapes), never cutesy.
 
 ---
 
-## 11. Do / Don't
+## 8. Marketing layout patterns
+
+- **Hero:** centered. Mono eyebrow in a green-tint pill, Clash Display headline
+  with one word in Signal green, plain subhead, two buttons (green primary +
+  outline secondary), then the browser-framed dashboard.
+- **Logo wall:** "Teams answering RFPs with Propello," muted grayscale wordmarks.
+- **Feature sections:** alternating left/right, verb-first title, one product
+  vignette each (extraction pipeline, cited draft, review-to-export).
+- **Stats strip:** the app's readings-band vocabulary reused as social proof
+  (answers drafted, avg confidence, citations attached).
+- **Testimonial:** one large pull quote, no card, attributed to a named bid lead.
+- **Pricing:** three tiers, middle accented with a 2px green border only.
+- **CTA band:** one drenched Signal-green section near the footer, dark text.
+
+---
+
+## 9. Product application (keep it consistent)
+
+- Primary buttons: Brand green fill, white text, 6px radius.
+- Links: Deep green, underline on hover.
+- Active nav: white surface, inset rule, leading green dot.
+- Status tags: mono uppercase + dot, tone-colored, never color alone.
+- Segmented tabs / count pills: green-tint background, Deep green text.
+- Focus ring: 2px Brand green. Motion: 100–150ms ease-out, color/border only.
+
+---
+
+## 10. Handoff notes (for Claude Design or any designer)
+
+- Load fonts from the two CDN links in section 6. If Clash Display is
+  unavailable, fall back to a bold grotesk (Cabinet Grotesk or Satoshi from
+  Fontshare), never to Inter or a system font.
+- Use the hex values in section 5 directly. Green is the only brand color.
+- Lead every marketing comp with the tagline and the "300 questions. 3 days"
+  proof line. Keep copy short and outcome-first per section 3.
+- The hero screenshot must be a real recreation of the app dashboard, not a
+  fake abstract UI.
+- Accessibility: body text 4.5:1 minimum. Brand green on white is 4.9:1 (button
+  labels OK), Deep green is 5.2:1 (small text OK). Signal green is for large or
+  ink-on-green use only.
+
+---
+
+## 11. Do / Don't (the whole brand in one table)
 
 | Do | Don't |
 |---|---|
-| One brand green, everywhere | A second accent color (amber, blue, anything) |
-| Warm-white canvas | Stark white or gray-corporate |
-| Green CTA fills | Ink/black CTAs (an earlier system, now retired) |
-| Mono numbers as proof | Adjective-stacked claims |
-| Browser-framed real UI | Abstract gradient hero art |
-| Sentence case | Title Case headlines |
-| Reuse `--brand-deep` for "done/approved" state | Invent a second green shade for status |
+| Green means go, one hue everywhere | A second brand color, blue, purple, black |
+| Clash Display for brand punch | Generic system font or Inter |
+| Short, outcome-first copy | Adjective-stacked hype, "AI magic" |
+| Real product screenshots | Abstract gradient art or stock clichés |
+| Sentence case, numbers as proof | Title Case, vague claims |
+| One drenched-green moment per page | Green wash on everything |

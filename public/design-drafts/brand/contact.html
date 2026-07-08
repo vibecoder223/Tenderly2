@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — Propello</title>
+<meta name="description" content="Get in touch with Propello. Sales, support, and partnerships. We reply within 24 hours.">
+<meta name="theme-color" content="#12B24A">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312B24A'/%3E%3Ctext x='16' y='23' font-family='Arial,Helvetica,sans-serif' font-size='20' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.99 0.003 90); --surface: oklch(1 0 0); --panel: oklch(0.972 0.004 152);
+    --ink: oklch(0.20 0.015 152); --ink-2: oklch(0.38 0.012 152); --ink-3: oklch(0.52 0.010 152); --ink-4: oklch(0.64 0.008 152);
+    --rule: oklch(0.90 0.005 152); --rule-soft: oklch(0.945 0.004 152);
+    --err: oklch(0.55 0.19 27);
+    --signal: oklch(0.68 0.17 152); --brand: oklch(0.53 0.18 152); --deep: oklch(0.44 0.16 152); --tint: oklch(0.955 0.045 152);
+    --sans: 'Geist', -apple-system, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --display: 'Clash Display', var(--sans);
+    --ease: cubic-bezier(0.22,1,0.36,1);
+    --shadow-card: 0 1px 2px oklch(0.20 0.02 152 / 0.04), 0 12px 34px oklch(0.20 0.02 152 / 0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  a { color: inherit; text-decoration: none; }
+  svg { display: block; }
+  button { font-family: inherit; border: none; appearance: none; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(24px, 4vw, 32px); }
+
+  .eyebrow-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--deep); background: var(--tint); border: 1px solid oklch(0.86 0.08 152);
+    padding: 6px 13px 5px; border-radius: 999px;
+  }
+  .eyebrow-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+
+  .site { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--bg) 86%, transparent); backdrop-filter: saturate(180%) blur(10px); -webkit-backdrop-filter: saturate(180%) blur(10px); border-bottom: 1px solid var(--rule); }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .wordmark { font-family: var(--display); font-weight: 650; font-size: 19px; letter-spacing: -0.02em; color: var(--ink); }
+  .navlinks { display: flex; align-items: center; gap: 32px; font-size: 14px; color: var(--ink-3); }
+  .navlinks a { transition: color 120ms var(--ease); }
+  .navlinks a:hover { color: var(--ink); }
+  .navactions { display: flex; align-items: center; gap: 14px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 140ms var(--ease), border-color 140ms var(--ease), color 140ms var(--ease), transform 140ms var(--ease), box-shadow 140ms var(--ease); }
+  .btn-ghost { color: var(--ink-2); }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 1px 2px oklch(0.44 0.16 152 / 0.28); }
+  .btn-primary:hover { background: var(--deep); transform: translateY(-1px); box-shadow: 0 6px 18px oklch(0.44 0.16 152 / 0.28); }
+  .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .btn-lg { padding: 13px 24px; font-size: 15px; }
+
+  /* Contact page */
+  .contact { padding: clamp(56px, 8vw, 96px) 0 104px; }
+  .chead { text-align: center; margin-bottom: 44px; }
+  .chead .eyebrow-pill { margin-bottom: 16px; }
+  .chead h1 { font-family: var(--display); font-size: clamp(32px, 5vw, 52px); font-weight: 700; letter-spacing: -0.03em; color: var(--ink); line-height: 1.08; }
+  .chead p { font-size: 16.5px; color: var(--ink-3); max-width: 52ch; margin: 16px auto 0; line-height: 1.6; }
+  .cgrid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; align-items: start; max-width: 980px; margin: 0 auto; }
+  .formcard { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 28px; box-shadow: var(--shadow-card); }
+  .frow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  .input, .textarea { font-family: var(--sans); font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; width: 100%; transition: border-color 140ms var(--ease), box-shadow 140ms var(--ease); }
+  .input:focus, .textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px oklch(0.53 0.18 152 / 0.12); }
+  .textarea { resize: vertical; min-height: 132px; }
+  .formfoot { margin-top: 4px; }
+  .btn-block { width: 100%; }
+  .formerr { display: none; margin-top: 14px; font-size: 13px; color: var(--err); }
+  .formerr.is-on { display: block; }
+  .formerr a { color: var(--deep); text-decoration: underline; }
+  .csuccess { display: none; text-align: center; padding: 20px 0; }
+  .csuccess.is-on { display: block; }
+  .csuccess .sicon { width: 48px; height: 48px; border-radius: 12px; background: var(--tint); color: var(--deep); display: grid; place-items: center; margin: 0 auto 16px; }
+  .csuccess h2 { font-family: var(--display); font-size: 22px; font-weight: 650; color: var(--ink); }
+  .csuccess p { font-size: 14.5px; color: var(--ink-3); margin-top: 8px; }
+  .cside { display: grid; gap: 14px; }
+  .ccard { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; }
+  .ccard h3 { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--ink); }
+  .ccard a { display: inline-block; margin-top: 4px; font-family: var(--mono); font-size: 12.5px; color: var(--deep); }
+  .ccard a:hover { text-decoration: underline; }
+  .ccard p { font-size: 12.5px; color: var(--ink-4); margin-top: 6px; line-height: 1.5; }
+
+  /* Footer — matches propello-landing-page.vercel.app */
+  .foot { border-top: 1px solid var(--rule); padding: 56px 0 40px; }
+  .foot-top { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 44px; }
+  .foot-brand .logo { display: flex; align-items: center; gap: 10px; }
+  .mark { width: 24px; height: 24px; border-radius: 6px; background: var(--signal); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: var(--display); font-weight: 700; font-size: 13px; line-height: 1; }
+  .foot-tagline { font-size: 13.5px; color: var(--ink-4); margin-top: 12px; max-width: 28ch; line-height: 1.55; }
+  .foot-col h4 { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .13em; color: var(--ink-4); margin: 0 0 14px; font-weight: 500; }
+  .foot-col a { display: block; font-size: 14px; color: var(--ink-3); margin-bottom: 10px; transition: color 120ms var(--ease); }
+  .foot-col a:hover { color: var(--ink); }
+  .foot-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid var(--rule-soft); }
+  .foot-note { font-family: var(--mono); font-size: 12px; color: var(--ink-4); }
+
+  @media (max-width: 860px) {
+    .cgrid { grid-template-columns: 1fr; }
+    .foot-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+    .navlinks { display: none; }
+  }
+  @media (max-width: 560px) {
+    .frow2 { grid-template-columns: 1fr; }
+    .foot-top { grid-template-columns: 1fr; }
+    .foot-bar { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav aria-label="Primary">
+      <a class="logo" href="landing-human.html" aria-label="Propello home">
+        <span class="wordmark">propello</span>
+      </a>
+      <div class="navlinks">
+        <a href="landing-human.html#how">How it works</a><a href="pricing.html">Pricing</a><a href="landing-human.html#faq">FAQ</a><a href="contact.html">Contact</a>
+      </div>
+      <div class="navactions">
+        <a href="/auth/login" class="btn btn-ghost">Sign in</a>
+        <a href="/auth/signup" class="btn btn-primary">Start free trial</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="contact wrap">
+  <div class="chead">
+    <span class="eyebrow-pill">Contact</span>
+    <h1>Get in touch</h1>
+    <p>Drop us a note. Sales, support, and partnerships all read here. We reply within 24 hours.</p>
+  </div>
+  <div class="cgrid">
+    <div class="formcard">
+      <form id="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" novalidate>
+        <input type="hidden" name="_subject" value="New contact message — Propello">
+        <div class="frow2">
+          <div class="field"><label for="name">Name</label><input class="input" type="text" id="name" name="name" autocomplete="name" required></div>
+          <div class="field"><label for="email">Email</label><input class="input" type="email" id="email" name="email" autocomplete="email" required></div>
+        </div>
+        <div class="field"><label for="subject">Subject</label><input class="input" type="text" id="subject" name="subject" required></div>
+        <div class="field"><label for="message">Message</label><textarea class="textarea" id="message" name="message" rows="5" required></textarea></div>
+        <div class="formfoot"><button class="btn btn-primary btn-lg btn-block" type="submit" id="contact-submit">Send message</button></div>
+        <div class="formerr" id="contact-error" role="alert">Something went wrong. Please try again, or email <a href="mailto:hello@propello.ai">hello@propello.ai</a>.</div>
+      </form>
+      <div class="csuccess" id="contact-success" aria-live="polite">
+        <div class="sicon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h2>Message sent.</h2>
+        <p>We'll respond within 24 hours.</p>
+      </div>
+    </div>
+    <aside class="cside" aria-label="Other ways to reach us">
+      <div class="ccard"><h3>Sales inquiries</h3><a href="mailto:sales@propello.ai">sales@propello.ai</a><p>Contracts and enterprise rollouts.</p></div>
+      <div class="ccard"><h3>Support</h3><a href="mailto:support@propello.ai">support@propello.ai</a><p>Account issues, bugs, urgent help during a live RFP.</p></div>
+      <div class="ccard"><h3>General</h3><a href="mailto:hello@propello.ai">hello@propello.ai</a><p>Press, careers, and everything else.</p></div>
+      <div class="ccard"><h3>Partnerships</h3><a href="mailto:partners@propello.ai">partners@propello.ai</a><p>System integrators, advisors, technology partners.</p></div>
+    </aside>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <span class="logo">
+          <span class="mark" aria-hidden="true">P</span>
+          <span class="wordmark" style="font-size:17px;">propello</span>
+        </span>
+        <p class="foot-tagline">AI RFP response software. Grounded, cited, reviewed.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <a href="landing-human.html#how">How it works</a>
+        <a href="landing-human.html#problem">Why Propello</a>
+        <a href="landing-human.html#faq">FAQ</a>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html">Contact</a>
+        <a href="/auth/login">Sign in</a>
+      </div>
+      <div class="foot-col">
+        <h4>Get started</h4>
+        <a href="/auth/signup">Start free trial</a>
+        <a href="contact.html">Book a demo</a>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span class="foot-note">&copy; 2026 Propello</span>
+      <span class="foot-note">Win the bid, not the busywork.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* Contact form — async submit to Formspree with inline success / error. */
+  (function () {
+    var form = document.getElementById('contact-form');
+    if (!form) return;
+    var success = document.getElementById('contact-success');
+    var error = document.getElementById('contact-error');
+    var submit = document.getElementById('contact-submit');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      error.classList.remove('is-on');
+      submit.disabled = true;
+      submit.textContent = 'Sending...';
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      }).then(function (r) {
+        if (r.ok) {
+          form.style.display = 'none';
+          success.classList.add('is-on');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          error.classList.add('is-on');
+          submit.disabled = false;
+          submit.textContent = 'Send message';
+        }
+      }).catch(function () {
+        error.classList.add('is-on');
+        submit.disabled = false;
+        submit.textContent = 'Send message';
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

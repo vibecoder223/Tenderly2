@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propello dashboard — restrained direction (mockup v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* One hue, product-restrained. No display font, no icon-badge rainbow. */
+    --bg: oklch(0.99 0.003 90); --panel: oklch(0.972 0.006 152); --surface: oklch(1 0 0);
+    --ink: oklch(0.20 0.015 152); --ink-2: oklch(0.38 0.012 152); --ink-3: oklch(0.52 0.010 152); --ink-4: oklch(0.64 0.008 152);
+    --rule: oklch(0.90 0.005 152); --rule-soft: oklch(0.945 0.004 152);
+
+    --brand: oklch(0.53 0.18 152);
+    --deep: oklch(0.42 0.16 152);
+    --tint: oklch(0.955 0.045 152);
+
+    --warn: oklch(0.58 0.14 62);
+    --err: oklch(0.53 0.18 27);
+
+    --sans: 'Geist', -apple-system, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 13.5px; line-height: 1.5; }
+  a { color: inherit; text-decoration: none; }
+
+  .compare-banner {
+    background: var(--ink); color: var(--bg); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.02em; text-align: center; padding: 8px 12px;
+  }
+  .compare-banner b { color: oklch(0.80 0.14 152); }
+
+  .shell { display: flex; min-height: calc(100vh - 32px); }
+
+  /* Sidebar — same structure as the live app, sentence case, one accent */
+  .side {
+    width: 220px; flex-shrink: 0; background: var(--panel);
+    border-right: 1px solid var(--rule); display: flex; flex-direction: column;
+  }
+  .side-brand { display: flex; align-items: center; gap: 9px; padding: 0 16px; height: 48px; border-bottom: 1px solid var(--rule); }
+  .side-mark { width: 24px; height: 24px; border-radius: 6px; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .side-mark svg { width: 10px; height: 10px; }
+  .side-word { font-size: 14.5px; font-weight: 650; letter-spacing: -0.012em; color: var(--ink); }
+
+  .side-search { padding: 8px 10px 4px; }
+  .side-search-box {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+    padding: 6px 10px; color: var(--ink-4); font-size: 12.5px;
+  }
+
+  .side-nav { flex: 1; padding: 8px 8px 4px; overflow-y: auto; }
+  .side-group { margin-bottom: 14px; }
+  .side-label { font-size: 11px; font-weight: 500; color: var(--ink-4); padding: 0 10px 6px; }
+  .side-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 10px; border-radius: 6px; margin-bottom: 1px;
+    font-size: 13px; font-weight: 500; color: var(--ink-3);
+    transition: background 120ms var(--ease), color 120ms var(--ease);
+  }
+  .side-item svg { width: 15px; height: 15px; color: var(--ink-4); flex-shrink: 0; }
+  .side-item:hover { background: var(--surface); color: var(--ink); }
+  .side-item.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--rule); }
+  .side-item.on svg { color: var(--brand); }
+  .side-badge {
+    margin-left: auto; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 99px;
+    background: var(--tint); color: var(--deep);
+  }
+
+  .side-user {
+    display: flex; align-items: center; gap: 9px; padding: 10px 12px;
+    border-top: 1px solid var(--rule);
+  }
+  .side-avatar {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--tint); color: var(--deep);
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0;
+  }
+  .side-user-name { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .side-user-org { font-size: 11px; color: var(--ink-4); }
+
+  /* Main */
+  .main { flex: 1; min-width: 0; }
+  .topbar {
+    height: 48px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; border-bottom: 1px solid var(--rule); background: var(--surface);
+  }
+  .crumbs { font-size: 12.5px; color: var(--ink-4); }
+  .crumbs b { color: var(--ink); font-weight: 500; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--brand); color: #fff; font-weight: 600; font-size: 13px;
+    padding: 7px 13px; border-radius: 6px;
+    transition: background 120ms var(--ease);
+  }
+  .btn-primary:hover { background: var(--deep); }
+
+  .content { padding: 24px 28px 40px; max-width: 1200px; }
+
+  .greeting { margin-bottom: 22px; }
+  .greeting h1 { font-size: 21px; font-weight: 650; letter-spacing: -0.015em; color: var(--ink); margin-bottom: 4px; }
+  .greeting p { font-size: 13.5px; color: var(--ink-3); }
+
+  /* Stat cards — neutral surfaces, plain numbers. Color only where the
+     number itself is a state (overdue/awaiting), never as decoration. */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .stat-n { font-family: var(--mono); font-size: 24px; font-weight: 500; color: var(--ink); letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-n.warn { color: var(--warn); }
+  .stat-n.err { color: var(--err); }
+  .stat-l { font-size: 12px; color: var(--ink-4); margin-top: 6px; }
+
+  .block { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+  .block-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--rule-soft); }
+  .block-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .block-title .count { color: var(--ink-4); font-weight: 400; margin-left: 6px; }
+  .block-more { font-size: 12.5px; font-weight: 500; color: var(--deep); }
+  .block-more:hover { color: var(--brand); }
+
+  /* Requires action — small status dot (paired with text, per accessibility
+     rule), plain sentence-case copy, no icon-badge blocks. */
+  .action-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 16px; border-top: 1px solid var(--rule-soft);
+    transition: background 120ms var(--ease);
+  }
+  .action-row:first-child { border-top: none; }
+  .action-row:hover { background: var(--panel); }
+  .action-dot { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; background: var(--ink-4); }
+  .action-dot.warn { background: var(--warn); }
+  .action-dot.err { background: var(--err); }
+  .action-body { flex: 1; min-width: 0; }
+  .action-title { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  .action-sub { font-size: 12px; color: var(--ink-4); margin-top: 1px; }
+  .action-btn {
+    font-size: 12px; font-weight: 500; color: var(--ink-2); background: var(--surface);
+    border: 1px solid var(--rule); padding: 5px 11px; border-radius: 6px; white-space: nowrap;
+    transition: border-color 120ms var(--ease);
+  }
+  .action-row:hover .action-btn { border-color: var(--brand); color: var(--deep); }
+
+  .cols { display: grid; grid-template-columns: 1.7fr 1fr; gap: 16px; }
+
+  .deal-row {
+    display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 14px;
+    padding: 11px 16px; border-top: 1px solid var(--rule-soft);
+    transition: background 120ms var(--ease);
+  }
+  .deal-row:first-child { border-top: none; }
+  .deal-row:hover { background: var(--panel); }
+  .deal-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .deal-client { font-size: 11.5px; color: var(--ink-4); margin-top: 1px; }
+  /* Stage — dot + label, matches the app's existing stage vocabulary */
+  .stage { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+  .stage::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--ink-4); }
+  .stage.draft { color: var(--deep); } .stage.draft::before { background: var(--brand); }
+  .stage.review { color: var(--warn); } .stage.review::before { background: var(--warn); }
+  .prog { display: flex; align-items: center; gap: 7px; width: 100px; }
+  .prog-track { flex: 1; height: 4px; border-radius: 99px; background: var(--rule-soft); overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--brand); border-radius: 99px; }
+  .prog-pct { font-family: var(--mono); font-size: 11px; color: var(--ink-3); width: 30px; text-align: right; }
+  .due { font-family: var(--mono); font-size: 11px; color: var(--ink-4); white-space: nowrap; }
+  .due.late { color: var(--err); font-weight: 500; }
+
+  .feed-row { display: flex; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--rule-soft); }
+  .feed-row:first-child { border-top: none; }
+  .feed-avatar {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--tint); color: var(--deep);
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 10px; flex-shrink: 0;
+  }
+  .feed-text { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+  .feed-text b { color: var(--ink); font-weight: 600; }
+  .feed-time { font-size: 11px; color: var(--ink-4); margin-top: 2px; }
+
+  @media (max-width: 1000px) {
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .cols { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="compare-banner">MOCKUP v2 — restrained direction: Geist only, green reserved for action/identity, neutral everywhere else. Compare against <b>the current app</b> at localhost:3000/dashboard.</div>
+
+<div class="shell">
+  <aside class="side">
+    <div class="side-brand">
+      <div class="side-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4 L18 12 L7 20 Z" fill="#fff"/></svg></div>
+      <span class="side-word">Propello</span>
+    </div>
+    <div class="side-search">
+      <div class="side-search-box">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search…
+      </div>
+    </div>
+    <nav class="side-nav">
+      <div class="side-group">
+        <div class="side-label">Workspace</div>
+        <div class="side-item on">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          Dashboard
+        </div>
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+          Deals
+        </div>
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          My queue
+          <span class="side-badge">3</span>
+        </div>
+      </div>
+      <div class="side-group">
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Knowledge base
+        </div>
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          Templates
+        </div>
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></svg>
+          Analytics
+        </div>
+      </div>
+      <div class="side-group">
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Team
+        </div>
+        <div class="side-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </div>
+      </div>
+    </nav>
+    <div class="side-user">
+      <div class="side-avatar">SA</div>
+      <div>
+        <div class="side-user-name">Sara Al-Amin</div>
+        <div class="side-user-org">Ferro Group</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="crumbs">Workspace / <b>Dashboard</b></div>
+      <a href="#" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New deal
+      </a>
+    </div>
+
+    <div class="content">
+      <div class="greeting">
+        <h1>Ferro Group</h1>
+        <p>8 active deals, 3 things need you today.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-n">8</div>
+          <div class="stat-l">Active deals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n warn">2</div>
+          <div class="stat-l">Awaiting approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n err">2</div>
+          <div class="stat-l">Overdue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-n">38</div>
+          <div class="stat-l">Answers drafted</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <span class="block-title">Requires action <span class="count">3</span></span>
+          <a href="#" class="block-more">My queue →</a>
+        </div>
+        <a href="#" class="action-row">
+          <span class="action-dot warn"></span>
+          <div class="action-body">
+            <div class="action-title">2 questions awaiting approval</div>
+            <div class="action-sub">QNB Digital Banking</div>
+          </div>
+          <span class="action-btn">Review</span>
+        </a>
+        <a href="#" class="action-row">
+          <span class="action-dot err"></span>
+          <div class="action-body">
+            <div class="action-title">Ashghal ITS tender is overdue by 3 days</div>
+            <div class="action-sub">Due date passed</div>
+          </div>
+          <span class="action-btn">Open</span>
+        </a>
+        <a href="#" class="action-row">
+          <span class="action-dot err"></span>
+          <div class="action-body">
+            <div class="action-title">1 document failed processing</div>
+            <div class="action-sub">Marlowe Digital knowledge base</div>
+          </div>
+          <span class="action-btn">Retry</span>
+        </a>
+      </div>
+
+      <div class="cols">
+        <div class="block">
+          <div class="block-head">
+            <span class="block-title">Active deals <span class="count">8</span></span>
+            <a href="#" class="block-more">View all →</a>
+          </div>
+          <div class="deal-row">
+            <div>
+              <div class="deal-name">QNB Digital Banking</div>
+              <div class="deal-client">QNB</div>
+            </div>
+            <span class="stage review">Review</span>
+            <div class="prog"><span class="prog-track"><span class="prog-fill" style="width:82%"></span></span><span class="prog-pct">82%</span></div>
+            <span class="due">Nov 14</span>
+          </div>
+          <div class="deal-row">
+            <div>
+              <div class="deal-name">Ashghal Transport RFP</div>
+              <div class="deal-client">Ashghal</div>
+            </div>
+            <span class="stage draft">Drafting</span>
+            <div class="prog"><span class="prog-track"><span class="prog-fill" style="width:41%"></span></span><span class="prog-pct">41%</span></div>
+            <span class="due late">Overdue</span>
+          </div>
+          <div class="deal-row">
+            <div>
+              <div class="deal-name">Ocean Analytics Platform</div>
+              <div class="deal-client">Ocean Analytics</div>
+            </div>
+            <span class="stage">Triage</span>
+            <div class="prog"><span class="prog-track"><span class="prog-fill" style="width:8%"></span></span><span class="prog-pct">8%</span></div>
+            <span class="due">Dec 2</span>
+          </div>
+          <div class="deal-row">
+            <div>
+              <div class="deal-name">Halcyon Security Review</div>
+              <div class="deal-client">Halcyon</div>
+            </div>
+            <span class="stage draft">Drafting</span>
+            <div class="prog"><span class="prog-track"><span class="prog-fill" style="width:64%"></span></span><span class="prog-pct">64%</span></div>
+            <span class="due">Nov 22</span>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="block-head">
+            <span class="block-title">Activity</span>
+            <a href="#" class="block-more">View all →</a>
+          </div>
+          <div class="feed-row">
+            <div class="feed-avatar">MK</div>
+            <div>
+              <div class="feed-text"><b>Mia K.</b> approved 4 answers in QNB Digital Banking</div>
+              <div class="feed-time">2 hours ago</div>
+            </div>
+          </div>
+          <div class="feed-row">
+            <div class="feed-avatar">SA</div>
+            <div>
+              <div class="feed-text"><b>Sara A.</b> uploaded Ashghal_RFP_v3.pdf</div>
+              <div class="feed-time">5 hours ago</div>
+            </div>
+          </div>
+          <div class="feed-row">
+            <div class="feed-avatar">JT</div>
+            <div>
+              <div class="feed-text"><b>James T.</b> invited two teammates to Halcyon</div>
+              <div class="feed-time">Yesterday</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

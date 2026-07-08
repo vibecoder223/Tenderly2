@@ -11,7 +11,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { callGroqJson, callGroqText, estimateCost, MODEL, MODEL_FAST } from "./groq";
+import { callMistralJson, callMistralText, estimateCost, MODEL, MODEL_FAST } from "./mistral";
 import { parseDocument, type ParsedDoc } from "./parse";
 import { chunkBlocks, type ProducedChunk } from "./chunk";
 import { embedTexts, hasEmbeddings } from "./embeddings";
@@ -25,7 +25,11 @@ type Doc = {
   extracted_text: string | null;
 };
 
-async function recordRun(
+// Exported so the generate stage (lib/jobs.ts, which persists its own token
+// usage rather than going through an agents.ts runXAgent function) can log to
+// the same agent_runs table as every other stage — previously generation was
+// the only stage with zero cost/token visibility.
+export async function recordRun(
   supabase: SupabaseClient,
   args: {
     document_id: string;
@@ -252,8 +256,12 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
   try {
     type ChunkResult = { reqs: ExtractedRequirement[]; inTok: number; outTok: number };
 
-    // Batch chunks 4 at a time — reduces Groq calls by ~4x.
-    const BATCH = 4;
+    // Batch chunks 12 at a time. This model (MODEL, mistral-large-latest) is
+    // capped at 4 requests/minute — a small batch size multiplies call count
+    // straight into that ceiling. Large's 250K TPM budget has plenty of room
+    // for bigger batches, so trade batch size up to keep extraction call
+    // count low (a ~20-chunk document now costs ~2 calls instead of ~5).
+    const BATCH = 12;
     const batches: ProducedChunk[][] = [];
     for (let i = 0; i < chunks.length; i += BATCH) batches.push(chunks.slice(i, i + BATCH));
 
@@ -270,13 +278,16 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
       let inTok = 0, outTok = 0;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const { data, usage, raw } = await callGroqJson<unknown>({
+          const { data, usage, raw } = await callMistralJson<unknown>({
             system: sys,
             user:
               attempt === 0
                 ? user
                 : `${user}\n\n[Previous attempt failed: ${lastErr}. Return ONLY a JSON array.]`,
-            maxTokens: 4096,
+            // Bigger batches (12 chunks) need more room for the requirements
+            // list than the old 4-chunk batches did; salvageTruncatedArray in
+            // lib/mistral.ts still recovers a partial list if this cap is hit.
+            maxTokens: 8192,
             model: MODEL,
             // response_format=json_object forces the model to return a single
             // top-level object; gpt-oss-120b and llama3.1-8b on Cerebras both
@@ -310,7 +321,7 @@ Return ONLY the JSON array. No prose, no markdown fences.`;
         // bubble it up so the orchestrator marks the doc as extraction_failed.
         // Validation-only failures (LLM produced bad JSON) return empty so a
         // doc that legitimately has no requirements still proceeds.
-        if (lastErr && /rate.?limit|429|^Groq |timeout|abort/i.test(lastErr)) {
+        if (lastErr && /rate.?limit|429|^LLM |timeout|abort/i.test(lastErr)) {
           throw new Error(`Extraction batch failed: ${lastErr}`);
         }
         console.warn(`[extraction] Chunk batch produced no parsed reqs after retries. Last error:`, lastErr);

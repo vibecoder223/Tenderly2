@@ -1,15 +1,21 @@
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
-import { ReadingsBand } from "@/components/ui";
+import { Page, PageHeader, Readings, SectionCard } from "@/components/ui";
 import {
   TimeRangeFilter,
   TrendChart,
-  DealsAtRisk,
-  FunnelSection,
-  type DealRiskRow,
+  WinLossChart,
+  FunnelChart,
+  DwellChart,
   type FunnelStep,
   type DwellBar,
+  type WinLossPoint,
 } from "./AnalyticsClient";
+
+// A win rate off one or two deals isn't a rate, it's a coin flip. Below this
+// many closed deals, the readings tile shows a plain count instead of a %
+// that implies more confidence than the sample supports.
+const MIN_CLOSED_FOR_RATE = 3;
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 
@@ -73,7 +79,6 @@ export default async function AnalyticsPage({
   const sp = await searchParams;
   const fromDate = parseDate(sp.from);
   const toDate = parseDate(sp.to);
-  const now = new Date();
 
   /* ── Deals ─────────────────────────────────────────────────── */
   const { data: allDeals } = await supabase
@@ -96,9 +101,10 @@ export default async function AnalyticsPage({
 
   const won = closedInRange.filter((d) => d.status === "won");
   const lost = closedInRange.filter((d) => d.status === "lost");
-  const winRate = won.length + lost.length > 0
-    ? Math.round((won.length / (won.length + lost.length)) * 100)
-    : null;
+  const closedCount = won.length + lost.length;
+  const winRateReady = closedCount >= MIN_CLOSED_FOR_RATE;
+  const winRate = closedCount > 0 ? Math.round((won.length / closedCount) * 100) : null;
+  const valueWon = won.reduce((s, d) => s + (Number(d.value) || 0), 0);
 
   const activeDeals = deals.filter((d) => d.status !== "won" && d.status !== "lost");
   const pipelineValue = activeDeals.reduce((s, d) => s + (Number(d.value) || 0), 0);
@@ -222,10 +228,9 @@ export default async function AnalyticsPage({
   }
 
   const sortedMonths = Array.from(monthBuckets.keys()).sort();
-  const winRateTrend = sortedMonths.map((month) => {
+  const winLossTrend: WinLossPoint[] = sortedMonths.map((month) => {
     const b = monthBuckets.get(month)!;
-    const total = b.won + b.lost;
-    return { month, value: total > 0 ? Math.round((b.won / total) * 100) : null };
+    return { month, won: b.won, lost: b.lost };
   });
   const completionTrend = sortedMonths.map((month) => {
     const b = monthBuckets.get(month)!;
@@ -235,46 +240,6 @@ export default async function AnalyticsPage({
         ? parseFloat((b.completionDays.reduce((s, v) => s + v, 0) / b.completionDays.length).toFixed(1))
         : null,
     };
-  });
-
-  /* ── Deals at risk ──────────────────────────────────────────── */
-  const dealDocIds = new Map<string, string[]>();
-  for (const doc of docs) {
-    const arr = dealDocIds.get(doc.deal_id) ?? [];
-    arr.push(doc.id);
-    dealDocIds.set(doc.deal_id, arr);
-  }
-
-  const dealRiskRows: DealRiskRow[] = activeDeals.map((deal) => {
-    const dids = dealDocIds.get(deal.id) ?? [];
-    const qs = questions.filter((q) => dids.includes(q.document_id));
-    const total = qs.length;
-    const approved = qs.filter((q) => q.status === "approved").length;
-    const pctDone = total > 0 ? approved / total : 0;
-
-    const due = parseDate(deal.due_date);
-    const daysLeft = due ? Math.round((due.getTime() - now.getTime()) / 86400_000) : null;
-
-    let risk: DealRiskRow["risk"] = "none";
-    if (daysLeft != null) {
-      if (daysLeft < 0) risk = "red";
-      else if (daysLeft <= 3 && pctDone < 0.8) risk = "red";
-      else if (daysLeft <= 7) risk = "amber";
-      else risk = "green";
-    }
-
-    return { id: deal.id, name: deal.name, dueDate: deal.due_date, pctDone, total, approved, daysLeft, risk };
-  });
-
-  // Sort: red first, then amber, then by days left ascending
-  const riskOrder = { red: 0, amber: 1, green: 2, none: 3 };
-  dealRiskRows.sort((a, b) => {
-    const ro = riskOrder[a.risk] - riskOrder[b.risk];
-    if (ro !== 0) return ro;
-    if (a.daysLeft == null && b.daysLeft == null) return 0;
-    if (a.daysLeft == null) return 1;
-    if (b.daysLeft == null) return -1;
-    return a.daysLeft - b.daysLeft;
   });
 
   /* ── Funnel ─────────────────────────────────────────────────── */
@@ -371,60 +336,37 @@ export default async function AnalyticsPage({
         actions={<TimeRangeFilter from={sp.from ?? null} to={sp.to ?? null} />}
       />
 
-      <ReadingsBand
-        maxWidth={1200}
-        items={[
-          {
-            label: "Win rate",
-            value: winRate != null ? `${winRate}%` : "—",
-            delta: `${won.length}W / ${lost.length}L`,
-            tone: winRate != null && winRate >= 60 ? "ok" : undefined,
-          },
-          {
-            label: "Pipeline value",
-            value: fmt$(pipelineValue),
-            delta: `${activeDeals.length} active`,
-          },
-          {
-            label: "Avg cycle time",
-            value: avgCompletionDays != null ? fmtDays(avgCompletionDays) : "—",
-            delta: "open to export",
-            tone: avgCompletionDays != null && avgCompletionDays > 14 ? "warn" : undefined,
-          },
-          {
-            label: "AI quality",
-            value: avgConfidence != null ? `${Math.round(avgConfidence * 100)}%` : "—",
-            delta: noSourceRate != null ? `${Math.round(noSourceRate * 100)}% no-source` : "confidence",
-            tone:
-              avgConfidence != null && avgConfidence < 0.5 ? "err"
-              : avgConfidence != null && avgConfidence >= 0.75 ? "ok"
-              : undefined,
-          },
-        ]}
-      />
+      <Page>
+        <PageHeader title="Analytics" sub="Win rate, cycle time, and where bids stall." />
 
-      <div className="p-4 sm:p-7 pt-0" style={{ maxWidth: 1200 }}>
+        <Readings
+          items={[
+            {
+              label: "Win rate",
+              value: closedCount === 0 ? "—" : winRateReady ? `${winRate}%` : `${closedCount} closed`,
+              tone: winRateReady && winRate != null && winRate >= 60 ? "ok" : undefined,
+            },
+            { label: "Value won", value: fmt$(valueWon) },
+            { label: "Pipeline value", value: fmt$(pipelineValue) },
+            { label: "Avg cycle time", value: avgCompletionDays != null ? fmtDays(avgCompletionDays) : "—", tone: avgCompletionDays != null && avgCompletionDays > 14 ? "warn" : undefined },
+          ]}
+        />
 
-        <div className="page-header">
-          <div className="page-title-row">
-            <h1 className="page-title">Analytics</h1>
-            <span className="page-meta">{activeDeals.length} active · {won.length + lost.length} closed</span>
-          </div>
-          <p className="page-sub">Pipeline health, conversion, cycle time, AI quality.</p>
-        </div>
+        <Section title="Win and loss" subtitle="Deals closed over time">
+          <WinLossChart data={winLossTrend} activeCount={activeDeals.length} />
+        </Section>
 
-        {/* Deals at risk + Funnel — side by side on desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-          <Section title="Deals at risk" subtitle="Active deals sorted by urgency">
-            <DealsAtRisk rows={dealRiskRows} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <Section title="Response funnel" subtitle="Questions by stage, selected range">
+            <FunnelChart steps={funnelSteps} />
           </Section>
-          <Section title="Pipeline funnel" subtitle="Questions by stage in selected range">
-            <FunnelSection steps={funnelSteps} dwellData={dwellData} />
+          <Section title="Time per stage" subtitle="Avg days in draft vs review">
+            <DwellChart dwellData={dwellData} />
           </Section>
         </div>
 
-        {/* 4. Team */}
-        <Section title="Team" subtitle="Filtered by time range" className="mb-5">
+        {/* Team */}
+        <Section title="Team" subtitle="Filtered by time range">
           {teamRows.length === 0 ? (
             <Empty>No activity in range</Empty>
           ) : (
@@ -447,12 +389,12 @@ export default async function AnalyticsPage({
                         <td style={{ color: "var(--fg)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {row.member.name ?? row.member.email}
                         </td>
-                        <td className="mono" style={{ textAlign: "right", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{row.assigned}</td>
-                        <td className="mono" style={{ textAlign: "right", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{row.completed}</td>
-                        <td className="mono" style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: rate >= 0.8 ? "var(--ok)" : rate >= 0.5 ? "var(--warn)" : "var(--fg-2)" }}>
+                        <td style={{ textAlign: "right", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{row.assigned}</td>
+                        <td style={{ textAlign: "right", color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{row.completed}</td>
+                        <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: rate >= 0.8 ? "var(--ok)" : rate >= 0.5 ? "var(--warn)" : "var(--fg-2)" }}>
                           {row.assigned > 0 ? `${Math.round(rate * 100)}%` : "—"}
                         </td>
-                        <td className="mono" style={{ textAlign: "right", color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
+                        <td style={{ textAlign: "right", color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
                           {row.avgResponseHrs != null
                             ? row.avgResponseHrs < 24
                               ? `${row.avgResponseHrs.toFixed(1)}h`
@@ -468,7 +410,18 @@ export default async function AnalyticsPage({
           )}
         </Section>
 
-        {/* 5. AI quality — collapsed detail */}
+        {completionTrend.length > 0 && (
+          <TrendChart
+            data={completionTrend}
+            label="Avg cycle time (days) by month"
+            color="var(--accent)"
+            unit="d"
+          />
+        )}
+
+        {/* AI & knowledge health — secondary, collapsed by default. Propello's
+            trust signal, but this page leads with win/loss per the chosen
+            emphasis, so it sits at the bottom rather than up top. */}
         <AiQualitySection
           avgConfidence={avgConfidence}
           noSourceRate={noSourceRate}
@@ -476,31 +429,15 @@ export default async function AnalyticsPage({
           responsesCount={responsesInRange.length}
         />
 
-        {/* 6. Trends */}
-        {(winRateTrend.length > 0 || completionTrend.length > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
-            <TrendChart
-              data={winRateTrend}
-              label="Win rate by month"
-              color="var(--ok)"
-              unit="%"
-            />
-            <TrendChart
-              data={completionTrend}
-              label="Avg cycle time (days) by month"
-              color="var(--accent)"
-              unit="d"
-            />
-          </div>
-        )}
-
-      </div>
+      </Page>
     </>
   );
 }
 
 /* ─── Sub-components ─────────────────────────────────────────────────────── */
 
+// Thin wrapper over the canonical SectionCard so every analytics panel shares
+// the exact card + head as the rest of the app; adds a padded body for charts.
 function Section({
   title,
   subtitle,
@@ -513,17 +450,9 @@ function Section({
   className?: string;
 }) {
   return (
-    <section className={`section-card ${className ?? ""}`} style={{ minWidth: 0 }}>
-      <div className="section-card-head">
-        <div>
-          <span className="section-card-title">{title}</span>
-          {subtitle && (
-            <span style={{ fontSize: 11.5, color: "var(--fg-4)", marginLeft: 8 }}>{subtitle}</span>
-          )}
-        </div>
-      </div>
+    <SectionCard title={title} subtitle={subtitle} className={className}>
       <div style={{ padding: "16px 20px" }}>{children}</div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -546,7 +475,7 @@ function AiQualitySection({
     <details className="card" style={{ padding: "18px 20px", minWidth: 0 }}>
       <summary style={{ cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
         <div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>AI quality</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)" }}>AI &amp; knowledge health</span>
           {avgConfidence != null && (
             <span style={{ fontSize: 12, color: "var(--fg-4)", marginLeft: 8 }}>
               avg {Math.round(avgConfidence * 100)}% confidence
@@ -592,7 +521,7 @@ function StatBox({
   const color = tone === "ok" ? "var(--ok)" : tone === "err" ? "var(--err)" : "var(--fg)";
   return (
     <div style={{ padding: "12px 14px", background: "var(--bg-2, var(--elevated))", borderRadius: 8, border: "1px solid var(--border)" }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 5 }}>
+      <div style={{ fontSize: 12, fontWeight: 500, color: "var(--fg-4)", marginBottom: 5 }}>
         {label}
       </div>
       <div className="num" style={{ fontSize: 20, fontWeight: 600, color, lineHeight: 1.1 }}>{value}</div>

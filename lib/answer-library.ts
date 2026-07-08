@@ -135,6 +135,35 @@ export async function suggestAnswers(
 }
 
 /**
+ * Batched library lookup from precomputed query embeddings — one match_answers
+ * RPC per embedding (DB only, no provider calls). Lets a batch of questions
+ * share a single embed call instead of embedding one question per suggestAnswers
+ * invocation, which was another source of embed-endpoint bursts. Returns the top
+ * match per input embedding, aligned 1:1 (null where none). Never throws.
+ */
+export async function suggestAnswersByEmbeddings(
+  supabase: SupabaseClient,
+  args: { org_id: string; embeddings: (number[] | undefined)[] }
+): Promise<(AnswerMatch | null)[]> {
+  return Promise.all(
+    args.embeddings.map(async (embedding) => {
+      if (!embedding) return null;
+      try {
+        const { data, error } = await supabase.rpc("match_answers", {
+          p_org_id: args.org_id,
+          p_embedding: embedding,
+          p_match_count: 1,
+        });
+        if (error) return null;
+        return ((data ?? [])[0] as AnswerMatch | undefined) ?? null;
+      } catch {
+        return null;
+      }
+    })
+  );
+}
+
+/**
  * Record that a library answer was reused: bump usage_count and last_used_at.
  * Best-effort — never throws, never blocks the caller.
  */

@@ -471,7 +471,7 @@ function QuestionDetailInline({
 
   async function regenerate() {
     setSaving(true);
-    setInfo("Regenerating with Claude…");
+    setInfo("Regenerating with AI…");
     const res = await fetch(`/api/questions/${question.id}/regenerate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -773,7 +773,7 @@ function QuestionDetailInline({
                   style={{
                     width: 28, height: 28,
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg,#3B47D6,#5C6BFA)",
+                    background: "linear-gradient(135deg,var(--accent),var(--accent-3))",
                     fontSize: 10.5,
                     fontWeight: 600,
                     color: "white",

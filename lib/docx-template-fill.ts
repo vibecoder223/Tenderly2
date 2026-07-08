@@ -17,7 +17,7 @@
 
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
-import { callGroqJson, callGroqText } from "./groq";
+import { callMistralJson, callMistralText } from "./mistral";
 
 export type FillQuestion = {
   requirement_id: string;
@@ -192,7 +192,7 @@ function detectTokens(text: string): string[] {
   return Array.from(out);
 }
 
-/** Detect [AI: <instruction>] tokens that trigger Groq generation. */
+/** Detect [AI: <instruction>] tokens that trigger Mistral generation. */
 function detectAiTokens(text: string): string[] {
   const out = new Set<string>();
   const re = /\[AI:\s*([^\]]{1,600})\]/g;
@@ -238,7 +238,7 @@ async function resolveAiTokens(
       .replace(/\[Sector\]/gi, flat.sector ?? "")
       .replace(/\[Region\]/gi, flat.region ?? "");
     try {
-      const { text } = await callGroqText({
+      const { text } = await callMistralText({
         system: `You are writing a section of a professional RFP proposal response.
 Write in formal business English. 2-3 concise paragraphs. Be persuasive and outcome-focused.
 Never invent facts not supported by context. Do not include section headings in the output.
@@ -304,7 +304,7 @@ ${templateText.slice(0, 4000)}
 Tokens (return JSON for every one):
 ${JSON.stringify(tokens)}`;
   try {
-    const { data } = await callGroqJson<Record<string, string>>({ system, user, maxTokens: 1200 });
+    const { data } = await callMistralJson<Record<string, string>>({ system, user, maxTokens: 1200 });
     if (!data || typeof data !== "object") return {};
     const out: Record<string, string> = {};
     for (const t of tokens) {
@@ -387,7 +387,7 @@ export async function fillDocxTemplate(
     for (const [tok, v] of Object.entries(aiMap)) resolved[tok] = v;
   }
 
-  // Resolve [AI: ...] tokens via Groq section generation
+  // Resolve [AI: ...] tokens via Mistral section generation
   if (aiTokens.length > 0) {
     const aiSectionMap = await resolveAiTokens(aiTokens, context);
     for (const [tok, v] of Object.entries(aiSectionMap)) resolved[tok] = v;

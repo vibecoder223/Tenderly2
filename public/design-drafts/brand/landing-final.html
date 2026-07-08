@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propello — AI RFP Response Software | 300 Questions in 3 Days</title>
+<meta name="description" content="Propello reads the RFP, drafts answers cited from your own documents, and routes them through review. Answer every RFP in days, not weeks. Start free.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Propello — AI RFP Response Software">
+<meta property="og:description" content="Propello reads the RFP, drafts answers cited from your own documents, and routes them through review.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Propello — AI RFP Response Software">
+<meta name="twitter:description" content="Answer every RFP in days, not weeks. Grounded, cited, reviewed.">
+<meta name="theme-color" content="#12B24A">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2300872F'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='700' font-size='18' fill='white' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Propello",
+    "url": "https://propello.io",
+    "description": "Propello is AI RFP response software that extracts requirements from RFPs and drafts cited answers from a company's own knowledge base."
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Propello",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "AI RFP response software: extracts requirements, drafts grounded and cited answers, and routes drafts through review before export to Word or PDF.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free to start" }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What is Propello?", "acceptedAnswer": { "@type": "Answer", "text": "Propello is AI RFP response software. It reads a request for proposal, extracts every requirement, drafts an answer for each one grounded in your own knowledge base, and routes drafts through your team's review before export." } },
+      { "@type": "Question", "name": "Where do the answers come from?", "acceptedAnswer": { "@type": "Answer", "text": "Every answer is drafted from documents you upload to your knowledge base: past proposals, security policies, pricing sheets. Each claim is cited back to the source chunk it came from." } },
+      { "@type": "Question", "name": "What happens if the knowledge base doesn't cover a question?", "acceptedAnswer": { "@type": "Answer", "text": "Propello flags it as no source instead of guessing. An uncovered requirement shows up for a human to answer, not a fabricated draft." } },
+      { "@type": "Question", "name": "Can my team review answers before they go out?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every drafted answer carries a confidence score and routes to review before it's marked approved. Nothing ships to a client without a human sign-off." } }
+    ]
+  }
+]
+</script>
+<style>
+  :root {
+    --bg: oklch(0.99 0.003 90); --surface: oklch(1 0 0); --panel: oklch(0.972 0.004 152);
+    --ink: oklch(0.20 0.015 152); --ink-2: oklch(0.38 0.012 152); --ink-3: oklch(0.52 0.010 152); --ink-4: oklch(0.64 0.008 152);
+    --rule: oklch(0.90 0.005 152); --rule-soft: oklch(0.945 0.004 152);
+    --signal: oklch(0.68 0.17 152);
+    --brand: oklch(0.53 0.18 152);
+    --deep: oklch(0.44 0.16 152);
+    --tint: oklch(0.955 0.045 152);
+    --sans: 'Geist', -apple-system, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --display: 'Clash Display', var(--sans);
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 15px; line-height: 1.55; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  ::selection { background: var(--tint); color: var(--ink); }
+  section[id] { scroll-margin-top: 76px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  .eyebrow-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--deep); background: var(--tint); border: 1px solid oklch(0.86 0.08 152);
+    padding: 6px 13px 5px; border-radius: 999px;
+  }
+  .eyebrow-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+
+  /* Nav — sticky, translucent on scroll */
+  header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in oklab, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid transparent; transition: border-color 200ms var(--ease); }
+  header.site.scrolled { border-bottom-color: var(--rule); }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .logo { display: flex; align-items: center; gap: 9px; }
+  .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-family: var(--display); font-weight: 700; font-size: 15px; }
+  .wordmark { font-family: var(--display); font-weight: 650; font-size: 19px; letter-spacing: -0.02em; color: var(--ink); }
+  .navlinks { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--ink-3); }
+  .navlinks a { transition: color 120ms var(--ease); }
+  .navlinks a:hover { color: var(--ink); }
+  .navactions { display: flex; align-items: center; gap: 14px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; transition: background 120ms var(--ease), border-color 120ms var(--ease), color 120ms var(--ease), transform 120ms var(--ease); }
+  .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .btn-ghost { color: var(--ink-2); }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-outline { border: 1px solid var(--rule); color: var(--ink-2); }
+  .btn-outline:hover { border-color: var(--ink-4); color: var(--ink); }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--deep); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-ink { background: var(--ink); color: var(--bg); }
+  .btn-ink:hover { background: var(--ink-2); }
+  .btn-arrow svg { transition: transform 160ms var(--ease); }
+  .btn:hover .btn-arrow-icon { transform: translateX(3px); }
+
+  /* Hero */
+  .hero { position: relative; padding: 68px 0 92px; text-align: center; overflow: hidden; }
+  .hero-chev { position: absolute; top: -60px; right: -8%; width: min(620px, 62vw); color: var(--signal); opacity: 0.07; pointer-events: none; z-index: 0; }
+  .hero > * { position: relative; z-index: 1; }
+  .hero .eyebrow-pill { margin-bottom: 22px; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(38px, 7.4vw, 76px); line-height: 1.06; letter-spacing: -0.035em; color: var(--ink); max-width: 900px; margin: 0 auto; text-wrap: balance; }
+  h1 .go { color: var(--signal); white-space: nowrap; }
+  .sub { font-size: 18px; color: var(--ink-3); max-width: 560px; margin: 24px auto 12px; line-height: 1.6; }
+  .herobtns { display: flex; gap: 12px; justify-content: center; margin: 22px 0 14px; flex-wrap: wrap; }
+  .btn-lg { padding: 13px 24px; font-size: 15px; border-radius: 8px; }
+  .heronote { font-size: 13px; color: var(--ink-4); margin-bottom: 56px; }
+
+  /* Browser frame */
+  .framewrap { max-width: 1020px; margin: 0 auto; }
+  .browser { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; box-shadow: 0 28px 68px oklch(0.20 0.02 152 / 0.14), 0 4px 16px oklch(0.20 0.02 152 / 0.08); background: var(--surface); text-align: left; }
+  .chrome { height: 38px; background: var(--panel); border-bottom: 1px solid var(--rule); display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); }
+  .chromeurl { margin-left: 10px; font-family: var(--mono); font-size: 11px; color: var(--ink-4); background: var(--bg); border: 1px solid var(--rule); border-radius: 5px; padding: 3px 10px; }
+  .appshell { display: flex; }
+  .appside { width: 168px; flex-shrink: 0; background: var(--bg); border-right: 1px solid var(--rule); padding: 14px 10px; }
+  .appside .navlabel { font-family: var(--mono); font-size: 8px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4); padding: 0 6px 5px; margin-top: 10px; }
+  .appside .navlabel:first-child { margin-top: 0; }
+  .appside .item { font-size: 11.5px; padding: 5px 8px; border-radius: 5px; color: var(--ink-3); margin-bottom: 1px; }
+  .appside .item.on { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule); font-weight: 550; }
+  .appside .item.on .dotmark { background: var(--brand); }
+  .appside .item { display: flex; align-items: center; gap: 7px; }
+  .dotmark { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-4); flex-shrink: 0; }
+  .appmain { flex: 1; min-width: 0; }
+  .apptop { height: 38px; border-bottom: 1px solid var(--rule); display: flex; align-items: center; padding: 0 16px; font-size: 11px; color: var(--ink-4); font-family: var(--mono); }
+  .band { display: grid; grid-template-columns: repeat(5,1fr); border-bottom: 1px solid var(--rule); }
+  .band .cell { padding: 10px 12px 9px; border-right: 1px solid var(--rule-soft); }
+  .band .cell:last-child { border-right: none; }
+  .band .lbl { font-family: var(--mono); font-size: 7px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 3px; }
+  .band .n { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .band .n.hi { color: var(--deep); }
+  .appbody { padding: 14px 16px; }
+  .block { border: 1px solid var(--rule); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+  .blockhead { padding: 7px 12px; border-bottom: 1px solid var(--rule-soft); font-size: 10.5px; font-weight: 600; color: var(--ink); display: flex; justify-content: space-between; }
+  .qrow { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--rule-soft); font-size: 10px; }
+  .qrow:last-child { border-bottom: none; }
+  .qrow .say { flex: 1; color: var(--ink-2); }
+  .chip { font-family: var(--mono); font-size: 8.5px; letter-spacing: .01em; padding: 2px 7px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .chip.ok { background: var(--tint); color: var(--deep); }
+  .chip.ok::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--signal); }
+  .chip.gap { background: var(--panel); color: var(--ink-4); }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+  /* Definition — the sentence AI engines quote, no card, no dark panel */
+  .define { padding: 56px 0 64px; text-align: center; }
+  .define .tag { font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .16em; color: var(--deep); }
+  .define p { font-size: clamp(19px, 2.4vw, 24px); line-height: 1.55; color: var(--ink-3); max-width: 760px; margin: 18px auto 0; text-wrap: pretty; }
+  .define p b { color: var(--ink); font-weight: 600; }
+
+  /* Feature sections */
+  .feature { padding: 76px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+  .feature.rev .fcopy { order: 2; }
+  .feature.rev .fviz { order: 1; }
+  .fcopy .eyebrow-pill { margin-bottom: 16px; }
+  .fcopy h2 { font-family: var(--display); font-size: clamp(26px, 3.4vw, 36px); font-weight: 650; letter-spacing: -0.025em; color: var(--ink); line-height: 1.16; margin-bottom: 14px; text-wrap: balance; }
+  .fcopy p { font-size: 15.5px; color: var(--ink-3); line-height: 1.65; max-width: 44ch; }
+  .fviz { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; box-shadow: 0 20px 48px -32px oklch(0.20 0.02 152 / 0.2); }
+  .citechip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 9.5px; color: var(--deep); background: var(--tint); padding: 2px 7px; border-radius: 4px; margin: 2px 3px 2px 0; }
+  .draftbox { font-size: 13px; color: var(--ink-2); line-height: 1.7; padding: 14px; background: var(--bg); border-radius: 6px; border: 1px solid var(--rule-soft); }
+  .draftcite { font-family: var(--mono); font-size: 10.5px; color: var(--ink-4); margin-top: 10px; }
+  .pipeline { display: flex; align-items: center; gap: 0; }
+  .pstep { flex: 1; text-align: center; padding: 16px 8px; border-right: 1px solid var(--rule-soft); }
+  .pstep:last-child { border-right: none; }
+  .pstep .n { font-family: var(--mono); font-size: 20px; color: var(--ink-4); margin-bottom: 4px; }
+  .pstep.on .n { color: var(--deep); }
+  .pstep .l { font-size: 10.5px; color: var(--ink-3); }
+
+  /* Trust block — the honest differentiator, no card, no dark panel */
+  .trust { padding: 20px 0 76px; display: flex; gap: 20px; align-items: flex-start; max-width: 720px; }
+  .trust-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--tint); color: var(--deep); display: grid; place-items: center; flex-shrink: 0; }
+  .trust h3 { font-family: var(--display); font-weight: 650; font-size: clamp(22px, 3vw, 28px); letter-spacing: -0.02em; color: var(--ink); margin-bottom: 10px; line-height: 1.2; }
+  .trust p { font-size: 15.5px; color: var(--ink-3); line-height: 1.65; }
+
+  /* Stats strip — real, verified test-run numbers only */
+  .statstrip { padding: 64px 0; }
+  .statcard { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; box-shadow: 0 24px 56px -40px oklch(0.20 0.02 152 / 0.16); overflow: hidden; }
+  .statnote { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .14em; color: var(--ink-4); text-align: center; margin-bottom: 28px; }
+  .statgrid { display: grid; grid-template-columns: repeat(4,1fr); }
+  .statcell { padding: 30px 22px; border-right: 1px solid var(--rule-soft); text-align: center; }
+  .statcell:last-child { border-right: none; }
+  .statcell .n { font-family: var(--mono); font-size: 32px; font-weight: 500; color: var(--deep); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .statcell .l { font-size: 12.5px; color: var(--ink-3); margin-top: 10px; line-height: 1.4; }
+
+  /* FAQ */
+  .faq { padding: 76px 0; }
+  .faq .head { margin-bottom: 40px; }
+  .faq h2 { font-family: var(--display); font-size: clamp(26px, 3.4vw, 36px); font-weight: 650; letter-spacing: -0.025em; color: var(--ink); margin-top: 14px; }
+  .faqlist { max-width: 760px; }
+  details.qa { border-top: 1px solid var(--rule); }
+  details.qa:last-child { border-bottom: 1px solid var(--rule); }
+  details.qa summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 2px; cursor: pointer; list-style: none; font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); }
+  details.qa summary::-webkit-details-marker { display: none; }
+  details.qa summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
+  .qa-plus { position: relative; width: 16px; height: 16px; flex-shrink: 0; color: var(--brand); }
+  .qa-plus::before, .qa-plus::after { content: ''; position: absolute; background: currentColor; border-radius: 2px; }
+  .qa-plus::before { top: 7px; left: 0; width: 16px; height: 2px; }
+  .qa-plus::after { left: 7px; top: 0; width: 2px; height: 16px; transition: transform 200ms var(--ease); }
+  details.qa[open] .qa-plus::after { transform: rotate(90deg); opacity: 0; }
+  details.qa p { font-size: 14.5px; color: var(--ink-3); line-height: 1.65; padding: 0 2px 22px; max-width: 62ch; }
+
+  /* CTA band — the one drenched signal-green moment (BRAND.md §8) */
+  .ctaband { background: var(--signal); color: var(--ink); padding: 76px 0; text-align: center; }
+  .ctaband h2 { font-family: var(--display); font-size: clamp(30px, 4.4vw, 44px); font-weight: 700; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 14px; }
+  .ctaband p { font-size: 16px; color: oklch(0.30 0.05 152); margin-bottom: 30px; }
+  .ctaband .btn-ink:hover { background: oklch(0.30 0.02 152); }
+
+  /* Footer */
+  footer { padding: 44px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-top: 1px solid var(--rule); }
+  .fcols { display: flex; gap: 32px; font-size: 13px; color: var(--ink-4); }
+  .fcols a { transition: color 120ms var(--ease); }
+  .fcols a:hover { color: var(--ink-2); }
+
+  @media (max-width: 860px) {
+    .feature, .statgrid { grid-template-columns: 1fr; }
+    .feature { gap: 40px; padding: 52px 0; }
+    .feature.rev .fcopy, .feature.rev .fviz { order: unset; }
+    .appside { display: none; }
+    .navlinks { display: none; }
+    .statcell { border-right: none; border-bottom: 1px solid var(--rule-soft); }
+    .statcell:last-child { border-bottom: none; }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 0 20px; }
+    .hero { padding: 44px 0 56px; }
+    .sub { font-size: 16px; }
+    .herobtns { flex-direction: column; align-items: stretch; }
+    .herobtns .btn { justify-content: center; }
+    .band { grid-template-columns: repeat(2,1fr); }
+    .band .cell:nth-child(2n) { border-right: none; }
+    footer { flex-direction: column; text-align: center; }
+    .fcols { gap: 22px; flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site" id="siteHeader">
+  <nav class="wrap">
+    <a href="#" class="logo">
+      <span class="mark" aria-hidden="true">P</span>
+      <span class="wordmark">propello</span>
+    </a>
+    <div class="navlinks">
+      <a href="#how-it-works">How it works</a><a href="#why-propello">Why Propello</a><a href="#faq">FAQ</a>
+    </div>
+    <div class="navactions">
+      <a href="#" class="btn btn-ghost">Sign in</a>
+      <a href="#" class="btn btn-primary">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero wrap">
+  <svg class="hero-chev" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 3L20 12L4 21V3Z"/></svg>
+  <span class="eyebrow-pill">AI-powered RFP response</span>
+  <h1>300 questions.<br><span class="go">3 days</span>, not 3 weeks.</h1>
+  <p class="sub">Propello reads the RFP, drafts grounded answers from your knowledge base, and routes them through review. Your team ships, it doesn&rsquo;t retype.</p>
+  <div class="herobtns">
+    <a href="#" class="btn btn-primary btn-lg">Start free</a>
+    <a href="#how-it-works" class="btn btn-outline btn-lg">See it work</a>
+  </div>
+  <p class="heronote">No credit card. Your first RFP is free.</p>
+
+  <div class="framewrap">
+    <div class="browser" aria-hidden="true">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="chromeurl">app.propello.io/deals/qg-2026-207</span></div>
+      <div class="appshell">
+        <div class="appside">
+          <div class="navlabel">Workspace</div>
+          <div class="item on"><span class="dotmark"></span>Dashboard</div>
+          <div class="item"><span class="dotmark"></span>Deals</div>
+          <div class="item"><span class="dotmark"></span>My queue</div>
+          <div class="navlabel">Intelligence</div>
+          <div class="item"><span class="dotmark"></span>Knowledge base</div>
+          <div class="item"><span class="dotmark"></span>Templates</div>
+        </div>
+        <div class="appmain">
+          <div class="apptop">Deal / Section 3 &mdash; Security</div>
+          <div class="band">
+            <div class="cell"><div class="lbl">Requirements</div><div class="n">255</div></div>
+            <div class="cell"><div class="lbl">Extraction to draft</div><div class="n hi">&lt;3 min</div></div>
+            <div class="cell"><div class="lbl">Cited or flagged</div><div class="n">100%</div></div>
+            <div class="cell"><div class="lbl">Hallucinated</div><div class="n">0</div></div>
+            <div class="cell"><div class="lbl">Confidence</div><div class="n hi">0.7&ndash;1.0</div></div>
+          </div>
+          <div class="appbody">
+            <div class="block">
+              <div class="blockhead">Requirements <span style="color:var(--ink-4); font-weight:400;">21</span></div>
+              <div class="qrow"><span class="say">SLA and uptime commitment</span><span class="chip ok">cited &middot; 0.7</span></div>
+              <div class="qrow"><span class="say">ISO 27001 certification</span><span class="chip ok">cited &middot; 1.0</span></div>
+              <div class="qrow"><span class="say">Mobile app availability</span><span class="chip gap">no source</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="define wrap reveal">
+  <span class="tag">What Propello is</span>
+  <p><b>Propello is AI RFP response software</b> for bid managers, presales leads, and proposal writers at B2B companies. It extracts every requirement from an RFP, drafts an answer for each one grounded in your own documents with a citation to the source, and flags anything it can&rsquo;t support instead of guessing. A 300-question RFP moves in days instead of weeks.</p>
+</section>
+
+<section class="feature wrap reveal" id="how-it-works">
+  <div class="fcopy">
+    <span class="eyebrow-pill">Requirement extraction</span>
+    <h2>Extract every requirement, even on page 140.</h2>
+    <p>Upload the RFP. Propello reads every section, extracts each requirement, and classifies it as must-have, should-have, or informational, so nothing gets missed.</p>
+  </div>
+  <div class="fviz">
+    <div class="pipeline">
+      <div class="pstep on"><div class="n">01</div><div class="l">Upload</div></div>
+      <div class="pstep on"><div class="n">02</div><div class="l">Extract</div></div>
+      <div class="pstep"><div class="n">03</div><div class="l">Classify</div></div>
+      <div class="pstep"><div class="n">04</div><div class="l">Structure</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="feature rev wrap reveal" id="why-propello">
+  <div class="fcopy">
+    <span class="eyebrow-pill">Grounded drafting</span>
+    <h2>Answers cite your own documents, not a guess.</h2>
+    <p>Every draft pulls from your approved knowledge base and shows exactly which passage backed each claim. If the answer isn&rsquo;t there, Propello says so instead of inventing one.</p>
+  </div>
+  <div class="fviz">
+    <div class="draftbox">&ldquo;We commit to a 99.9% monthly uptime SLA with service credits of 10% per 0.1% shortfall, capped at 50% of monthly fees.&rdquo;</div>
+    <div class="draftcite">Source: capability-statement.txt, chunk 4</div>
+  </div>
+</section>
+
+<section class="feature wrap reveal">
+  <div class="fcopy">
+    <span class="eyebrow-pill">Review to export</span>
+    <h2>Your SMEs review, they don&rsquo;t retype.</h2>
+    <p>Drafts route to the right reviewer with a confidence score attached. Nothing goes to a client without a human approving it. But nobody starts from a blank page.</p>
+  </div>
+  <div class="fviz">
+    <div class="pipeline">
+      <div class="pstep"><div class="n">Draft</div></div>
+      <div class="pstep on"><div class="n">Review</div></div>
+      <div class="pstep on"><div class="n">Approve</div></div>
+      <div class="pstep"><div class="n">Export</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="trust wrap reveal">
+  <span class="trust-icon" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </span>
+  <div>
+    <h3>It never guesses. It flags the gap instead.</h3>
+    <p>Most AI drafting tools will write something confident-sounding even when they have no source for it. Propello checks every citation before it lets a draft through. If the knowledge base doesn&rsquo;t cover a requirement, it comes back as no source for a human to answer, not a plausible-sounding guess.</p>
+  </div>
+</section>
+
+<section class="statstrip wrap reveal">
+  <div class="statcard">
+    <div style="padding-top:28px;">
+      <div class="statnote">From a live test run &middot; a 65-page government RFP</div>
+    </div>
+    <div class="statgrid">
+      <div class="statcell"><div class="n">255</div><div class="l">Requirements extracted</div></div>
+      <div class="statcell"><div class="n">&lt;3 min</div><div class="l">Extraction through drafting</div></div>
+      <div class="statcell"><div class="n">100%</div><div class="l">Drafts cited or flagged</div></div>
+      <div class="statcell"><div class="n">0</div><div class="l">Hallucinated answers</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="faq wrap reveal" id="faq">
+  <div class="head">
+    <span class="eyebrow-pill">FAQ</span>
+    <h2>Questions, answered</h2>
+  </div>
+  <div class="faqlist">
+    <details class="qa">
+      <summary>What is Propello?<span class="qa-plus" aria-hidden="true"></span></summary>
+      <p>Propello is AI RFP response software. It reads a request for proposal, extracts every requirement, drafts an answer for each one grounded in your own knowledge base, and routes drafts through your team&rsquo;s review before export.</p>
+    </details>
+    <details class="qa">
+      <summary>Where do the answers come from?<span class="qa-plus" aria-hidden="true"></span></summary>
+      <p>Every answer is drafted from documents you upload to your knowledge base: past proposals, security policies, pricing sheets. Each claim is cited back to the source chunk it came from.</p>
+    </details>
+    <details class="qa">
+      <summary>What happens if the knowledge base doesn&rsquo;t cover a question?<span class="qa-plus" aria-hidden="true"></span></summary>
+      <p>Propello flags it as no source instead of guessing. An uncovered requirement shows up for a human to answer, not a fabricated draft.</p>
+    </details>
+    <details class="qa">
+      <summary>Can my team review answers before they go out?<span class="qa-plus" aria-hidden="true"></span></summary>
+      <p>Yes. Every drafted answer carries a confidence score and routes to review before it&rsquo;s marked approved. Nothing ships to a client without a human sign-off.</p>
+    </details>
+  </div>
+</section>
+
+<section class="ctaband reveal">
+  <div class="wrap">
+    <h2>Stop retyping. Start winning.</h2>
+    <p>Upload your first RFP free. No credit card.</p>
+    <a href="#" class="btn btn-ink btn-lg">Start free</a>
+  </div>
+</section>
+
+<footer class="wrap">
+  <div class="logo">
+    <div class="mark" style="width:22px;height:22px;border-radius:5px;font-size:12px;" aria-hidden="true">P</div>
+    <span class="wordmark" style="font-size:15px;">propello</span>
+  </div>
+  <div class="fcols">
+    <a href="#how-it-works">How it works</a><a href="#why-propello">Why Propello</a><a href="#faq">FAQ</a>
+  </div>
+  <span style="font-family: var(--mono); font-size: 12px; color: var(--ink-4);">&copy; 2026 Propello</span>
+</footer>
+
+<script>
+  (function () {
+    var header = document.getElementById('siteHeader');
+    window.addEventListener('scroll', function () {
+      header.classList.toggle('scrolled', window.scrollY > 4);
+    }, { passive: true });
+
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced || !('IntersectionObserver' in window)) return;
+    var els = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+
+</body>
+</html>

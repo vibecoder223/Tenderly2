@@ -27,15 +27,14 @@ const COLUMNS: { key: string; label: string; aliases: string[]; tone: Tone }[] =
   { key: "lost",        label: "Lost",        aliases: ["lost"],        tone: "err" },
 ];
 
-// Count-pill colors — reuses the app's existing status tones (StatusBadge),
-// applied only to the small count chip so the rest of the column stays
-// neutral white. See public/design-drafts/board-alt-5-countpill.html.
-const PILL_TONE: Record<Tone, { bg: string; fg: string }> = {
-  neutral: { bg: "var(--bg-2)",         fg: "var(--fg-3)" },
-  accent:  { bg: "var(--accent-tint)",  fg: "var(--accent-3)" },
-  warn:    { bg: "var(--warn-tint)",    fg: "var(--warn)" },
-  ok:      { bg: "var(--ok-tint)",      fg: "var(--ok)" },
-  err:     { bg: "var(--err-tint)",     fg: "var(--err)" },
+// Stage dot classes — the same dot+label vocabulary as .stage/.st elsewhere
+// in the app, so the board reads as part of one system, not its own thing.
+const DOT_CLASS: Record<Tone, string> = {
+  neutral: "",
+  accent: "accent",
+  warn: "warn",
+  ok: "ok",
+  err: "err",
 };
 
 function resolveColumn(status: string): string {
@@ -151,7 +150,7 @@ function DealsFilterBar({
         </button>
       )}
 
-      <div style={{ marginLeft: "auto", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 11, color: "var(--fg-4)" }}>
+      <div style={{ marginLeft: "auto", fontSize: 12, color: "var(--fg-4)", fontVariantNumeric: "tabular-nums" }}>
         {shown} / {total}
       </div>
     </div>
@@ -421,6 +420,16 @@ export default function DealsBoard({
     setOverCardId(null);
   }, []);
 
+  // Quick-advance — move a deal to its next pipeline stage without a drag.
+  // Useful when triaging a long list of deals one at a time.
+  const advance = useCallback((dealId: string, fromColKey: string) => {
+    const idx = COLUMNS.findIndex((c) => c.key === fromColKey);
+    const next = COLUMNS[idx + 1];
+    if (!next) return;
+    setDeals((prev) => prev.map((d) => (d.id === dealId ? { ...d, status: next.key } : d)));
+    patchStatus(dealId, next.key);
+  }, []);
+
   // ---- Empty state ----
   if (deals.length === 0) {
     return (
@@ -485,21 +494,16 @@ export default function DealsBoard({
                         {d.is_sample && <SampleBadge />}
                       </Link>
                     </td>
-                    <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11.5 }}>{d.client_name ?? "—"}</td>
+                    <td style={{ color: "var(--fg-4)", fontSize: 12.5 }}>{d.client_name ?? "—"}</td>
                     <td><StatusBadge status={d.status} /></td>
                     <td style={{ minWidth: 140 }}>
                       {t.total > 0 ? (
                         <Meter pct={pct} width={64} />
-                      ) : <span className="mono" style={{ color: "var(--fg-5)", fontSize: 11 }}>—</span>}
+                      ) : <span style={{ color: "var(--fg-5)", fontSize: 12 }}>—</span>}
                     </td>
-                    <td className="mono" style={{ color: "var(--fg-4)", fontSize: 11.5 }}>{d.due_date ? d.due_date.slice(0, 10) : "—"}</td>
-                    <td style={{ textAlign: "right", fontFamily: "'Geist Mono', monospace", fontWeight: 500, fontSize: 12, color: "var(--fg)", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>
-                      {d.value ? (
-                        <>
-                          <span style={{ fontSize: 10.5, color: "var(--fg-4)", marginRight: 1 }}>$</span>
-                          {Number(d.value).toLocaleString()}
-                        </>
-                      ) : "—"}
+                    <td style={{ color: "var(--fg-4)", fontSize: 12.5, fontVariantNumeric: "tabular-nums" }}>{d.due_date ? d.due_date.slice(0, 10) : "—"}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600, fontSize: 13, color: "var(--fg)", fontVariantNumeric: "tabular-nums" }}>
+                      {d.value ? `$${Number(d.value).toLocaleString()}` : "—"}
                     </td>
                     <td>
                       <div data-card-menu onClick={(e) => e.stopPropagation()}>
@@ -531,75 +535,42 @@ export default function DealsBoard({
         total={deals.length}
         shown={filtered.length}
       />
-      <div
-        className="flex gap-3"
-        style={{ overflowX: "auto", paddingBottom: 12, alignItems: "flex-start" }}
-      >
-        {COLUMNS.map((col) => {
+      <div className="deal-board">
+        {COLUMNS.map((col, colIdx) => {
           const items = grouped.get(col.key) ?? [];
           const isOver = overCol === col.key;
-          const pillTone = PILL_TONE[col.tone];
           const subtotal = items.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
+          const canAdvance = colIdx < COLUMNS.length - 1;
 
           return (
-            <div
-              key={col.key}
-              style={{ minWidth: 262, width: 262, flexShrink: 0 }}
-              onDragOver={(e) => onDragOverCol(e, col.key)}
-              onDragLeave={onDragLeaveCol}
-              onDrop={(e) => onDrop(e, col.key)}
-            >
-              <div
-                className="flex items-center gap-2 px-1 mb-2.5"
-                style={{ borderBottom: "1px solid var(--divider)", paddingBottom: 9 }}
-              >
-                <span className="text-[12.5px] font-semibold" style={{ color: "var(--fg)", flex: 1 }}>
-                  {col.label}
-                </span>
-                <span className="mono text-[9.5px]" style={{ color: "var(--fg-4)" }}>
-                  {subtotal > 0 ? fmtCompact(subtotal) : ""}
-                </span>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 10.5,
-                    fontWeight: 600,
-                    padding: "2px 7px",
-                    borderRadius: 999,
-                    background: pillTone.bg,
-                    color: pillTone.fg,
-                    flexShrink: 0,
-                  }}
-                >
-                  {items.length}
-                </span>
+            <div key={col.key} className="deal-col">
+              <div className="deal-col-head">
+                <span className={`deal-col-dot${DOT_CLASS[col.tone] ? " " + DOT_CLASS[col.tone] : ""}`} />
+                <span className="deal-col-title">{col.label}</span>
+                <span className="deal-col-count">{items.length}</span>
+                {subtotal > 0 && <span className="deal-col-sub">{fmtCompact(subtotal)}</span>}
               </div>
 
               <div
-                className="space-y-2 rounded-lg p-1.5 transition-colors"
-                style={{
-                  minHeight: 80,
-                  background: isOver ? "var(--accent-tint)" : "transparent",
-                  border: isOver ? "1.5px dashed var(--accent-line)" : "1.5px dashed transparent",
-                  transition: "background 0.12s, border-color 0.12s",
-                }}
+                className={`deal-col-list${isOver ? " over" : ""}`}
+                onDragOver={(e) => onDragOverCol(e, col.key)}
+                onDragLeave={onDragLeaveCol}
+                onDrop={(e) => onDrop(e, col.key)}
               >
-                {items.length === 0 && !isOver && (
-                  <div
-                    className="text-[12px] text-center py-6 rounded"
-                    style={{ color: "var(--fg-5)", background: "var(--bg-2)" }}
-                  >
-                    Drop here
-                  </div>
+                {items.length === 0 && (
+                  <div className="deal-col-empty">{isOver ? "Drop here" : "No deals"}</div>
                 )}
 
                 {items.map((d) => {
                   const t = totals[d.id] ?? { total: 0, approved: 0 };
                   const pct = t.total > 0 ? Math.round((t.approved / t.total) * 100) : 0;
-                  const dueSoon =
-                    d.due_date != null &&
-                    (new Date(d.due_date).getTime() - Date.now()) / 86_400_000 < 7;
-                  const isCardOver = overCardId === d.id && draggingId.current !== d.id;
+                  const daysLeft =
+                    d.due_date != null
+                      ? Math.ceil((new Date(d.due_date).getTime() - Date.now()) / 86_400_000)
+                      : null;
+                  const dueTone = daysLeft == null ? "" : daysLeft < 0 ? "err" : daysLeft <= 7 ? "warn" : "";
+                  const dueLabel =
+                    daysLeft == null ? null : daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `Due ${d.due_date!.slice(5, 10)}`;
 
                   return (
                     <div
@@ -608,36 +579,22 @@ export default function DealsBoard({
                       onDragStart={(e) => onDragStart(e, d.id)}
                       onDragEnd={onDragEnd}
                       onDragOver={(e) => onDragOverCard(e, d.id)}
-                      style={{
-                        cursor: "grab",
-                        borderTop: isCardOver ? "2px solid var(--accent)" : "2px solid transparent",
-                        borderRadius: 8,
-                        transition: "border-color 0.1s",
-                        position: "relative",
-                      }}
+                      style={{ cursor: "grab" }}
                     >
                       <Link
                         href={`/deals/${d.id}`}
-                        className="card p-3 block"
+                        className="deal-card"
                         draggable={false}
-                        onClick={(e) => {
-                          if (draggingId.current) e.preventDefault();
-                        }}
-                        style={{ userSelect: "none", transition: "border-color 100ms var(--ease), box-shadow 100ms var(--ease)" }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 3px 10px oklch(0.17 0.01 110 / 0.07)"; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+                        onClick={(e) => { if (draggingId.current) e.preventDefault(); }}
+                        style={overCardId === d.id && draggingId.current !== d.id ? { borderColor: "var(--accent)" } : undefined}
                       >
-                        {/* Header: title + actions menu */}
-                        <div className="flex items-start gap-2 mb-1">
-                          <div
-                            className="text-[13px] font-medium leading-tight"
-                            style={{ color: "var(--fg)", flex: 1, minWidth: 0 }}
-                          >
+                        <div className="flex items-start gap-2">
+                          <span className="deal-card-title">
                             <span className="inline-flex items-center gap-1.5 flex-wrap">
                               {d.name}
                               {d.is_sample && <SampleBadge />}
                             </span>
-                          </div>
+                          </span>
                           <DealCardMenu
                             dealId={d.id}
                             dealName={d.name}
@@ -645,33 +602,34 @@ export default function DealsBoard({
                             onDeleted={() => removeFromList(d.id)}
                           />
                         </div>
-                        <div className="text-[11px] mb-2.5" style={{ color: "var(--fg-4)" }}>
-                          {d.client_name ?? "No client"}
-                        </div>
+                        {d.client_name && <div className="deal-card-client">{d.client_name}</div>}
 
-                        {/* Mini-stat strip: Value / Done / Due */}
-                        <div
-                          className="grid grid-cols-3 gap-1"
-                          style={{ paddingTop: 9, borderTop: "1px solid var(--divider)" }}
-                        >
-                          <div>
-                            <div className="mono" style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 2 }}>Value</div>
-                            <div className="mono" style={{ fontSize: 11.5, color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>
-                              {d.value ? fmtCompact(Number(d.value)) : "—"}
-                            </div>
+                        {t.total > 0 && (
+                          <div className="deal-card-meter">
+                            <span className="t"><span className="f" style={{ width: `${pct}%`, background: pct >= 100 ? "var(--ok)" : "var(--accent)" }} /></span>
+                            <span className="p">{pct}%</span>
                           </div>
+                        )}
+
+                        <div className="deal-card-foot">
                           <div>
-                            <div className="mono" style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 2 }}>Done</div>
-                            <div className="mono" style={{ fontSize: 11.5, color: pct >= 100 ? "var(--ok)" : "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>
-                              {t.total > 0 ? `${pct}%` : "—"}
-                            </div>
+                            <div className="deal-card-val">{d.value ? fmtCompact(Number(d.value)) : "—"}</div>
+                            {dueLabel && <div className={`deal-card-due${dueTone ? " " + dueTone : ""}`}>{dueLabel}</div>}
                           </div>
-                          <div>
-                            <div className="mono" style={{ fontSize: 8, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 2 }}>Due</div>
-                            <div className="mono" style={{ fontSize: 11.5, color: dueSoon ? "var(--warn)" : "var(--fg-2)", fontWeight: dueSoon ? 600 : 400, fontVariantNumeric: "tabular-nums" }}>
-                              {d.due_date ? d.due_date.slice(5, 10) : "—"}
-                            </div>
-                          </div>
+                          {canAdvance && (
+                            <button
+                              type="button"
+                              aria-label={`Move to ${COLUMNS[colIdx + 1].label}`}
+                              title={`Move to ${COLUMNS[colIdx + 1].label}`}
+                              className="deal-card-advance"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); advance(d.id, col.key); }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       </Link>
                     </div>
@@ -690,15 +648,13 @@ function SampleBadge() {
   return (
     <span
       style={{
-        fontSize: 9.5,
+        fontSize: 10.5,
         fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.06em",
-        padding: "2px 6px",
-        borderRadius: 4,
+        padding: "1px 7px",
+        borderRadius: 999,
         background: "var(--accent-tint)",
-        color: "var(--accent-2)",
-        lineHeight: 1.2,
+        color: "var(--accent-3)",
+        lineHeight: 1.3,
         flexShrink: 0,
       }}
     >

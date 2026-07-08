@@ -11,12 +11,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Instrument system (DESIGN.md): Geist for UI, Geist Mono for data/meta. */}
+        {/* Instrument system (DESIGN.md): Geist for UI, Geist Mono for data/meta.
+            Self-hosted (public/fonts + @font-face in globals.css) — no external
+            font CDN round-trip, no render-blocking third-party CSS. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..600&display=swap"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/Geist-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/GeistMono-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
       </head>
       <body>

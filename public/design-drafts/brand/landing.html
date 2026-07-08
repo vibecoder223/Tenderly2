@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propello: win the bid, not the busywork</title>
+<meta name="description" content="Propello extracts every requirement from an RFP, drafts grounded answers from your knowledge base, and routes them through review. Answer 300 questions in 3 days, not 3 weeks.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Propello: win the bid, not the busywork">
+<meta property="og:description" content="Propello extracts every requirement from an RFP, drafts grounded answers from your knowledge base, and routes them through review. Answer 300 questions in 3 days, not 3 weeks.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Propello: win the bid, not the busywork">
+<meta name="twitter:description" content="300 questions. 3 days, not 3 weeks.">
+<meta name="theme-color" content="#12B24A">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312B24A'/%3E%3Cpath d='M12 9 L21 16 L12 23 Z' fill='%23132A1B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Warm-white canvas (hue 90) + green-tinted ink/rule ramp (hue 152) —
+       matches BRAND.md §5 and app/globals.css exactly. */
+    --bg: oklch(0.99 0.003 90); --surface: oklch(1 0 0); --panel: oklch(0.972 0.004 152);
+    --ink: oklch(0.20 0.015 152); --ink-2: oklch(0.38 0.012 152); --ink-3: oklch(0.52 0.010 152); --ink-4: oklch(0.64 0.008 152);
+    --rule: oklch(0.90 0.005 152); --rule-soft: oklch(0.945 0.004 152);
+    --warn: oklch(0.62 0.14 62); --err: oklch(0.55 0.19 27);
+
+    /* The greens — one family, three jobs (BRAND.md §5). */
+    --signal: oklch(0.68 0.17 152);       /* big fills, hero graphics, logo tile */
+    --brand: oklch(0.53 0.18 152);        /* primary buttons, links, action */
+    --deep: oklch(0.44 0.16 152);         /* small text on tint */
+    --tint: oklch(0.955 0.045 152);       /* washes, badges, pills */
+
+    --sans: 'Geist', -apple-system, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --display: 'Clash Display', var(--sans);
+    --ease: cubic-bezier(0.22,1,0.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 15px; line-height: 1.55; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  .eyebrow-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--deep); background: var(--tint); border: 1px solid oklch(0.86 0.08 152);
+    padding: 6px 13px 5px; border-radius: 999px;
+  }
+  .eyebrow-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+
+  /* Nav */
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .logo { display: flex; align-items: center; gap: 9px; }
+  .mark { width: 28px; height: 28px; border-radius: 7px; background: var(--signal); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .mark svg { width: 12px; height: 12px; }
+  .wordmark { font-family: var(--display); font-weight: 650; font-size: 19px; letter-spacing: -0.02em; color: var(--ink); }
+  .navlinks { display: flex; align-items: center; gap: 32px; font-size: 14px; color: var(--ink-3); }
+  .navlinks a { transition: color 120ms var(--ease); }
+  .navlinks a:hover { color: var(--ink); }
+  .navactions { display: flex; align-items: center; gap: 16px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; transition: background 120ms var(--ease), border-color 120ms var(--ease), color 120ms var(--ease), transform 120ms var(--ease); }
+  .btn-ghost { color: var(--ink-2); }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-outline { border: 1px solid var(--rule); color: var(--ink-2); }
+  .btn-outline:hover { border-color: var(--ink-4); color: var(--ink); }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--deep); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-ink { background: var(--ink); color: var(--bg); }
+  .btn-ink:hover { background: var(--ink-2); }
+
+  /* Hero */
+  .hero { padding: 64px 0 88px; text-align: center; }
+  .hero .eyebrow-pill { margin-bottom: 22px; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(38px, 7.4vw, 76px); line-height: 1.06; letter-spacing: -0.035em; color: var(--ink); max-width: 900px; margin: 0 auto; }
+  h1 .go { color: var(--signal); }
+  .sub { font-size: 18px; color: var(--ink-3); max-width: 560px; margin: 24px auto 34px; line-height: 1.6; }
+  .herobtns { display: flex; gap: 12px; justify-content: center; margin-bottom: 64px; flex-wrap: wrap; }
+  .btn-lg { padding: 13px 24px; font-size: 15px; border-radius: 8px; }
+
+  /* Browser frame */
+  .framewrap { max-width: 1020px; margin: 0 auto; }
+  .browser { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; box-shadow: 0 28px 68px oklch(0.20 0.02 152 / 0.14), 0 4px 16px oklch(0.20 0.02 152 / 0.08); background: var(--surface); }
+  .chrome { height: 38px; background: var(--panel); border-bottom: 1px solid var(--rule); display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); }
+  .appshell { display: flex; text-align: left; }
+  .appside { width: 168px; flex-shrink: 0; background: var(--bg); border-right: 1px solid var(--rule); padding: 14px 10px; }
+  .appside .navlabel { font-family: var(--mono); font-size: 8px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4); padding: 0 6px 5px; margin-top: 10px; }
+  .appside .navlabel:first-child { margin-top: 0; }
+  .appside .item { font-size: 11.5px; padding: 5px 8px; border-radius: 5px; color: var(--ink-3); margin-bottom: 1px; }
+  .appside .item.on { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 -1px var(--brand); }
+  .appmain { flex: 1; min-width: 0; }
+  .apptop { height: 38px; border-bottom: 1px solid var(--rule); display: flex; align-items: center; padding: 0 16px; font-size: 11px; color: var(--ink-4); font-family: var(--mono); }
+  .band { display: grid; grid-template-columns: repeat(5,1fr); border-bottom: 1px solid var(--rule); }
+  .band .cell { padding: 10px 12px 9px; border-right: 1px solid var(--rule-soft); }
+  .band .cell:last-child { border-right: none; }
+  .band .lbl { font-family: var(--mono); font-size: 7px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 3px; }
+  .band .n { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--ink); letter-spacing: -0.02em; }
+  .band .n.warn { color: var(--warn); } .band .n.err { color: var(--err); }
+  .appbody { padding: 14px 16px; }
+  .block { border: 1px solid var(--rule); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+  .blockhead { padding: 7px 12px; border-bottom: 1px solid var(--rule-soft); font-size: 10.5px; font-weight: 600; color: var(--ink); display: flex; justify-content: space-between; }
+  .qrow { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--rule-soft); font-size: 10px; }
+  .qrow:last-child { border-bottom: none; }
+  .sig { width: 5px; height: 5px; border-radius: 1px; flex-shrink: 0; }
+  .sig.warn { background: var(--warn); } .sig.err { background: var(--err); }
+  .qrow .say { flex: 1; color: var(--ink-2); }
+  .qrow .ref { font-family: var(--mono); font-size: 8px; color: var(--ink-4); }
+  .table { width: 100%; font-size: 10px; }
+  .table th { font-family: var(--mono); font-size: 7px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--rule-soft); }
+  .table td { padding: 6px 12px; border-bottom: 1px solid var(--rule-soft); color: var(--ink-2); }
+  .stagedot { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 8px; color: var(--deep); text-transform: uppercase; }
+  .stagedot::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--brand); }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 560ms var(--ease), transform 560ms var(--ease); }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* Logo wall */
+  .logowall { padding: 52px 0; text-align: center; }
+  .logowall .lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 26px; }
+  .lwrow { display: flex; justify-content: center; gap: 52px; flex-wrap: wrap; align-items: center; }
+  .lwitem { font-size: 18px; font-weight: 600; color: var(--ink-4); letter-spacing: -0.01em; opacity: 0.6; transition: opacity 150ms var(--ease); }
+  .lwitem:hover { opacity: 1; }
+
+  /* Feature sections */
+  .feature { padding: 84px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; border-top: 1px solid var(--rule-soft); }
+  .feature.rev .fcopy { order: 2; }
+  .feature.rev .fviz { order: 1; }
+  .fcopy .eyebrow-pill { margin-bottom: 16px; }
+  .fcopy h2 { font-family: var(--display); font-size: clamp(26px, 3.4vw, 36px); font-weight: 650; letter-spacing: -0.025em; color: var(--ink); line-height: 1.16; margin-bottom: 14px; }
+  .fcopy p { font-size: 15.5px; color: var(--ink-3); line-height: 1.65; max-width: 44ch; }
+  .fviz { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; }
+  .citechip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 9.5px; color: var(--deep); background: var(--tint); padding: 2px 7px; border-radius: 4px; margin: 2px 3px 2px 0; }
+  .draftbox { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; padding: 14px; background: var(--bg); border-radius: 6px; border: 1px solid var(--rule-soft); }
+  .pipeline { display: flex; align-items: center; gap: 0; }
+  .pstep { flex: 1; text-align: center; padding: 16px 8px; border-right: 1px solid var(--rule-soft); }
+  .pstep:last-child { border-right: none; }
+  .pstep .n { font-family: var(--mono); font-size: 20px; color: var(--ink-4); margin-bottom: 4px; }
+  .pstep.on .n { color: var(--deep); }
+  .pstep .l { font-size: 10.5px; color: var(--ink-3); }
+
+  /* Stats strip */
+  .statstrip { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--surface); }
+  .statgrid { display: grid; grid-template-columns: repeat(4,1fr); }
+  .statcell { padding: 34px 24px; border-right: 1px solid var(--rule-soft); text-align: center; }
+  .statcell:last-child { border-right: none; }
+  .statcell .n { font-family: var(--mono); font-size: 34px; font-weight: 500; color: var(--ink); letter-spacing: -0.03em; }
+  .statcell.hi .n { color: var(--brand); }
+  .statcell .l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); margin-top: 6px; }
+
+  /* Testimonial */
+  .quote { padding: 92px 0; text-align: center; }
+  .quote p { font-family: var(--display); font-size: clamp(22px, 3vw, 32px); font-weight: 600; color: var(--ink); letter-spacing: -0.015em; line-height: 1.4; max-width: 780px; margin: 0 auto 22px; }
+  .quote .attr { font-size: 13.5px; color: var(--ink-4); }
+  .quote .attr b { color: var(--ink-2); font-weight: 600; }
+
+  /* Pricing */
+  .pricing { padding: 88px 0; border-top: 1px solid var(--rule-soft); }
+  .pricing .head { text-align: center; margin-bottom: 48px; }
+  .pricing h2 { font-family: var(--display); font-size: clamp(26px, 3.4vw, 36px); font-weight: 650; letter-spacing: -0.025em; color: var(--ink); }
+  .plans { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; max-width: 980px; margin: 0 auto; }
+  .plan { border: 1px solid var(--rule); border-radius: 10px; padding: 28px 24px; }
+  .plan.mid { border: 2px solid var(--brand); }
+  .plan .pname { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .plan .pdesc { font-size: 12.5px; color: var(--ink-4); margin-bottom: 20px; }
+  .plan .price { font-family: var(--mono); font-size: 32px; color: var(--ink); letter-spacing: -0.02em; }
+  .plan .price span { font-size: 13px; color: var(--ink-4); font-family: var(--sans); }
+  .plan ul { list-style: none; margin: 20px 0 24px; }
+  .plan li { font-size: 13px; color: var(--ink-3); padding: 6px 0; border-top: 1px solid var(--rule-soft); }
+  .plan li:first-child { border-top: none; }
+  .plan .btn { width: 100%; justify-content: center; }
+  .plan.mid .btn-primary { background: var(--brand); }
+
+  /* CTA band — one drenched Signal-green moment (BRAND.md §8), dark text */
+  .ctaband { background: var(--signal); color: var(--ink); padding: 76px 0; text-align: center; }
+  .ctaband h2 { font-family: var(--display); font-size: clamp(30px, 4.4vw, 44px); font-weight: 700; letter-spacing: -0.03em; color: var(--ink); margin-bottom: 14px; }
+  .ctaband p { font-size: 16px; color: oklch(0.30 0.05 152); margin-bottom: 30px; }
+  .ctaband .btn-ink:hover { background: oklch(0.30 0.02 152); }
+
+  /* Footer */
+  footer { padding: 44px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .fcols { display: flex; gap: 40px; font-size: 13px; color: var(--ink-4); }
+  .fcols a { transition: color 120ms var(--ease); }
+  .fcols a:hover { color: var(--ink-2); }
+
+  @media (max-width: 860px) {
+    .feature, .statgrid, .plans { grid-template-columns: 1fr; }
+    .feature { gap: 40px; padding: 56px 0; }
+    .feature.rev .fcopy, .feature.rev .fviz { order: unset; }
+    .appside { display: none; }
+    .navlinks { display: none; }
+    .statcell { border-right: none; border-bottom: 1px solid var(--rule-soft); }
+    .statcell:last-child { border-bottom: none; }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 0 20px; }
+    .hero { padding: 44px 0 56px; }
+    .sub { font-size: 16px; }
+    .herobtns { flex-direction: column; align-items: stretch; }
+    .herobtns .btn { justify-content: center; }
+    .band { grid-template-columns: repeat(2,1fr); }
+    .band .cell:nth-child(2n) { border-right: none; }
+    footer { flex-direction: column; text-align: center; }
+    .fcols { gap: 24px; flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <nav>
+    <div class="logo">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4 L18 12 L7 20 Z" fill="#132A1B"/></svg></div>
+      <span class="wordmark">propello</span>
+    </div>
+    <div class="navlinks">
+      <a href="#">Product</a><a href="#">Pricing</a><a href="#">Docs</a>
+    </div>
+    <div class="navactions">
+      <a href="#" class="btn btn-ghost">Sign in</a>
+      <a href="#" class="btn btn-primary">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero wrap">
+  <span class="eyebrow-pill">AI-powered RFP response</span>
+  <h1>300 questions.<br><span class="go">3 days</span>, not 3 weeks.</h1>
+  <p class="sub">Propello reads the RFP, drafts grounded answers from your knowledge base, and routes them through review. Your team ships, it doesn't retype.</p>
+  <div class="herobtns">
+    <a href="#" class="btn btn-primary btn-lg">Start free</a>
+    <a href="#" class="btn btn-outline btn-lg">See it work</a>
+  </div>
+
+  <div class="framewrap">
+    <div class="browser">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="appshell">
+        <div class="appside">
+          <div class="navlabel">Workspace</div>
+          <div class="item on">Dashboard</div>
+          <div class="item">Deals</div>
+          <div class="item">My queue</div>
+          <div class="navlabel">Intelligence</div>
+          <div class="item">Knowledge base</div>
+          <div class="item">Templates</div>
+        </div>
+        <div class="appmain">
+          <div class="apptop">Workspace / Dashboard</div>
+          <div class="band">
+            <div class="cell"><div class="lbl">Active deals</div><div class="n">8</div></div>
+            <div class="cell"><div class="lbl">Awaiting approval</div><div class="n warn">2</div></div>
+            <div class="cell"><div class="lbl">Due this week</div><div class="n">0</div></div>
+            <div class="cell"><div class="lbl">Overdue</div><div class="n err">2</div></div>
+            <div class="cell"><div class="lbl">Answers drafted</div><div class="n">38</div></div>
+          </div>
+          <div class="appbody">
+            <div class="block">
+              <div class="blockhead">Requires action <span style="color:var(--ink-4); font-weight:400;">3</span></div>
+              <div class="qrow"><span class="sig warn"></span><span class="say">2 questions awaiting approval</span><span class="ref">IN REVIEW</span></div>
+              <div class="qrow"><span class="sig err"></span><span class="say">Ashghal ITS tender overdue by 3 days</span><span class="ref">DUE DATE</span></div>
+            </div>
+            <div class="block">
+              <div class="blockhead">Active deals <span style="color:var(--ink-4); font-weight:400;">8</span></div>
+              <table class="table">
+                <tr><th>Deal</th><th>Stage</th><th>Completion</th></tr>
+                <tr><td>QNB Digital Banking</td><td><span class="stagedot">Review</span></td><td>82%</td></tr>
+                <tr><td>Ashghal Transport RFP</td><td><span class="stagedot">Drafting</span></td><td>41%</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="logowall wrap reveal">
+  <div class="lbl">Teams answering RFPs with Propello</div>
+  <div class="lwrow">
+    <span class="lwitem">Northwind</span>
+    <span class="lwitem">Ashford Systems</span>
+    <span class="lwitem">Ferro Group</span>
+    <span class="lwitem">Marlowe Digital</span>
+    <span class="lwitem">Ocean Analytics</span>
+    <span class="lwitem">Halcyon</span>
+  </div>
+</section>
+
+<section class="feature wrap reveal">
+  <div class="fcopy">
+    <span class="eyebrow-pill">Requirement extraction</span>
+    <h2>Extract every requirement, even on page 140.</h2>
+    <p>Upload the RFP. Propello reads every section, extracts each requirement, and classifies it as must-have, should-have, or informational, so nothing gets missed.</p>
+  </div>
+  <div class="fviz">
+    <div class="pipeline">
+      <div class="pstep on"><div class="n">1</div><div class="l">Upload</div></div>
+      <div class="pstep on"><div class="n">2</div><div class="l">Extract</div></div>
+      <div class="pstep"><div class="n">3</div><div class="l">Classify</div></div>
+      <div class="pstep"><div class="n">4</div><div class="l">Structure</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="feature rev wrap reveal">
+  <div class="fcopy">
+    <span class="eyebrow-pill">Grounded drafting</span>
+    <h2>Answers cite your own documents, not a guess.</h2>
+    <p>Every draft pulls from your approved knowledge base and shows exactly which passage backed each claim. If the answer isn't there, Propello says so instead of inventing one.</p>
+  </div>
+  <div class="fviz">
+    <div class="draftbox">
+      Propello processes uploaded RFP documents using AI-powered parsing <span class="citechip">c:1</span> and extracts requirements into structured, reviewable sections <span class="citechip">c:3</span>.
+    </div>
+  </div>
+</section>
+
+<section class="feature wrap reveal">
+  <div class="fcopy">
+    <span class="eyebrow-pill">Review to export</span>
+    <h2>Your SMEs review, they don't retype.</h2>
+    <p>Assign questions by topic, collect approvals in one thread per question, and export a branded, submission-ready proposal when the last box is checked.</p>
+  </div>
+  <div class="fviz">
+    <div class="pipeline">
+      <div class="pstep"><div class="n">Draft</div></div>
+      <div class="pstep on"><div class="n">Review</div></div>
+      <div class="pstep on"><div class="n">Approve</div></div>
+      <div class="pstep"><div class="n">Export</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="statstrip reveal">
+  <div class="wrap statgrid">
+    <div class="statcell"><div class="n">38</div><div class="l">Answers drafted / day</div></div>
+    <div class="statcell"><div class="n">0.73</div><div class="l">Avg confidence</div></div>
+    <div class="statcell"><div class="n">112</div><div class="l">Citations attached</div></div>
+    <div class="statcell hi"><div class="n">3.1x</div><div class="l">Faster to submission</div></div>
+  </div>
+</section>
+
+<section class="quote wrap reveal">
+  <p>"We used to lose two weeks to one RFP. Now the draft is ready before the kickoff call ends."</p>
+  <div class="attr"><b>Sara Al-Amin</b>, Head of Bids, Ferro Group</div>
+</section>
+
+<section class="pricing wrap reveal">
+  <div class="head">
+    <span class="eyebrow-pill">Pricing</span>
+    <h2 style="margin-top:14px;">Simple, per seat</h2>
+  </div>
+  <div class="plans">
+    <div class="plan">
+      <div class="pname">Starter</div>
+      <div class="pdesc">Small teams, one active RFP at a time.</div>
+      <div class="price">$49<span>/seat/mo</span></div>
+      <ul><li>Up to 3 deals</li><li>AI extraction + drafting</li><li>Email support</li></ul>
+      <a href="#" class="btn btn-outline">Start free</a>
+    </div>
+    <div class="plan mid">
+      <div class="pname">Team</div>
+      <div class="pdesc">Most bid teams land here.</div>
+      <div class="price">$99<span>/seat/mo</span></div>
+      <ul><li>Unlimited deals</li><li>Review workflows</li><li>Response library</li><li>Priority support</li></ul>
+      <a href="#" class="btn btn-primary">Start free</a>
+    </div>
+    <div class="plan">
+      <div class="pname">Enterprise</div>
+      <div class="pdesc">SSO, custom retention, dedicated support.</div>
+      <div class="price">Custom</div>
+      <ul><li>Everything in Team</li><li>SSO + SCIM</li><li>Dedicated onboarding</li></ul>
+      <a href="#" class="btn btn-outline">Talk to us</a>
+    </div>
+  </div>
+</section>
+
+<section class="ctaband reveal">
+  <div class="wrap">
+    <h2>Stop retyping. Start winning.</h2>
+    <p>Upload your first RFP free. No credit card.</p>
+    <a href="#" class="btn btn-ink btn-lg">Start free</a>
+  </div>
+</section>
+
+<footer class="wrap">
+  <div class="logo">
+    <div class="mark" style="width:22px;height:22px;border-radius:5px;"><svg viewBox="0 0 24 24" fill="none" style="width:10px;height:10px;"><path d="M7 4 L18 12 L7 20 Z" fill="#132A1B"/></svg></div>
+    <span class="wordmark" style="font-size:15px;">propello</span>
+  </div>
+  <div class="fcols">
+    <a href="#">Product</a><a href="#">Pricing</a><a href="#">Docs</a><a href="#">Privacy</a>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced || !('IntersectionObserver' in window)) return;
+    var els = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+</script>
+
+</body>
+</html>

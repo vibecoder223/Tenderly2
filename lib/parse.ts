@@ -30,7 +30,7 @@ export async function parseDocument(
   filename: string
 ): Promise<ParsedDoc> {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
-  if (mime === "application/pdf" || ext === "pdf") return parsePdf(buf);
+  if (mime === "application/pdf" || ext === "pdf") return parsePdfRobust(buf);
   if (
     mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     ext === "docx"
@@ -39,6 +39,103 @@ export async function parseDocument(
   }
   if (mime === "text/plain" || ext === "txt") return parseTxt(buf);
   throw new Error(`Unsupported file type for parsing: ${mime || ext}`);
+}
+
+// Minimum extracted characters per page below which we treat a PDF as scanned
+// (image-only) and escalate to OCR. A digital PDF yields hundreds+ per page;
+// a scanned one yields ~0 from the text layer.
+const SCANNED_CHARS_PER_PAGE = 80;
+
+/**
+ * PDF entry point with graceful degradation so an upload never hard-fails:
+ *   1. Try the fast text-layer parser (pdfjs).
+ *   2. If it throws (corrupt/encrypted) OR yields almost no text (scanned),
+ *      fall back to Mistral OCR when a key is configured.
+ *   3. If OCR is unavailable or also yields nothing, surface a clear,
+ *      actionable error instead of a generic crash.
+ */
+async function parsePdfRobust(buf: Buffer): Promise<ParsedDoc> {
+  let textParsed: ParsedDoc | null = null;
+  let textErr: string | null = null;
+  try {
+    textParsed = await parsePdf(buf);
+  } catch (e: any) {
+    textErr = e?.message ?? String(e);
+  }
+
+  const chars = textParsed?.raw_text.replace(/\s/g, "").length ?? 0;
+  const pages = textParsed?.page_count || 1;
+  const looksScanned = !textParsed || chars < SCANNED_CHARS_PER_PAGE * pages;
+
+  if (!looksScanned && textParsed) return textParsed;
+
+  // Escalate to OCR.
+  if (hasOcr()) {
+    try {
+      const ocr = await ocrPdf(buf);
+      if (ocr.raw_text.replace(/\s/g, "").length > 0) return ocr;
+    } catch (e: any) {
+      // fall through to the error below with OCR context
+      textErr = `OCR fallback failed: ${e?.message ?? String(e)}`;
+    }
+  }
+
+  // If the text layer produced *something* usable, return it rather than fail.
+  if (textParsed && chars > 0) return textParsed;
+
+  throw new Error(
+    textErr
+      ? `Could not read this PDF (${textErr}). If it is a scanned document, set MISTRAL_API_KEY to enable OCR.`
+      : "This PDF appears to be scanned (no text layer) and OCR is not configured. Set MISTRAL_API_KEY to enable OCR."
+  );
+}
+
+function hasOcr(): boolean {
+  return Boolean(process.env.MISTRAL_API_KEY || process.env.LLM_API_KEY);
+}
+
+// ---------- OCR fallback (Mistral OCR) ----------
+
+async function ocrPdf(buf: Buffer): Promise<ParsedDoc> {
+  const key = process.env.MISTRAL_API_KEY || process.env.LLM_API_KEY!;
+  const model = process.env.MISTRAL_OCR_MODEL || "mistral-ocr-latest";
+  const dataUrl = `data:application/pdf;base64,${buf.toString("base64")}`;
+
+  const res = await fetch("https://api.mistral.ai/v1/ocr", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model,
+      document: { type: "document_url", document_url: dataUrl },
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Mistral OCR ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  }
+  const j = (await res.json()) as { pages?: { index?: number; markdown?: string }[] };
+  const pages = j.pages ?? [];
+
+  const blocks: Block[] = [];
+  const rawParts: string[] = [];
+  pages.forEach((pg, i) => {
+    const pageNo = (pg.index ?? i) + 1;
+    const md = pg.markdown ?? "";
+    for (const line of md.split(/\n+/)) {
+      const text = line.replace(/\s+/g, " ").trim();
+      if (!text) continue;
+      rawParts.push(text);
+      const h = text.match(/^(#{1,6})\s+(.*)$/);
+      if (h) {
+        blocks.push({ type: "heading", text: h[2], page: pageNo, level: h[1].length });
+      } else if (/^\s*(?:[-*•]|\d+[.)])\s+/.test(text)) {
+        blocks.push({ type: "list_item", text: text.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, ""), page: pageNo });
+      } else {
+        blocks.push({ type: "paragraph", text, page: pageNo });
+      }
+    }
+  });
+
+  return { blocks, page_count: pages.length || 1, raw_text: rawParts.join("\n") };
 }
 
 // ---------- PDF (pdfjs-dist, page-aware) ----------

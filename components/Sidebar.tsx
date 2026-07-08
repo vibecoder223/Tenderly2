@@ -194,7 +194,7 @@ export default function Sidebar({
           <label style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "6px 10px", borderRadius: 5,
-            background: "var(--sidebar-active)", border: "1px solid var(--sidebar-line)",
+            background: "var(--bg-2)", border: "1px solid var(--sidebar-line)",
             cursor: "text",
           }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-5)", flexShrink: 0 }}>
@@ -360,6 +360,7 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
   return (
     <Link
       href={item.href}
+      aria-current={active ? "page" : undefined}
       style={{
         display: "flex",
         alignItems: "center",
@@ -367,10 +368,9 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
         padding: "6px 10px",
         borderRadius: 5,
         fontSize: 12.5,
-        fontWeight: 500,
-        background: active ? "var(--surface)" : "transparent",
-        color: active ? "var(--fg)" : "var(--fg-3)",
-        boxShadow: active ? "inset 0 0 0 1px var(--border)" : "none",
+        fontWeight: active ? 600 : 500,
+        background: active ? "var(--accent-tint)" : "transparent",
+        color: active ? "var(--accent-3)" : "var(--fg-3)",
         position: "relative",
         transition: "background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)",
       }}
@@ -387,16 +387,6 @@ function NavItem({ item, path, badge }: { item: Item; path: string; badge?: numb
         }
       }}
     >
-      {active && (
-        <span
-          aria-hidden
-          style={{
-            width: 4, height: 4, borderRadius: "50%",
-            background: "var(--accent)", flexShrink: 0,
-            marginRight: -6,
-          }}
-        />
-      )}
       <span
         aria-hidden
         style={{

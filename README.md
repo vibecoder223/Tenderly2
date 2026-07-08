@@ -34,20 +34,20 @@ Every action persists to Supabase. No mock data.
 
 | Feature | Needs |
 | --- | --- |
-| AI requirement extraction from uploaded RFP | `ANTHROPIC_API_KEY` |
-| AI draft response generation | `ANTHROPIC_API_KEY` |
-| "Regenerate with Claude" in SME workspace | `ANTHROPIC_API_KEY` |
+| AI requirement extraction from uploaded RFP | `MISTRAL_API_KEY` (or any OpenAI-compatible `LLM_BASE_URL` + `LLM_API_KEY`) |
+| AI draft response generation | `MISTRAL_API_KEY` |
+| "Regenerate with AI" in SME workspace | `MISTRAL_API_KEY` |
 | Programmatic schema migration via `npm run db:migrate` | `SUPABASE_DB_URL` |
 | Bypass-RLS admin operations (optimization, not required) | `SUPABASE_SERVICE_ROLE_KEY` |
 
-When `ANTHROPIC_API_KEY` is missing, the upload still succeeds and the file is stored — the document page shows a clear "API key not configured" message instead of failing silently or pretending to work. You can still add questions manually and test the whole SME → Review → Export flow.
+When the LLM key is missing, the upload still succeeds and the file is stored — the document page shows a clear "API key not configured" message instead of failing silently or pretending to work. You can still add questions manually and test the whole SME → Review → Export flow.
 
 ## Tech
 
-- Next.js 14 (App Router) + TypeScript + Tailwind
+- Next.js 16 (App Router) + TypeScript + Tailwind
 - Supabase (Postgres + Auth + Storage) with full RLS
-- `@anthropic-ai/sdk` against `claude-sonnet-4-6` (when key is present)
-- `pdf-parse`, `mammoth` for ingestion; `pdfkit` for export
+- Mistral via an OpenAI-compatible gateway (`lib/mistral.ts`) — `mistral-large-latest` for extraction, `mistral-small` for generation, plus Mistral embeddings for RAG
+- `pdf-parse`, `mammoth` for ingestion; `pdfkit` / `docxtemplater` for export
 
 ## Project layout
 
@@ -62,7 +62,7 @@ app/
 components/             # Sidebar, Topbar, StatusBadge
 lib/
   agents.ts             # full agent pipeline
-  anthropic.ts          # Claude client + cost telemetry
+  mistral.ts            # LLM client (OpenAI-compatible) + rate gates
   extract.ts            # pdf-parse / mammoth wrappers
 utils/
   supabase/{server,client,middleware,admin}.ts
@@ -78,8 +78,11 @@ migrations/0001_init.sql
 NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…
 
-# Optional — unlocks the AI pipeline
-ANTHROPIC_API_KEY=
+# Optional — unlocks the AI pipeline (Mistral, or any OpenAI-compatible endpoint)
+MISTRAL_API_KEY=
+# LLM_BASE_URL=https://api.mistral.ai/v1
+# LLM_MODEL=mistral-large-latest
+# LLM_MODEL_FAST=mistral-small-2603
 
 # Optional — unlocks `npm run db:migrate` (otherwise paste SQL into Supabase Studio)
 SUPABASE_DB_URL=postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres

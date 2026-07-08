@@ -1,12 +1,12 @@
 /**
- * Hybrid retrieval: query expansion → dense (pgvector, Jina embeddings) +
- * sparse (BM25) → rerank (Jina) → top-6. Returns ranked chunk candidates with
- * full provenance for citation.
+ * Hybrid retrieval: query expansion → dense (pgvector, mistral-embed) +
+ * sparse (BM25) → merge/dedup → top-6 by score. Returns ranked chunk
+ * candidates with full provenance for citation.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { callGroqJson, MODEL, MODEL_FAST, hasLlmKey } from "./groq";
-import { embedTexts, hasEmbeddings, rerank } from "./embeddings";
+import { callMistralJson, MODEL, MODEL_FAST, hasLlmKey } from "./mistral";
+import { embedTexts, hasEmbeddings } from "./embeddings";
 
 export type Candidate = {
   chunk_id: string;
@@ -15,7 +15,7 @@ export type Candidate = {
   page_start: number | null;
   page_end: number | null;
   document_filename: string;
-  /** 0..1 — final reranked score (or normalized similarity if rerank unavailable). */
+  /** 0..1 — cosine similarity (dense) or normalized BM25 score (sparse). */
   score: number;
 };
 
@@ -26,12 +26,10 @@ export type RetrievalResult = {
   usage: { input_tokens: number; output_tokens: number };
 };
 
-// Calibrated to the jina-reranker-v2 score distribution: genuinely relevant
-// passages commonly score 0.25–0.45 (a perfect security-policy ↔ security-
-// question match measured 0.36). A 0.4 gate rejected good matches and made
-// drafting return "no_source" even when the answer was clearly in the KB.
-// 0.2 keeps real matches while still filtering noise (< 0.2).
-const NO_SOURCE_THRESHOLD = 0.2;
+// Calibrated to mistral-embed cosine similarity: genuinely relevant passages
+// on this corpus commonly score 0.65-0.95; unrelated chunks fall below 0.5.
+// 0.55 keeps real matches while filtering noise.
+const NO_SOURCE_THRESHOLD = 0.55;
 
 export async function retrieveForQuery(
   supabase: SupabaseClient,
@@ -47,7 +45,7 @@ export async function retrieveForQuery(
   let expansion: { paraphrases: string[]; keywords: string[] } | null = null;
   if (process.env.RAG_USE_QUERY_EXPANSION === "1" && hasLlmKey()) {
     try {
-      const { data, usage } = await callGroqJson<{
+      const { data, usage } = await callMistralJson<{
         paraphrases: string[];
         keywords: string[];
       }>({
@@ -130,20 +128,7 @@ No prose, no fences.`,
     };
   }
 
-  let ranked: Candidate[];
-  if (hasEmbeddings() && candidates.length > 1) {
-    const order = await rerank({
-      query: opts.query,
-      documents: candidates.map((c) => c.text),
-      topK: Math.min(topK, candidates.length),
-    });
-    ranked = order
-      .map((o) => ({ ...candidates[o.index], score: o.score }))
-      .slice(0, topK);
-  } else {
-    // No reranker — sort by whatever score we have.
-    ranked = candidates.sort((a, b) => b.score - a.score).slice(0, topK);
-  }
+  const ranked = candidates.sort((a, b) => b.score - a.score).slice(0, topK);
 
   return {
     candidates: ranked,
@@ -151,6 +136,87 @@ No prose, no fences.`,
     query_expansion: expansion,
     usage: { input_tokens: usageIn, output_tokens: usageOut },
   };
+}
+
+/**
+ * Batched retrieval for many queries at once. The throughput win: query
+ * embedding is the ONLY rate-limited step in retrieval (dense match_chunks and
+ * sparse BM25 are DB-only). The per-question path embeds one query per call, so
+ * a 70-question document fired ~70 embed calls that burst past mistral-embed's
+ * 60 RPM ceiling and paid large 429 backoffs. Here every query is embedded in a
+ * single embedTexts call (which internally batches + gates), collapsing ~70
+ * network calls to ~1. Query expansion is intentionally skipped — per-query LLM
+ * expansion would defeat the batching and is off by default anyway.
+ *
+ * Returns results aligned 1:1 with the input `queries` order.
+ */
+export async function retrieveForQueries(
+  supabase: SupabaseClient,
+  opts: { org_id: string; queries: string[]; topK?: number; embeddings?: number[][] }
+): Promise<RetrievalResult[]> {
+  const topK = opts.topK ?? 6;
+  if (opts.queries.length === 0) return [];
+
+  // ONE embed call for every query — or reuse caller-precomputed embeddings so
+  // the same texts aren't embedded twice (library lookup + retrieval). Embedding
+  // is best-effort: if it fails after its own retries, degrade to sparse/BM25
+  // only rather than failing the whole document.
+  let embeds: number[][] = opts.embeddings ?? [];
+  if (embeds.length === 0 && hasEmbeddings()) {
+    try {
+      embeds = await embedTexts(opts.queries, "query");
+    } catch {
+      embeds = [];
+    }
+  }
+
+  // Per-query assembly. Dense + sparse are DB round-trips (no provider rate
+  // limit); rerank degrades to identity when no reranker is configured.
+  return Promise.all(
+    opts.queries.map(async (query, i): Promise<RetrievalResult> => {
+      const dense: Candidate[] = [];
+      const emb = embeds[i];
+      if (emb) {
+        const { data, error } = await supabase.rpc("match_chunks", {
+          p_org_id: opts.org_id,
+          p_embedding: emb,
+          p_match_count: 20,
+        });
+        if (!error) {
+          for (const row of (data ?? []) as any[]) {
+            dense.push({
+              chunk_id: row.chunk_id,
+              text: row.text,
+              section_path: row.section_path,
+              page_start: row.page_start,
+              page_end: row.page_end,
+              document_filename: row.document_filename,
+              score: row.similarity,
+            });
+          }
+        }
+      }
+
+      const sparse = await sparseSearch(supabase, {
+        org_id: opts.org_id,
+        keywords: extractKeywords(query),
+        topK: 20,
+      });
+
+      const merged = new Map<string, Candidate>();
+      for (const c of [...dense, ...sparse]) {
+        if (!merged.has(c.chunk_id)) merged.set(c.chunk_id, c);
+      }
+      const candidates = Array.from(merged.values());
+      if (candidates.length === 0) {
+        return { candidates: [], top_score: 0, query_expansion: null, usage: { input_tokens: 0, output_tokens: 0 } };
+      }
+
+      const ranked = candidates.sort((a, b) => b.score - a.score).slice(0, topK);
+
+      return { candidates: ranked, top_score: ranked[0]?.score ?? 0, query_expansion: null, usage: { input_tokens: 0, output_tokens: 0 } };
+    })
+  );
 }
 
 export function isNoSource(top_score: number, candidateCount: number): boolean {

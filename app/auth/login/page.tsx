@@ -8,7 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 // Stores the last email a user successfully signed in with, so returning
 // visitors don't retype it. Browser autofill is unreliable across sessions;
 // this is an explicit, predictable prefill.
-const LAST_EMAIL_KEY = "tenderly:last-email";
+const LAST_EMAIL_KEY = "propello:last-email";
 
 // The Google provider is disabled in Supabase unless explicitly enabled, so the
 // button is hidden by default to avoid a dead-end "provider not enabled" error.
@@ -50,6 +50,11 @@ function LoginForm() {
   const [err, setErr] = useState<string | null>(params.get("error"));
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // Set when Supabase rejects sign-in because the email isn't confirmed yet —
+  // reveals a one-click "resend verification email" affordance.
+  const [needsVerify, setNeedsVerify] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   useEffect(() => {
     if (params.get("email")) return; // explicit param wins
@@ -71,11 +76,16 @@ function LoginForm() {
       return;
     }
     setLoading(true);
+    setNeedsVerify(false);
+    setResent(false);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
       setErr(friendlyAuthError(error.message));
+      if ((error.message || "").toLowerCase().includes("email not confirmed")) {
+        setNeedsVerify(true);
+      }
       return;
     }
     try {
@@ -86,6 +96,26 @@ function LoginForm() {
     // Keep spinner active through the redirect
     router.push(next);
     router.refresh();
+  }
+
+  async function resendVerification() {
+    if (!email) return;
+    setResending(true);
+    setResent(false);
+    setErr(null);
+    const supabase = createClient();
+    const emailRedirectTo = `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`;
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim().toLowerCase(),
+      options: { emailRedirectTo },
+    });
+    setResending(false);
+    if (error) {
+      setErr(friendlyAuthError(error.message));
+      return;
+    }
+    setResent(true);
   }
 
   async function signInWithGoogle() {
@@ -147,6 +177,22 @@ function LoginForm() {
           </div>
         </div>
         {err && <div className="text-xs" style={{ color: "var(--err)" }}>{err}</div>}
+        {needsVerify && (
+          <div className="text-xs" style={{ color: "var(--fg-3)" }}>
+            {resent ? (
+              <span style={{ color: "var(--ok)" }}>Verification email sent — check your inbox.</span>
+            ) : (
+              <button
+                type="button"
+                onClick={resendVerification}
+                disabled={resending}
+                style={{ color: "var(--accent)", background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
+              >
+                {resending ? "Sending…" : "Resend verification email →"}
+              </button>
+            )}
+          </div>
+        )}
         <button type="submit" className="btn btn-primary w-full justify-center mt-2" disabled={loading}>
           {loading ? (
             <>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
 import { sendEmail, resetEmail, emailConfigured } from "@/lib/email";
 import { getSiteUrl } from "@/utils/site-url";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Sends a password-reset email via Resend.
@@ -23,6 +24,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
   if (!email || !email.includes("@")) return NextResponse.json({ ok: true });
+
+  // Throttle: 3 sends per email per 15 min, 10 per IP per 15 min. Responses
+  // stay identical (200 ok) so throttling never leaks account existence.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (
+    !rateLimit(`fp:email:${email}`, 3, 15 * 60_000) ||
+    !rateLimit(`fp:ip:${ip}`, 10, 15 * 60_000)
+  ) {
+    return NextResponse.json({ ok: true });
+  }
 
   const admin = tryCreateAdminClient();
   if (!admin || !emailConfigured()) {

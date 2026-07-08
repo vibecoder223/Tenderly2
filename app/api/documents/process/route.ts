@@ -34,13 +34,14 @@ export async function POST(req: Request) {
 
   // If the LLM key is missing, mark the document and return success — upload
   // UX shouldn't error out.
-  if (!process.env.OPENROUTER_API_KEY && !process.env.LLM_API_KEY && !process.env.CEREBRAS_API_KEY) {
+  // Must match the key resolution in lib/mistral.ts (LLM_API_KEY ?? MISTRAL_API_KEY).
+  if (!process.env.LLM_API_KEY && !process.env.MISTRAL_API_KEY) {
     await supabase
       .from("documents")
       .update({
         processing_status: "uploaded",
         error_message:
-          "No LLM API key configured. The file is stored, but the AI pipeline is disabled until OPENROUTER_API_KEY (or CEREBRAS_API_KEY) is set in .env.local.",
+          "No LLM API key configured. The file is stored, but the AI pipeline is disabled until LLM_API_KEY or MISTRAL_API_KEY is set in .env.local.",
       })
       .eq("id", document_id);
     return NextResponse.json({ ok: true, skipped: true, reason: "llm_key_missing" });
@@ -61,6 +62,17 @@ export async function POST(req: Request) {
     .from("documents")
     .update({ processing_status: "queued", error_message: null })
     .eq("id", document_id);
+
+  // Kick the drain immediately (fire-and-forget) so the pipeline starts now
+  // instead of on the next cron tick. The drain push-chains all successor
+  // stages within its own time budget; the interval driver stays as recovery.
+  if (process.env.CRON_SECRET) {
+    const origin = new URL(req.url).origin;
+    void fetch(`${origin}/api/jobs/drain`, {
+      method: "POST",
+      headers: { "x-cron-secret": process.env.CRON_SECRET },
+    }).catch(() => {});
+  }
 
   return NextResponse.json({ ok: true, queued: true });
 }

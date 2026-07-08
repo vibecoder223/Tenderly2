@@ -302,7 +302,7 @@ function DocumentPreview({ data, onClose }: { data: PreviewData; onClose: () => 
         color: "#1a1a2e",
       }}>
         {/* Title block */}
-        <div style={{ borderBottom: "2px solid #3B47D6", paddingBottom: 20, marginBottom: 32 }}>
+        <div style={{ borderBottom: "2px solid var(--accent)", paddingBottom: 20, marginBottom: 32 }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7280", marginBottom: 8, fontFamily: "system-ui, sans-serif" }}>
             RFP Response Proposal
           </div>
@@ -326,14 +326,14 @@ function DocumentPreview({ data, onClose }: { data: PreviewData; onClose: () => 
         {data.sections.map((section, si) => (
           <div key={si} style={{ marginBottom: 40 }}>
             {data.sections.length > 1 && (
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#3B47D6", margin: "0 0 20px", fontFamily: "system-ui, sans-serif", paddingBottom: 8, borderBottom: "1px solid #e5e7eb" }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)", margin: "0 0 20px", fontFamily: "system-ui, sans-serif", paddingBottom: 8, borderBottom: "1px solid #e5e7eb" }}>
                 {section.heading}
               </h2>
             )}
             {section.items.map((item, ii) => (
               <div key={ii} style={{ marginBottom: 28, paddingBottom: 28, borderBottom: ii < section.items.length - 1 ? "1px solid #f3f4f6" : "none" }}>
                 {item.requirement_id && (
-                  <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#3B47D6", marginBottom: 5, fontFamily: "system-ui, sans-serif" }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 5, fontFamily: "system-ui, sans-serif" }}>
                     {item.requirement_id}
                   </div>
                 )}

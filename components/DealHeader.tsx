@@ -26,14 +26,17 @@ export default function DealHeader({
 
   return (
     <header
-      className="py-3.5 md:py-4 border-b flex flex-col gap-3 md:flex-row md:items-start md:gap-6 pl-[52px] pr-4 md:px-7"
+      className="py-3.5 md:py-4 border-b flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6 pl-[52px] pr-4 md:px-7"
       style={{ background: "var(--surface)", borderColor: "var(--divider)" }}
     >
       <div className="flex-1 min-w-0">
-        <div className="crumbs" style={{ marginBottom: 4 }}>
+        <div className="crumbs flex items-baseline" style={{ marginBottom: 4 }}>
           <Link href="/deals" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Deals</Link>
           <span className="sep">/</span>
-          <span className="curr" style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11.5 }}>
+          <span
+            className="curr truncate"
+            style={{ fontFamily: "'Geist Mono', monospace", fontSize: 11.5, maxWidth: "100%" }}
+          >
             {deal.client_name ?? "—"}
           </span>
         </div>
@@ -46,7 +49,7 @@ export default function DealHeader({
         </div>
       </div>
 
-      <div className="flex items-end gap-x-5 gap-y-3 flex-wrap md:items-start md:self-start">
+      <div className="flex items-end gap-x-5 gap-y-3 flex-wrap lg:items-start lg:self-start">
         <Meta label="value">
           <span style={{ fontFamily: "'Geist Mono', monospace", fontWeight: 500, letterSpacing: "-0.03em", fontSize: 17, color: "var(--fg)", fontVariantNumeric: "tabular-nums" }}>
             {deal.value ? (
@@ -72,7 +75,7 @@ export default function DealHeader({
             <Meter pct={pct} />
           )}
         </Meta>
-        <div className="self-center md:self-start md:mt-1">
+        <div className="self-center lg:self-start lg:mt-1">
           <CloneDealButton dealId={deal.id} />
         </div>
       </div>

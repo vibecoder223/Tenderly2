@@ -1,0 +1,72 @@
+REQUEST FOR PROPOSAL — PROPOSAL AUTOMATION PLATFORM
+RFP Reference: QG-2026-207 | Issued: July 2026 | Issuing Entity: The Authority
+
+SECTION 1 — INTRODUCTION
+The Authority invites proposals from qualified vendors for the supply, implementation, and support of an enterprise proposal automation platform. Vendors must respond to every requirement in Sections 3 through 8, indicating full compliance, partial compliance, or non-compliance, with supporting evidence.
+
+SECTION 2 — BACKGROUND
+The Authority processes approximately 400 tenders annually across 12 departments. The current process is manual, and the Authority seeks a platform to automate document analysis, response drafting, and compliance tracking.
+
+SECTION 3 — SECURITY REQUIREMENTS
+3.1 The vendor MUST hold a current ISO/IEC 27001 certification; provide certificate number, scope, and validity period.
+3.2 The vendor MUST provide evidence of an independent SOC 2 Type II audit completed within the last 12 months.
+3.3 Describe encryption standards applied at rest and in transit, including key management and customer-managed key support.
+3.4 The solution MUST support single sign-on via SAML 2.0 or OIDC integrated with the Authority's Azure Active Directory.
+3.5 Describe the role-based access control model, including custom roles, field-level permissions, and audit logging.
+3.6 Describe your penetration testing regime, frequency, and remediation timelines by severity.
+3.7 Confirm whether multi-factor authentication is enforced for all privileged accounts.
+3.8 Describe your security incident response plan and customer notification timelines.
+3.9 Confirm IP allowlisting and configurable session policies are supported per workspace.
+
+SECTION 4 — DATA GOVERNANCE REQUIREMENTS
+4.1 All Authority data MUST reside within the State of Qatar or, subject to approval, within the GCC. Specify hosting regions and residency guarantees.
+4.2 Confirm compliance with Qatar Law No. 13 of 2016 on Personal Data Privacy Protection and describe your data protection governance.
+4.3 Describe backup and disaster recovery capabilities, including RPO and RTO commitments and testing frequency.
+4.4 Confirm whether an on-premises or sovereign deployment option is available for classified workloads.
+4.5 Describe sub-processor disclosure practices and the notice period before any sub-processor change.
+4.6 Confirm data retention, export, and deletion practices upon contract termination.
+4.7 Confirm whether a Data Protection Officer is appointed and describe their reporting line.
+4.8 Describe how data subject requests (access, erasure, portability) are fulfilled and within what timeframe.
+
+SECTION 5 — TECHNICAL REQUIREMENTS
+5.1 The solution MUST provide a documented REST API for integration with the Authority's existing systems.
+5.2 Describe available native integrations, specifically with Microsoft 365 and SharePoint.
+5.3 The solution MUST support automated user provisioning and deprovisioning via SCIM.
+5.4 Describe the platform's uptime commitment and the service credit regime applicable to SLA breaches.
+5.5 Describe the system architecture's approach to high availability, failover, and horizontal scalability.
+5.6 Confirm whether the platform supports Arabic-language data entry, search, and reporting.
+5.7 Describe your approach to accessibility compliance (WCAG 2.1 AA or equivalent).
+5.8 Describe your approach to mobile access, including native apps versus responsive web.
+5.9 Confirm API rate limits and describe how the platform scales under peak concurrent load.
+5.10 Describe webhook support for real-time event notifications to external systems.
+
+SECTION 6 — FUNCTIONAL REQUIREMENTS
+6.1 The solution MUST support AI-assisted extraction of requirements from uploaded RFP documents.
+6.2 Describe how drafted responses are grounded in an approved knowledge base with citations.
+6.3 Describe the review and approval workflow, including multi-stage approval gates.
+6.4 Confirm whether the platform supports reusable answer libraries that improve over time.
+6.5 Describe reporting and dashboard capabilities available to leadership for real-time visibility.
+6.6 Describe search and retrieval capabilities across historical proposals and responses.
+6.7 Confirm whether the solution supports export to Word and PDF formats with customer templates.
+6.8 Describe version control and change-history tracking for responses within the platform.
+
+SECTION 7 — IMPLEMENTATION AND SUPPORT REQUIREMENTS
+7.1 Describe your implementation methodology, typical timeline for a 300-user deployment, and the project team assigned.
+7.2 Describe the training approach, including Arabic-language materials and post-go-live adoption tracking.
+7.3 Describe your support tiers, response times for priority-1 incidents, and escalation procedures.
+7.4 Provide details of at least three comparable reference implementations, preferably within the GCC region.
+7.5 Confirm the availability of a dedicated technical account manager for the duration of the contract.
+7.6 Describe your data migration approach from the Authority's legacy system.
+7.7 Describe your approach to knowledge transfer and reducing dependency on vendor personnel.
+7.8 Confirm warranty period post go-live and what is covered during that period.
+
+SECTION 8 — COMMERCIAL REQUIREMENTS
+8.1 Provide your pricing model, including subscription tiers, implementation fees, and volume or multi-year discounts for a 300-user deployment.
+8.2 Confirm the company's financial standing, years in operation, and total staff dedicated to delivery.
+8.3 Confirm professional indemnity and cyber liability insurance coverage levels.
+8.4 Confirm whether performance bonds or bank guarantees can be provided as required by procurement regulations.
+8.5 Describe any early-termination provisions and associated costs.
+8.6 Confirm standard payment terms and whether contract governance under Qatari law is available.
+8.7 Describe your approach to price stability or escalation clauses over a multi-year term.
+
+END OF RFP

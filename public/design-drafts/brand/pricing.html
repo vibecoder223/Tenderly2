@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing — Propello | Plans from $79/seat</title>
+<meta name="description" content="Simple per-seat pricing for Propello. Try any plan free for 7 days, then Starter at $79, Team at $149, or custom Enterprise.">
+<meta name="theme-color" content="#12B24A">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312B24A'/%3E%3Ctext x='16' y='23' font-family='Arial,Helvetica,sans-serif' font-size='20' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(0.99 0.003 90); --surface: oklch(1 0 0); --panel: oklch(0.972 0.004 152);
+    --ink: oklch(0.20 0.015 152); --ink-2: oklch(0.38 0.012 152); --ink-3: oklch(0.52 0.010 152); --ink-4: oklch(0.64 0.008 152);
+    --rule: oklch(0.90 0.005 152); --rule-soft: oklch(0.945 0.004 152);
+    --signal: oklch(0.68 0.17 152); --brand: oklch(0.53 0.18 152); --deep: oklch(0.44 0.16 152); --tint: oklch(0.955 0.045 152);
+    --sans: 'Geist', -apple-system, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    --display: 'Clash Display', var(--sans);
+    --ease: cubic-bezier(0.22,1,0.36,1);
+    --shadow-card: 0 1px 2px oklch(0.20 0.02 152 / 0.04), 0 12px 34px oklch(0.20 0.02 152 / 0.06);
+    --shadow-lift: 0 18px 48px oklch(0.20 0.02 152 / 0.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink-2); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  a { color: inherit; text-decoration: none; }
+  svg { display: block; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(24px, 4vw, 32px); }
+
+  .eyebrow-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--deep); background: var(--tint); border: 1px solid oklch(0.86 0.08 152);
+    padding: 6px 13px 5px; border-radius: 999px;
+  }
+  .eyebrow-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+
+  .site { position: sticky; top: 0; z-index: 50; background: color-mix(in oklab, var(--bg) 86%, transparent); backdrop-filter: saturate(180%) blur(10px); -webkit-backdrop-filter: saturate(180%) blur(10px); border-bottom: 1px solid var(--rule); }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .wordmark { font-family: var(--display); font-weight: 650; font-size: 19px; letter-spacing: -0.02em; color: var(--ink); }
+  .navlinks { display: flex; align-items: center; gap: 32px; font-size: 14px; color: var(--ink-3); }
+  .navlinks a { transition: color 120ms var(--ease); }
+  .navlinks a:hover { color: var(--ink); }
+  .navlinks a.on { color: var(--ink); font-weight: 550; }
+  .navactions { display: flex; align-items: center; gap: 14px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 140ms var(--ease), border-color 140ms var(--ease), color 140ms var(--ease), transform 140ms var(--ease), box-shadow 140ms var(--ease); }
+  .btn-ghost { color: var(--ink-2); }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-outline { border: 1px solid var(--rule); color: var(--ink-2); background: var(--surface); }
+  .btn-outline:hover { border-color: var(--ink-4); color: var(--ink); transform: translateY(-1px); }
+  .btn-primary { background: var(--brand); color: #fff; box-shadow: 0 1px 2px oklch(0.44 0.16 152 / 0.28); }
+  .btn-primary:hover { background: var(--deep); transform: translateY(-1px); box-shadow: 0 6px 18px oklch(0.44 0.16 152 / 0.28); }
+  .btn-ink { background: var(--ink); color: #fff; }
+  .btn-ink:hover { background: oklch(0.28 0.02 152); transform: translateY(-1px); }
+  .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .btn-lg { padding: 13px 24px; font-size: 15px; }
+
+  /* Page head */
+  .page-head { text-align: center; padding: clamp(64px, 9vw, 104px) 0 8px; }
+  .page-head .eyebrow-pill { margin-bottom: 18px; }
+  .page-title { font-family: var(--display); font-weight: 700; font-size: clamp(34px, 5.4vw, 56px); letter-spacing: -0.03em; color: var(--ink); line-height: 1.08; }
+  .page-sub { font-size: 17px; color: var(--ink-3); max-width: 60ch; margin: 20px auto 0; line-height: 1.6; }
+
+  .sec-head { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+  .sec-head .eyebrow-pill { margin-bottom: 16px; }
+  .sec-title { font-family: var(--display); font-size: clamp(26px, 3.4vw, 38px); font-weight: 650; letter-spacing: -0.025em; color: var(--ink); line-height: 1.14; }
+
+  /* Plans */
+  .pricing { padding: 56px 0 88px; }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: 0 auto; align-items: start; }
+  .plan { position: relative; border: 1px solid var(--rule); border-radius: 14px; padding: 30px 26px; display: flex; flex-direction: column; background: var(--surface); transition: transform 180ms var(--ease), box-shadow 180ms var(--ease); }
+  .plan:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .plan.mid { border: 2px solid var(--brand); }
+  .pflag { position: absolute; top: -12px; left: 26px; background: var(--brand); color: #fff; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 11px; border-radius: 999px; }
+  .pname { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .pdesc { font-size: 12.5px; color: var(--ink-4); margin-bottom: 20px; }
+  .price { font-family: var(--mono); font-size: 34px; color: var(--ink); letter-spacing: -0.02em; }
+  .price span { font-size: 13px; color: var(--ink-4); font-family: var(--sans); }
+  .price-note { font-family: var(--mono); font-size: 11px; color: var(--deep); margin-top: 8px; }
+  .plan ul { list-style: none; margin: 22px 0 24px; flex: 1; }
+  .plan li { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; color: var(--ink-3); padding: 8px 0; }
+  .li-check { color: var(--brand); flex-shrink: 0; margin-top: 1px; }
+  .plan .btn { width: 100%; }
+
+  /* Comparison table */
+  .cmp { padding: 64px 0; }
+  .cmp-wrap { max-width: 900px; margin: 0 auto; overflow-x: auto; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-card); }
+  .cmp-table { width: 100%; border-collapse: collapse; background: var(--surface); }
+  .cmp-table caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .cmp-table th, .cmp-table td { text-align: center; padding: 13px 16px; font-size: 13.5px; border-top: 1px solid var(--rule-soft); }
+  .cmp-table thead th { border-top: none; font-family: var(--display); font-weight: 600; font-size: 14px; color: var(--ink); padding-top: 18px; padding-bottom: 18px; }
+  .cmp-table tbody th[scope="row"] { text-align: left; font-weight: 500; color: var(--ink-2); }
+  .cmp-table .hi { background: color-mix(in oklab, var(--tint) 55%, transparent); }
+  .cmp-table thead .hi { border-radius: 10px 10px 0 0; }
+  .cmp-yes { color: var(--brand); display: inline-flex; }
+  .cmp-no { color: var(--ink-4); opacity: 0.5; display: inline-flex; }
+  .cmp-txt { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+
+  /* FAQ */
+  .faq { padding: 64px 0 96px; }
+  .faqlist { max-width: 760px; margin: 0 auto; }
+  details.qa { border-top: 1px solid var(--rule); }
+  details.qa:last-child { border-bottom: 1px solid var(--rule); }
+  details.qa summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 2px; cursor: pointer; list-style: none; font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); }
+  details.qa summary::-webkit-details-marker { display: none; }
+  details.qa summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
+  .qa-plus { position: relative; width: 16px; height: 16px; flex-shrink: 0; color: var(--brand); }
+  .qa-plus::before, .qa-plus::after { content: ''; position: absolute; background: currentColor; border-radius: 2px; }
+  .qa-plus::before { top: 7px; left: 0; width: 16px; height: 2px; }
+  .qa-plus::after { left: 7px; top: 0; width: 2px; height: 16px; transition: transform 200ms var(--ease); }
+  details.qa[open] .qa-plus::after { transform: rotate(90deg); opacity: 0; }
+  details.qa p { font-size: 14.5px; color: var(--ink-3); line-height: 1.65; padding: 0 2px 22px; max-width: 62ch; }
+
+  /* CTA band */
+  .ctaband { background: var(--signal); color: var(--ink); padding: 88px 0; text-align: center; }
+  .ctaband h2 { font-family: var(--display); font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; letter-spacing: -0.03em; color: var(--ink); margin: 0 auto 14px; max-width: 16ch; }
+  .ctaband p { font-size: 16.5px; color: oklch(0.30 0.05 152); margin: 0 auto 30px; }
+  .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-cta-ghost { border: 1px solid oklch(0.30 0.05 152 / 0.32); color: var(--ink); }
+  .btn-cta-ghost:hover { border-color: var(--ink); transform: translateY(-1px); }
+
+  /* Footer */
+  .foot { border-top: 1px solid var(--rule); padding: 56px 0 40px; }
+  .foot-top { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 44px; }
+  .foot-brand .logo { display: flex; align-items: center; gap: 10px; }
+  .mark { width: 24px; height: 24px; border-radius: 6px; background: var(--signal); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: var(--display); font-weight: 700; font-size: 13px; line-height: 1; }
+  .foot-tagline { font-size: 13.5px; color: var(--ink-4); margin-top: 12px; max-width: 28ch; line-height: 1.55; }
+  .foot-col h4 { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .13em; color: var(--ink-4); margin: 0 0 14px; font-weight: 500; }
+  .foot-col a { display: block; font-size: 14px; color: var(--ink-3); margin-bottom: 10px; transition: color 120ms var(--ease); }
+  .foot-col a:hover { color: var(--ink); }
+  .foot-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid var(--rule-soft); }
+  .foot-note { font-family: var(--mono); font-size: 12px; color: var(--ink-4); }
+
+  @media (max-width: 860px) {
+    .plans { grid-template-columns: 1fr; max-width: 460px; }
+    .foot-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+    .navlinks { display: none; }
+  }
+  @media (max-width: 560px) {
+    .foot-top { grid-template-columns: 1fr; }
+    .foot-bar { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav aria-label="Primary">
+      <a class="logo" href="landing-human.html" aria-label="Propello home">
+        <span class="wordmark">propello</span>
+      </a>
+      <div class="navlinks">
+        <a href="landing-human.html#how">How it works</a><a href="pricing.html" class="on">Pricing</a><a href="landing-human.html#faq">FAQ</a><a href="contact.html">Contact</a>
+      </div>
+      <div class="navactions">
+        <a href="/auth/login" class="btn btn-ghost">Sign in</a>
+        <a href="/auth/signup" class="btn btn-primary">Start free trial</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head wrap">
+    <span class="eyebrow-pill">Pricing</span>
+    <h1 class="page-title">Simple pricing, per seat.</h1>
+    <p class="page-sub">Try any plan free for 7 days. Every plan includes AI extraction, grounded and cited drafting, and no-source flagging. You only pay for the people answering bids.</p>
+  </section>
+
+  <section class="pricing wrap">
+    <div class="plans">
+      <div class="plan">
+        <div class="pname">Starter</div>
+        <div class="pdesc">Small teams with the occasional bid.</div>
+        <div class="price">$79<span>/seat/mo</span></div>
+        <p class="price-note">7-day free trial, then $79/seat/mo</p>
+        <ul>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Up to 5 RFPs a month</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>AI extraction &amp; grounded drafting</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Cited answers</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Word &amp; PDF export</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Email support</li>
+        </ul>
+        <a href="/auth/signup" class="btn btn-outline">Start free trial</a>
+      </div>
+
+      <div class="plan mid">
+        <div class="pflag">Most popular</div>
+        <div class="pname">Team</div>
+        <div class="pdesc">Where most bid teams land.</div>
+        <div class="price">$149<span>/seat/mo</span></div>
+        <p class="price-note">7-day free trial, then $149/seat/mo</p>
+        <ul>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Unlimited RFPs</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Review workflows &amp; approvals</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Reusable answer library</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Template export</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Confidence scoring</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Priority support</li>
+        </ul>
+        <a href="/auth/signup" class="btn btn-primary">Start free trial</a>
+      </div>
+
+      <div class="plan">
+        <div class="pname">Enterprise</div>
+        <div class="pdesc">Security, scale, and control.</div>
+        <div class="price">Custom</div>
+        <p class="price-note">Talk to us for trial terms</p>
+        <ul>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Everything in Team</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>SSO &amp; SCIM</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Custom data retention</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Dedicated onboarding</li>
+          <li><span class="li-check"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>SLA &amp; priority routing</li>
+        </ul>
+        <a href="contact.html" class="btn btn-outline">Talk to us</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="cmp wrap">
+    <div class="sec-head"><h2 class="sec-title">Compare every plan</h2></div>
+    <div class="cmp-wrap">
+      <table class="cmp-table">
+        <caption>Propello plan comparison</caption>
+        <thead>
+          <tr><th scope="col">Feature</th><th scope="col">Starter</th><th scope="col" class="hi">Team</th><th scope="col">Enterprise</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">RFPs per month</th><td><span class="cmp-txt">5</span></td><td class="hi"><span class="cmp-txt">Unlimited</span></td><td><span class="cmp-txt">Unlimited</span></td></tr>
+          <tr><th scope="row">Requirement extraction</th><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td class="hi"><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">Grounded, cited drafting</th><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td class="hi"><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">No-source flagging</th><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td class="hi"><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">Review &amp; approval workflow</th><td><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td class="hi"><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">Reusable answer library</th><td><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td class="hi"><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">Export to your template</th><td><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td class="hi"><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">SSO &amp; SCIM</th><td><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td class="hi"><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">Custom data retention</th><td><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td class="hi"><span class="cmp-no"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></span></td><td><span class="cmp-yes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></td></tr>
+          <tr><th scope="row">Support</th><td><span class="cmp-txt">Email</span></td><td class="hi"><span class="cmp-txt">Priority</span></td><td><span class="cmp-txt">Dedicated</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="faq wrap">
+    <div class="sec-head">
+      <span class="eyebrow-pill">Pricing FAQ</span>
+      <h2 class="sec-title">Questions about plans</h2>
+    </div>
+    <div class="faqlist">
+      <details class="qa"><summary>Is there a free trial?<span class="qa-plus" aria-hidden="true"></span></summary><p>Yes. Every plan includes a 7-day free trial with full access to extraction, drafting, and review. Billing for your selected plan begins when the trial ends.</p></details>
+      <details class="qa"><summary>How does per-seat pricing work?<span class="qa-plus" aria-hidden="true"></span></summary><p>You pay for each person who drafts or reviews answers in Propello. Reviewers and occasional collaborators count as seats; there are no separate charges per RFP or per question.</p></details>
+      <details class="qa"><summary>Can I change plans later?<span class="qa-plus" aria-hidden="true"></span></summary><p>Yes. Upgrade, downgrade, or add seats at any time. Changes are prorated to your billing period.</p></details>
+      <details class="qa"><summary>Do you offer annual billing?<span class="qa-plus" aria-hidden="true"></span></summary><p>Yes. Annual billing comes with a discount over monthly. Talk to us for team and enterprise annual terms.</p></details>
+    </div>
+  </section>
+
+  <section class="ctaband">
+    <div class="wrap">
+      <h2>Answer your next RFP free.</h2>
+      <p>Start your 7-day free trial and see it work.</p>
+      <div class="cta-actions">
+        <a href="/auth/signup" class="btn btn-ink btn-lg">Start free trial</a>
+        <a href="contact.html" class="btn btn-cta-ghost btn-lg">Talk to us</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <span class="logo">
+          <span class="mark" aria-hidden="true">P</span>
+          <span class="wordmark" style="font-size:17px;">propello</span>
+        </span>
+        <p class="foot-tagline">AI RFP response software. Grounded, cited, reviewed.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <a href="landing-human.html#how">How it works</a>
+        <a href="landing-human.html#problem">Why Propello</a>
+        <a href="landing-human.html#faq">FAQ</a>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <a href="pricing.html">Pricing</a>
+        <a href="contact.html">Contact</a>
+        <a href="/auth/login">Sign in</a>
+      </div>
+      <div class="foot-col">
+        <h4>Get started</h4>
+        <a href="/auth/signup">Start free trial</a>
+        <a href="contact.html">Book a demo</a>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span class="foot-note">&copy; 2026 Propello</span>
+      <span class="foot-note">Win the bid, not the busywork.</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

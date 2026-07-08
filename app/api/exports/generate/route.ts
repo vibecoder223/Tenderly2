@@ -6,7 +6,7 @@ import { tryCreateAdminClient } from "@/utils/supabase/admin";
 import PDFDocument from "pdfkit";
 import { renderDocx, type ExportQuestion } from "@/lib/docx-export";
 import { fillDocxTemplate, type FillVars } from "@/lib/docx-template-fill";
-import { callGroqText } from "@/lib/groq";
+import { callMistralText } from "@/lib/mistral";
 
 const SECTIONS_PREFIX = "__SECTIONS__:";
 
@@ -67,7 +67,7 @@ async function generateProposalSections(
       ? `Keep this section under ${wl} words. Be concise.`
       : "Write 2-3 concise paragraphs.";
     try {
-      const { text } = await callGroqText({
+      const { text } = await callMistralText({
         system: `You are writing a section of a professional RFP proposal response.
 Write in formal business English. ${lengthRule} Be persuasive and outcome-focused.
 Never invent facts not in the context. Do not include the section heading in your output.

@@ -59,7 +59,9 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/jobs/drain") ||
     path.startsWith("/design-drafts") ||
     path.startsWith("/_next") ||
-    path.startsWith("/favicon");
+    path.startsWith("/fonts") ||
+    path.startsWith("/favicon") ||
+    path.startsWith("/icon");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

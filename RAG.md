@@ -1,10 +1,11 @@
 # Tenderly — RAG Pipeline (as built)
 
 **Status:** ingestion, retrieval, citation-grounded generation, gap
-detection, and `.docx` export are in place. Awaiting `ANTHROPIC_API_KEY`
-and `VOYAGE_API_KEY` to be set in production for the pipeline to produce
-real output; without them the system gracefully degrades to clear
-no-source / AI-disabled responses rather than hallucinating.
+detection, and `.docx` export are in place. The pipeline runs on Mistral
+via the OpenAI-compatible client in `lib/mistral.ts` (`MISTRAL_API_KEY`,
+with Mistral embeddings for retrieval). Without a key the system
+gracefully degrades to clear no-source / AI-disabled responses rather
+than hallucinating.
 
 ## Pipeline diagram
 
@@ -180,8 +181,8 @@ Each entry has `requirement`, `expected_citations` (as `"filename p.NN"`),
 `npm run eval` runs every case against the live DB, prints the four
 metrics, and writes a timestamped JSON report under `evals/results/`.
 
-**Latest run:** *not yet executed in production* — requires
-`ANTHROPIC_API_KEY` and `VOYAGE_API_KEY` to be set, and a populated
+**Latest run:** *not yet executed in production* — requires an LLM key
+(`MISTRAL_API_KEY` / `LLM_API_KEY`) to be set, and a populated
 knowledge base. The harness is built and ready; run it after seeding the
 KB with the actual documents referenced in `expected_citations`. To run:
 

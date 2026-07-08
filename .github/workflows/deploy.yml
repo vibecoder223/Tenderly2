@@ -4,14 +4,15 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
+    # Gated: set repo variable DEPLOY_ENABLED=true and the VERCEL_* secrets to
+    # turn on deploys. Until then this job is skipped, so a push to main never
+    # red-fails on a missing token.
+    if: vars.DEPLOY_ENABLED == 'true'
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

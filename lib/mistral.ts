@@ -1,28 +1,26 @@
 /**
- * LLM client — OpenAI-compatible chat completions.
+ * Mistral AI client — OpenAI-compatible chat completions.
  *
- * Provider is env-driven so it can target OpenRouter, Cerebras, or any
- * OpenAI-compatible endpoint without code changes:
- *   LLM_BASE_URL    base URL, e.g. https://openrouter.ai/api/v1 (default: Cerebras)
- *   OPENROUTER_API_KEY / LLM_API_KEY / CEREBRAS_API_KEY  bearer key (first set wins)
- *   LLM_MODEL       quality model id
- *   LLM_MODEL_FAST  fast/cheap model id
- *
- * Filename and exported names kept as "groq*" so the rest of the codebase
- * doesn't need to change — only the upstream provider swaps.
+ * Talks to Mistral's OpenAI-compatible endpoint. Still env-driven, so it can be
+ * pointed at any OpenAI-compatible provider without code changes:
+ *   LLM_BASE_URL    base URL (default: https://api.mistral.ai/v1)
+ *   LLM_API_KEY / MISTRAL_API_KEY   bearer key (first set wins)
+ *   LLM_MODEL       quality model id  (default: mistral-large-latest)
+ *   LLM_MODEL_FAST  fast/cheap model id (default: mistral-small-2603)
  */
 
-const BASE_URL = (process.env.LLM_BASE_URL ?? "https://api.cerebras.ai/v1").replace(/\/+$/, "");
+const BASE_URL = (process.env.LLM_BASE_URL ?? "https://api.mistral.ai/v1").replace(/\/+$/, "");
 const CHAT_URL = `${BASE_URL}/chat/completions`;
 
 // Quality model — response generation, complex extraction.
-export const MODEL      = process.env.LLM_MODEL ?? "gpt-oss-120b";
+export const MODEL      = process.env.LLM_MODEL ?? "mistral-large-latest";
 // Fast/cheap — extraction batches, query expansion, confidence scoring.
-export const MODEL_FAST = process.env.LLM_MODEL_FAST ?? "llama3.1-8b";
+export const MODEL_FAST = process.env.LLM_MODEL_FAST ?? "mistral-small-2603";
 
-// Rough USD/MTok for cost display only.
-const INPUT_PRICE_PER_MTOK  = 0.85;
-const OUTPUT_PRICE_PER_MTOK = 1.20;
+// Rough USD/MTok for cost display only (Mistral Large pricing; generation on
+// the small model is cheaper, so this over-estimates slightly).
+const INPUT_PRICE_PER_MTOK  = 0.50;
+const OUTPUT_PRICE_PER_MTOK = 1.50;
 
 export function estimateCost(input: number, output: number): number {
   return (input / 1_000_000) * INPUT_PRICE_PER_MTOK + (output / 1_000_000) * OUTPUT_PRICE_PER_MTOK;
@@ -38,22 +36,15 @@ export class RateLimitError extends Error {
 }
 
 function getKey(): string {
-  const k =
-    process.env.OPENROUTER_API_KEY ??
-    process.env.LLM_API_KEY ??
-    process.env.CEREBRAS_API_KEY;
-  if (!k) throw new Error("No LLM API key set (OPENROUTER_API_KEY / LLM_API_KEY / CEREBRAS_API_KEY).");
+  const k = process.env.LLM_API_KEY ?? process.env.MISTRAL_API_KEY;
+  if (!k) throw new Error("No LLM API key set (LLM_API_KEY / MISTRAL_API_KEY).");
   return k;
 }
 
-// True if any LLM provider key is configured. Use this for "is the AI pipeline
-// enabled" checks instead of testing a single provider's env var.
+// True if a Mistral API key is configured. Use this for "is the AI pipeline
+// enabled" checks instead of testing a single env var.
 export function hasLlmKey(): boolean {
-  return Boolean(
-    process.env.OPENROUTER_API_KEY ||
-    process.env.LLM_API_KEY ||
-    process.env.CEREBRAS_API_KEY,
-  );
+  return Boolean(process.env.LLM_API_KEY || process.env.MISTRAL_API_KEY);
 }
 
 // 429 handling: the async jobs queue (lib/jobs.ts) already retries failed jobs
@@ -62,85 +53,114 @@ export function hasLlmKey(): boolean {
 const MAX_RETRY_WAIT_MS = 30_000;
 const MAX_RETRIES = 2;
 
-// ---- Process-wide rate gate -------------------------------------------------
-// The drain runs LLM calls in parallel batches. Without coordination, a burst
-// of generate jobs overshoots the provider's tokens-per-minute ceiling and gets
-// 429'd (free Cerebras gpt-oss-120b ≈ 60k TPM). This gate paces calls across
-// the whole process so the burst spends only the budget actually available.
+// ---- Per-model rate gate -----------------------------------------------------
+// Mistral enforces rate limits PER MODEL, not account-wide, and the two models
+// this app uses have very different shapes. Defaults below match our current
+// paid Mistral tier (override any via env):
+//   mistral-large-latest (MODEL, extraction — few big calls):    15 RPM / 400,000 TPM
+//   mistral-small-2603   (MODEL_FAST, generation — many small):  100 RPM / 100,000 TPM
+// A single shared gate tuned for one model starves or over-trusts the other,
+// so gate state is keyed by model id and each gets its own rolling window.
 //
-// Single-process only (one Next server / one `npm run drain`). For multiple
-// workers, move this state to Redis (shared INCR on a per-minute key) — same
-// logic, shared counter. Tune via env; set any to 0 to disable that limit.
+// The gate is per PROCESS (one Next server / one `npm run drain`). Running more
+// than one drainer at once means each keeps its own counter, so their combined
+// request rate can exceed the real per-minute cap and trip 429s — enforce a
+// single active drain, or move this state to Redis (shared INCR on a per-minute
+// key) for multiple workers. Tune via env; set any limit to 0 to disable it.
 //
-// Defaults match the Cerebras FREE tier for gpt-oss-120b, whose binding
-// constraint is requests/min, not tokens (confirmed via x-ratelimit headers):
-//   requests-per-minute: 5   tokens-per-minute: 30000
-// On a paid tier raise LLM_RPM / LLM_TPM to your plan's limits (or set 0).
-//   LLM_RPM              requests-per-minute cap     (default 5)
-//   LLM_TPM              tokens-per-minute cap       (default 30000)
-//   LLM_MAX_CONCURRENCY  max simultaneous in-flight  (default 4)
-const LLM_RPM = Number(process.env.LLM_RPM ?? 5);
-const LLM_TPM = Number(process.env.LLM_TPM ?? 30_000);
-const LLM_MAX_CONCURRENCY = Number(process.env.LLM_MAX_CONCURRENCY ?? 4);
+//   LLM_RPM / LLM_TPM / LLM_MAX_CONCURRENCY / LLM_MIN_INTERVAL_MS
+//     — apply to MODEL (quality/extraction)
+//   LLM_RPM_FAST / LLM_TPM_FAST / LLM_MAX_CONCURRENCY_FAST / LLM_MIN_INTERVAL_MS_FAST
+//     — apply to MODEL_FAST (fast/generation)
+type ModelGateConfig = { rpm: number; tpm: number; maxConcurrency: number; minIntervalMs: number };
 
-let inFlight = 0;
-const concurrencyWaiters: Array<() => void> = [];
-let tokenWindow: Array<{ t: number; tokens: number }> = [];
-let requestWindow: number[] = [];
+function gateConfigFor(model: string): ModelGateConfig {
+  if (model === MODEL_FAST) {
+    return {
+      rpm: Number(process.env.LLM_RPM_FAST ?? 100),
+      tpm: Number(process.env.LLM_TPM_FAST ?? 100_000),
+      maxConcurrency: Number(process.env.LLM_MAX_CONCURRENCY_FAST ?? 8),
+      minIntervalMs: Number(process.env.LLM_MIN_INTERVAL_MS_FAST ?? 600),
+    };
+  }
+  // Default bucket covers MODEL and any model not explicitly MODEL_FAST.
+  return {
+    rpm: Number(process.env.LLM_RPM ?? 15),
+    tpm: Number(process.env.LLM_TPM ?? 400_000),
+    maxConcurrency: Number(process.env.LLM_MAX_CONCURRENCY ?? 8),
+    minIntervalMs: Number(process.env.LLM_MIN_INTERVAL_MS ?? 0),
+  };
+}
 
-async function acquireConcurrency(): Promise<void> {
-  if (!LLM_MAX_CONCURRENCY) return;
-  if (inFlight < LLM_MAX_CONCURRENCY) {
-    inFlight++;
+type GateState = {
+  inFlight: number;
+  waiters: Array<() => void>;
+  tokenWindow: Array<{ t: number; tokens: number }>;
+  requestWindow: number[];
+  lastRequestAt: number;
+};
+const gateStates = new Map<string, GateState>();
+function stateFor(model: string): GateState {
+  let s = gateStates.get(model);
+  if (!s) {
+    s = { inFlight: 0, waiters: [], tokenWindow: [], requestWindow: [], lastRequestAt: 0 };
+    gateStates.set(model, s);
+  }
+  return s;
+}
+
+async function acquireConcurrency(model: string): Promise<void> {
+  const cfg = gateConfigFor(model);
+  const s = stateFor(model);
+  if (!cfg.maxConcurrency) return;
+  if (s.inFlight < cfg.maxConcurrency) {
+    s.inFlight++;
     return;
   }
-  // Queue; the releaser hands us the slot (inFlight stays accounted).
-  await new Promise<void>((resolve) => concurrencyWaiters.push(resolve));
+  await new Promise<void>((resolve) => s.waiters.push(resolve));
 }
 
-function releaseConcurrency(): void {
-  if (!LLM_MAX_CONCURRENCY) return;
-  const next = concurrencyWaiters.shift();
+function releaseConcurrency(model: string): void {
+  const cfg = gateConfigFor(model);
+  const s = stateFor(model);
+  if (!cfg.maxConcurrency) return;
+  const next = s.waiters.shift();
   if (next) next(); // transfer slot, inFlight unchanged
-  else inFlight--;
+  else s.inFlight--;
 }
 
-function windowTokens(now: number): number {
-  tokenWindow = tokenWindow.filter((e) => now - e.t < 60_000);
-  return tokenWindow.reduce((s, e) => s + e.tokens, 0);
+function windowTokens(s: GateState, now: number): number {
+  s.tokenWindow = s.tokenWindow.filter((e) => now - e.t < 60_000);
+  return s.tokenWindow.reduce((sum, e) => sum + e.tokens, 0);
 }
-
-// Minimum gap between request starts. Providers with a strict requests-per-
-// second cap (Mistral free tier: 1 req/s) 429 on back-to-back calls even when
-// the per-minute budget has room, so RPM alone can't express their limit.
-const LLM_MIN_INTERVAL_MS = Number(process.env.LLM_MIN_INTERVAL_MS ?? 0);
-let lastRequestAt = 0;
 
 // Block until BOTH the rolling 60s request budget (RPM) and token budget (TPM)
-// have room for this call, then reserve a slot in each window.
-async function reserveSlot(est: number): Promise<void> {
-  if (!LLM_RPM && !LLM_TPM && !LLM_MIN_INTERVAL_MS) return;
+// have room for this call on THIS model's gate, then reserve a slot in each.
+async function reserveSlot(model: string, est: number): Promise<void> {
+  const cfg = gateConfigFor(model);
+  const s = stateFor(model);
+  if (!cfg.rpm && !cfg.tpm && !cfg.minIntervalMs) return;
   for (;;) {
     const now = Date.now();
-    requestWindow = requestWindow.filter((t) => now - t < 60_000);
-    const reqOk = !LLM_RPM || requestWindow.length < LLM_RPM;
+    s.requestWindow = s.requestWindow.filter((t) => now - t < 60_000);
+    const reqOk = !cfg.rpm || s.requestWindow.length < cfg.rpm;
     // A single call larger than the whole token budget would deadlock — exempt.
-    const tokOk = !LLM_TPM || est >= LLM_TPM || windowTokens(now) + est <= LLM_TPM;
-    const gapOk = !LLM_MIN_INTERVAL_MS || now - lastRequestAt >= LLM_MIN_INTERVAL_MS;
+    const tokOk = !cfg.tpm || est >= cfg.tpm || windowTokens(s, now) + est <= cfg.tpm;
+    const gapOk = !cfg.minIntervalMs || now - s.lastRequestAt >= cfg.minIntervalMs;
     if (reqOk && tokOk && gapOk) {
-      requestWindow.push(now);
-      lastRequestAt = now;
-      if (LLM_TPM) tokenWindow.push({ t: now, tokens: est });
+      s.requestWindow.push(now);
+      s.lastRequestAt = now;
+      if (cfg.tpm) s.tokenWindow.push({ t: now, tokens: est });
       return;
     }
     if (reqOk && tokOk && !gapOk) {
       // Only the spacing gate is binding — short sleep until the gap elapses.
-      await new Promise((r) => setTimeout(r, LLM_MIN_INTERVAL_MS - (now - lastRequestAt)));
+      await new Promise((r) => setTimeout(r, cfg.minIntervalMs - (now - s.lastRequestAt)));
       continue;
     }
     // Sleep until the oldest entry in the binding window ages out of the minute.
-    const oldestReq = requestWindow[0];
-    const oldestTok = tokenWindow[0]?.t;
+    const oldestReq = s.requestWindow[0];
+    const oldestTok = s.tokenWindow[0]?.t;
     const oldest = Math.min(oldestReq ?? now, oldestTok ?? now);
     const wait = Math.max(250, 60_000 - (now - oldest));
     await new Promise((r) => setTimeout(r, Math.min(wait, 5_000)));
@@ -171,22 +191,22 @@ async function call(opts: {
     temperature: 0.2,
   };
   if (opts.json) body.response_format = { type: "json_object" };
-  // Reasoning models (gpt-oss, glm) otherwise spend the whole token budget on
-  // hidden reasoning before emitting an answer — slow, and the visible content
-  // can come back empty. "low" keeps them fast and answering. Ignored by
-  // non-reasoning providers.
+  // Reasoning models otherwise spend the whole token budget on hidden reasoning
+  // before emitting an answer — slow, and the visible content can come back
+  // empty. "low" keeps them fast and answering. Ignored by non-reasoning models.
   if (process.env.LLM_REASONING_EFFORT) {
     body.reasoning_effort = process.env.LLM_REASONING_EFFORT;
   }
 
-  // Rate gate: cap simultaneous calls, then wait for token budget. Held for the
-  // whole call (including in-call 429 retries) so retries don't re-burst.
-  await acquireConcurrency();
+  // Rate gate: cap simultaneous calls, then wait for token budget — scoped to
+  // THIS model's own gate (see gateConfigFor). Held for the whole call
+  // (including in-call 429 retries) so retries don't re-burst.
+  await acquireConcurrency(model);
   try {
-    await reserveSlot(estimateTokens(opts.system, opts.user, maxTokens));
+    await reserveSlot(model, estimateTokens(opts.system, opts.user, maxTokens));
     return await sendWithRetries(body, model);
   } finally {
-    releaseConcurrency();
+    releaseConcurrency(model);
   }
 }
 
@@ -202,9 +222,6 @@ async function sendWithRetries(body: any, model: string): Promise<{ raw: string;
         headers: {
           Authorization:  `Bearer ${getKey()}`,
           "Content-Type": "application/json",
-          // OpenRouter attribution headers (ignored by other providers).
-          "HTTP-Referer":  "https://tenderly.app",
-          "X-Title":       "Propello",
         },
         body:   JSON.stringify(body),
         signal: ctrl.signal,
@@ -251,17 +268,16 @@ async function sendWithRetries(body: any, model: string): Promise<{ raw: string;
   }
 }
 
-export async function callGroqJson<T = unknown>(opts: {
+export async function callMistralJson<T = unknown>(opts: {
   system: string;
   user: string;
   maxTokens?: number;
   model?: string;
   /**
    * Output mode. Default "json_object" forces `response_format`. Use "text"
-   * when you want an array — some Cerebras models (gpt-oss-120b, llama3.1-8b)
-   * misbehave under json_object mode for arrays and return either a schema
-   * descriptor like {"type":"object"} or a single object instead of the
-   * requested array.
+   * when you want an array — some models misbehave under json_object mode for
+   * arrays and return either a schema descriptor like {"type":"object"} or a
+   * single object instead of the requested array.
    */
   mode?: "json_object" | "text";
 }): Promise<{ data: T; usage: Usage; raw: string }> {
@@ -291,8 +307,8 @@ export async function callGroqJson<T = unknown>(opts: {
     try {
       parsed = JSON.parse(m[0]);
     } catch (e: any) {
-      // Truncated-array salvage: trim back to the last well-formed object
-      // and close the array. Cerebras sometimes hits max_tokens mid-array.
+      // Truncated-array salvage: trim back to the last well-formed object and
+      // close the array. The model sometimes hits max_tokens mid-array.
       const salvaged = salvageTruncatedArray(m[0]);
       if (salvaged !== null) {
         parsed = salvaged;
@@ -302,7 +318,7 @@ export async function callGroqJson<T = unknown>(opts: {
     }
   }
 
-  // Unwrap object → array. Cerebras often returns { "type": "object",
+  // Unwrap object → array. Some models return { "type": "object",
   // "requirements": [...] } or similar. Find the first array value and use it.
   if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
     const arrayValues = Object.values(parsed).filter((v) => Array.isArray(v));
@@ -344,7 +360,7 @@ function salvageTruncatedArray(s: string): any[] | null {
   }
 }
 
-export async function callGroqText(opts: {
+export async function callMistralText(opts: {
   system: string;
   user: string;
   maxTokens?: number;

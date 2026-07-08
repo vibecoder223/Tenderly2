@@ -104,7 +104,7 @@ export default async function DealOverview({
               <div className="flex-1 flex flex-col justify-center">
                 <PipelineBar
                   stages={[
-                    { key: "todo", label: "To do", count: unanswered, color: "var(--fg)" },
+                    { key: "todo", label: "To do", count: unanswered, color: "var(--fg-4)" },
                     { key: "drafting", label: "Drafting", count: drafting, color: "var(--accent)" },
                     { key: "review", label: "In review", count: inReview, color: "var(--warn)" },
                     { key: "approved", label: "Approved", count: approved, color: "var(--ok)" },

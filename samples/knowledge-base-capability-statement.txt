@@ -1,0 +1,110 @@
+PROPELLO SOLUTIONS — COMPANY CAPABILITY STATEMENT
+Prepared for internal knowledge base ingestion. Last updated: June 2026.
+
+1. SECURITY CERTIFICATIONS
+Propello Solutions holds ISO/IEC 27001:2022 certification (certificate #IS-745211, valid
+through March 2028) and completes an annual SOC 2 Type II audit covering security,
+availability, and confidentiality trust criteria. The latest SOC 2 report (January 2026)
+recorded zero exceptions. Penetration tests are performed twice yearly by CREST-accredited
+third parties, with all critical and high findings remediated within 14 days. Vulnerability
+scanning runs continuously across all production infrastructure using an authenticated
+scanner, with results triaged weekly by the security team.
+
+2. DATA ENCRYPTION AND KEY MANAGEMENT
+All customer data is encrypted at rest using AES-256 with keys managed in a FIPS 140-2
+Level 3 validated hardware security module, and in transit using TLS 1.3 exclusively (TLS
+1.0/1.1 are disabled at the load balancer). Key rotation occurs every 90 days automatically.
+Customer-managed encryption keys (CMEK) are supported on the Enterprise plan, allowing
+customers to revoke access unilaterally by disabling their key. Field-level encryption is
+available for designated sensitive fields (e.g. national ID numbers, banking details).
+
+3. DATA RESIDENCY AND HOSTING
+The platform is hosted on Microsoft Azure with primary regions in Qatar Central (Doha) and
+West Europe (Netherlands). Customers select their data residency region at contract
+signature; data never leaves the selected region, including backups and disaster recovery
+replicas. An on-premises deployment option is available for government clients with
+sovereignty requirements, delivered as a containerized bundle deployable on customer-owned
+infrastructure with quarterly patch releases.
+
+4. SERVICE LEVELS AND SUPPORT
+We commit to a 99.9% monthly uptime SLA with service credits of 10% per 0.1% shortfall,
+capped at 50% of monthly fees. Support tiers: Standard (business hours, 8-hour response) and
+Premium (24/7, 1-hour P1 response, dedicated technical account manager). Average P1
+resolution time in 2025 was 3.2 hours. All incidents are published to a public status page
+with real-time updates during active incidents.
+
+5. IMPLEMENTATION METHODOLOGY
+Implementations follow a four-phase methodology: Discovery (2 weeks), Configuration (3-4
+weeks), UAT and training (2 weeks), and Hypercare (2 weeks post go-live). A typical mid-size
+deployment (100-300 users) completes in 8-10 weeks; enterprise deployments (500+ users,
+multiple business units) typically run 14-18 weeks. Each project is staffed with a certified
+project manager, a solution architect, and a training lead. We have completed 140+
+implementations with a 96% on-time delivery rate and a 4.6/5 average customer satisfaction
+score on post-implementation surveys.
+
+6. PRICING MODEL
+Pricing is per-user per-month subscription with three tiers: Essential ($29/user/month),
+Professional ($55/user/month), and Enterprise (custom, volume-discounted above 500 seats).
+Implementation is a one-time fee typically 0.8x-1.2x first-year subscription value. No
+charges for storage up to 1TB per workspace; API access is included in Professional and
+above. Multi-year commitments receive 12-18% discounts; a 3-year term with annual prepayment
+receives the maximum discount.
+
+7. INTEGRATIONS AND API
+The platform exposes a REST API (OpenAPI 3.1 documented) and webhooks for all core objects,
+with rate limits of 1,000 requests/minute on Enterprise. Native integrations include
+Microsoft 365, SharePoint, Salesforce, SAP Ariba, Oracle Fusion, and Slack. Single sign-on is
+supported via SAML 2.0 and OIDC (validated against Azure AD, Okta, and Ping Identity). SCIM
+2.0 handles automated user provisioning and deprovisioning, including group-based role
+assignment.
+
+8. ACCESS CONTROL AND AUDIT
+Role-based access control ships with five default roles (Admin, Manager, Contributor,
+Reviewer, Viewer) and unlimited custom roles with field-level permissions. All privileged
+actions are captured in an immutable audit log retained for 7 years and exportable to
+customer SIEM via syslog or API (Splunk and Microsoft Sentinel connectors are pre-built). IP
+allowlisting, session timeout policies, and concurrent session limits are configurable per
+workspace.
+
+9. BUSINESS CONTINUITY AND DISASTER RECOVERY
+The disaster recovery plan targets an RPO of 15 minutes and RTO of 4 hours, tested twice
+yearly with published results shared with customers under NDA. Backups run continuously
+(point-in-time recovery to any second within 35 days) plus daily snapshots retained 12
+months in a geo-separate region. The business continuity plan is ISO 22301-aligned and
+independently audited annually.
+
+10. COMPANY PROFILE AND REFERENCES
+Propello Solutions was founded in 2019, is headquartered in Doha with offices in Dubai and
+London, and employs 85 staff, of whom 60 are in engineering and delivery. The company is
+profitable, carries no external debt, and has grown revenue 40%+ year-over-year for three
+consecutive years. Reference customers include three GCC government ministries, two regional
+banks, and a Fortune 500 logistics firm; contactable references are available under NDA
+following shortlist confirmation.
+
+11. COMPLIANCE AND PRIVACY
+The platform complies with GDPR and Qatar's Personal Data Privacy Protection Law (Law No. 13
+of 2016). A Data Protection Officer is appointed and listed in our public privacy policy.
+Data processing agreements incorporating EU standard contractual clauses are offered as
+standard contract addenda. Data subject requests (access, erasure, portability) are
+fulfilled through a self-service console within 30 days. Sub-processors are listed publicly
+on our trust center and customers are notified 30 days before any sub-processor change.
+
+12. TRAINING AND ONBOARDING
+Training includes role-based live sessions (administrator, end-user, and executive tracks),
+a self-paced learning portal with completion certificates, and train-the-trainer packages
+for large deployments. All documentation and the platform UI are available in English and
+Arabic. Post go-live, quarterly business reviews track adoption metrics; customers average
+78% weekly active usage after 90 days, rising to 85%+ by month six.
+
+13. FINANCIAL AND CONTRACTUAL TERMS
+Standard payment terms are net-30 against quarterly invoicing, with annual prepayment
+available at a 5% discount. Contracts are governed by the customer's local law where
+required for public-sector procurement. Professional indemnity insurance of $5M and cyber
+liability insurance of $10M are maintained and certificates provided upon request.
+
+14. PRODUCT ROADMAP AND AI CAPABILITIES
+The platform includes built-in AI-assisted drafting for compliance responses, automated
+requirement extraction from uploaded tender documents, and a searchable answer library that
+improves reuse rates over time. A public roadmap is shared quarterly with enterprise
+customers under NDA; recent additions include Arabic-language AI drafting and expanded ERP
+connector coverage (Oracle Fusion, Microsoft Dynamics 365).

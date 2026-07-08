@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { requireMembership } from "@/utils/auth";
 import Topbar, { Crumb } from "@/components/Topbar";
-import { ReadingsBand } from "@/components/ui";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { Page, PageHeader, Readings } from "@/components/ui";
 
 export default async function DashboardPage() {
-  const { supabase, member } = await requireMembership();
+  const { supabase, member, user } = await requireMembership();
   const orgId = member.org_id;
 
   // One parallel batch for every query that only needs orgId. Sequential
@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     { data: kdocs },
     { data: activity },
     { data: orgRow },
-    { count: teamCount },
+    { data: teamRows },
   ] = await Promise.all([
     supabase
       .from("deals")
@@ -40,9 +40,12 @@ export default async function DashboardPage() {
       .maybeSingle(),
     supabase
       .from("team_members")
-      .select("id", { count: "exact", head: true })
+      .select("user_id, name, email")
       .eq("org_id", orgId),
   ]);
+
+  const teamCount = (teamRows ?? []).length;
+  const memberByUserId = new Map((teamRows ?? []).map((m) => [m.user_id, m]));
 
   const allDeals = deals ?? [];
   const dealIds = allDeals.map((d) => d.id);
@@ -54,6 +57,8 @@ export default async function DashboardPage() {
   let mandatoryUnanswered = 0;
   let docsFailed = 0;
   let realRfpCount = 0;
+  let avgConfidence: number | null = null;
+  let citationsCount = 0;
 
   if (dealIds.length > 0) {
     const [{ data: docRows }, { count: failedDocCount }] = await Promise.all([
@@ -84,7 +89,7 @@ export default async function DashboardPage() {
       const [{ data: qs }, { data: reqRows }] = await Promise.all([
         supabase
           .from("questions")
-          .select("document_id, status, requirement_id")
+          .select("id, document_id, status, requirement_id")
           .in("document_id", allDocIds),
         supabase
           .from("extracted_requirements")
@@ -122,6 +127,31 @@ export default async function DashboardPage() {
       );
       mandatoryUnanswered =
         (reqRows ?? []).filter((r: any) => !mustAnsweredIds.has(r.requirement_id)).length;
+
+      // Trust panel: average response confidence + citations attached, for
+      // every question in this org. Depends on question ids from `qs` above,
+      // so it can't join the parallel batch — one extra round trip.
+      const questionIds = (qs ?? []).map((q: any) => q.id);
+      if (questionIds.length > 0) {
+        const { data: responseRows } = await supabase
+          .from("responses")
+          .select("id, confidence")
+          .in("question_id", questionIds);
+        const confidences = (responseRows ?? [])
+          .map((r) => r.confidence)
+          .filter((c): c is number => c != null);
+        if (confidences.length > 0) {
+          avgConfidence = confidences.reduce((a, b) => a + b, 0) / confidences.length;
+        }
+        const responseIds = (responseRows ?? []).map((r) => r.id);
+        if (responseIds.length > 0) {
+          const { count } = await supabase
+            .from("citations")
+            .select("id", { count: "exact", head: true })
+            .in("response_id", responseIds);
+          citationsCount = count ?? 0;
+        }
+      }
     }
   }
 
@@ -137,6 +167,10 @@ export default async function DashboardPage() {
       new Date(d.due_date).getTime() >= Date.now() &&
       (new Date(d.due_date).getTime() - Date.now()) / 86_400_000 < 7
   );
+  const readyToSubmit = activeDeals.filter((d) => {
+    const t = dealCompletion.get(d.id);
+    return !!t && t.total > 0 && t.approved >= t.total;
+  }).length;
   const kbReady = (kdocs ?? []).filter((k) => k.ingestion_status === "ready").length;
   const kbFailed = (kdocs ?? []).filter((k) => k.ingestion_status === "failed").length;
   const failedCount = kbFailed + docsFailed;
@@ -172,6 +206,11 @@ export default async function DashboardPage() {
       tone: "err" as const,
     },
   ].filter(Boolean) as Array<{ icon: "review" | "clock" | "alert"; label: string; href: string; tone: "warn" | "err" }>;
+
+  // Most urgent first, so the hero row (and its solid CTA) is the thing that
+  // actually needs attention soonest, not just whatever pushed first.
+  const SEVERITY: Record<string, number> = { err: 2, warn: 1 };
+  const sortedInbox = [...inbox].sort((a, b) => SEVERITY[b.tone] - SEVERITY[a.tone]);
 
   const isEmpty = allDeals.length === 0;
 
@@ -222,12 +261,44 @@ export default async function DashboardPage() {
       label: "Invite teammates",
       desc: "Bring in SMEs and reviewers. They get assigned questions and approval rights.",
       href: "/team",
-      done: (teamCount ?? 0) > 1,
+      done: teamCount > 1,
     },
   ];
 
   const onboardingComplete = onboardingSteps.every((s) => s.done);
   const showOnboarding = !onboardingDismissed && !onboardingComplete;
+
+  // ─── Greeting ───────────────────────────────────────────────────────────
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const displayName = member.name ?? (user.user_metadata as { name?: string } | null)?.name ?? user.email ?? "";
+  const firstName = displayName.split(" ")[0] || "there";
+
+  const soonestDeal = [...activeDeals]
+    .filter((d) => d.due_date)
+    .sort((a, b) => new Date(a.due_date as string).getTime() - new Date(b.due_date as string).getTime())[0];
+  let urgentFact: string | null = null;
+  if (soonestDeal) {
+    const daysLeft = Math.ceil((new Date(soonestDeal.due_date as string).getTime() - Date.now()) / 86_400_000);
+    urgentFact =
+      daysLeft < 0
+        ? `${soonestDeal.name} is overdue.`
+        : daysLeft === 0
+        ? `${soonestDeal.name} is due today.`
+        : daysLeft <= 7
+        ? `${soonestDeal.name} is due in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
+        : null;
+  }
+
+  // Sorted by deadline (soonest/overdue first, no due date last) — this list
+  // doubles as the deals view, so it isn't just completion order.
+  const dealsByDeadline = [...activeDeals]
+    .sort((a, b) => {
+      const at = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+      const bt = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+      return at - bt;
+    })
+    .slice(0, 7);
 
   return (
     <>
@@ -247,47 +318,23 @@ export default async function DashboardPage() {
           </Link>
         }
       />
-      {!isEmpty && !showOnboarding && (
-        <ReadingsBand
-          maxWidth={1300}
-          items={[
-            { label: "Active deals", value: activeDeals.length, delta: `${questionTotals.total} questions` },
-            {
-              label: "Awaiting approval",
-              value: questionTotals.inReview,
-              delta: "in review",
-              tone: questionTotals.inReview > 0 ? "warn" : undefined,
-            },
-            {
-              label: "Due this week",
-              value: dueSoon.length,
-              delta: "next 7 days",
-              tone: dueSoon.length > 0 ? "warn" : undefined,
-            },
-            {
-              label: "Overdue",
-              value: overdue.length,
-              delta: "past due date",
-              tone: overdue.length > 0 ? "err" : undefined,
-            },
-            {
-              label: "Mandatory unanswered",
-              value: mandatoryUnanswered,
-              delta: "must-have items",
-              tone: mandatoryUnanswered > 0 ? "err" : undefined,
-            },
-          ]}
-        />
-      )}
 
-      <div className="p-7 pt-0 max-w-[1300px] space-y-6">
-        <div className="page-header">
-          <div className="page-title-row">
-            <h1 className="page-title">{member.organizations?.name}</h1>
-            <span className="page-meta">{activeDeals.length} active · {questionTotals.total} questions</span>
-          </div>
-          <p className="page-sub">RFP operations at a glance.</p>
-        </div>
+      <Page>
+        <PageHeader
+          title={`${timeGreeting}, ${firstName}`}
+          sub={
+            <>
+              {inbox.length > 0 && (
+                <>
+                  <b style={{ color: "var(--fg-2)", fontWeight: 600 }}>
+                    {inbox.length} thing{inbox.length === 1 ? "" : "s"} need{inbox.length === 1 ? "s" : ""} you today.
+                  </b>{" "}
+                </>
+              )}
+              {urgentFact ?? (inbox.length === 0 ? "Nothing urgent right now." : "")}
+            </>
+          }
+        />
 
         {showOnboarding && (
           <OnboardingChecklist steps={onboardingSteps} total={onboardingSteps.length} />
@@ -296,152 +343,178 @@ export default async function DashboardPage() {
         {isEmpty ? (
           !showOnboarding && <OnboardingCard kbReady={kbReady} />
         ) : (
-          <>
-            {inbox.length > 0 && (
-              <section className="section-card">
-                <div className="section-card-head">
-                  <div>
-                    <span className="section-card-title">Requires action</span>
-                    <span className="section-card-count">{inbox.length}</span>
-                  </div>
-                  <Link href="/my-queue" className="block-more">My queue →</Link>
-                </div>
-                <ul className="queue">
-                  {inbox.map((item, i) => (
-                    <Link key={i} href={item.href} className="queue-row no-sig">
-                      <span className="queue-say">{item.label}</span>
-                      <span className={`stage ${item.tone}`}>{QUEUE_REF[item.icon]}</span>
-                      <span className="queue-act">{QUEUE_ACT[item.icon]}</span>
-                    </Link>
-                  ))}
-                </ul>
-              </section>
-            )}
+          !showOnboarding && (
+            <>
+              <Readings
+                items={[
+                  { label: "Active deals", value: activeDeals.length },
+                  { label: "Awaiting your approval", value: questionTotals.inReview, tone: questionTotals.inReview > 0 ? "warn" : undefined },
+                  { label: "Overdue", value: overdue.length, tone: overdue.length > 0 ? "err" : undefined },
+                  { label: "Ready to submit", value: readyToSubmit, tone: readyToSubmit > 0 ? "ok" : undefined },
+                ]}
+              />
 
-            <div className="grid grid-cols-3 gap-6">
-              <section className="section-card col-span-2">
-                <div className="section-card-head">
-                  <div>
-                    <span className="section-card-title">Active deals</span>
-                    <span className="section-card-count">{activeDeals.length}</span>
+              {sortedInbox.length > 0 && (
+                <section className="section-card">
+                  <div className="section-card-head">
+                    <div>
+                      <span className="section-card-title">Needs you now</span>
+                      <span className="section-card-count">{sortedInbox.length}</span>
+                    </div>
+                    <Link href="/my-queue" className="block-more">My queue →</Link>
                   </div>
-                  <Link href="/deals" className="block-more">View all →</Link>
-                </div>
-                {activeDeals.length === 0 ? (
-                  <div className="p-8 text-center text-sm" style={{ color: "var(--fg-4)" }}>
-                    No active deals right now.
-                  </div>
-                ) : (
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Deal</th>
-                        <th>Stage</th>
-                        <th>Completion</th>
-                        <th style={{ textAlign: "right" }}>Due</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {activeDeals.slice(0, 6).map((d) => {
-                        const t = dealCompletion.get(d.id) ?? { total: 0, approved: 0 };
-                        const pct = t.total > 0 ? Math.round((t.approved / t.total) * 100) : 0;
-                        const due = d.due_date ? new Date(d.due_date).getTime() : 0;
-                        const overdueRow = due > 0 && due < Date.now();
-                        const dueSoonRow =
-                          due > 0 && !overdueRow && (due - Date.now()) / 86_400_000 < 7;
-                        const stageClass =
-                          d.status === "in_progress" ? "draft" : d.status === "new" ? "" : "review";
-                        const stageLabel =
-                          d.status === "in_progress" ? "Drafting" : d.status === "new" ? "Triage" : "Review";
-                        return (
-                          <tr key={d.id}>
-                            <td>
-                              <Link href={`/deals/${d.id}`} style={{ color: "var(--fg)", fontWeight: 550, textDecoration: "none" }}>
-                                {d.name}
-                              </Link>
-                              {d.client_name && (
-                                <div className="meta-mono" style={{ marginTop: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                                  {d.client_name}
-                                </div>
-                              )}
-                            </td>
-                            <td><span className={`stage ${stageClass}`}>{stageLabel}</span></td>
-                            <td style={{ minWidth: 140 }}>
-                              {t.total > 0 ? (
-                                <div className="meter">
-                                  <span className="meter-track">
-                                    <span className={`meter-fill${pct >= 100 ? " full" : ""}`} style={{ width: `${pct}%` }} />
-                                  </span>
-                                  <span className="meter-pct">{pct}%</span>
-                                </div>
-                              ) : (
-                                <span className="meter-pct" style={{ color: "var(--fg-4)" }}>not started</span>
-                              )}
-                            </td>
-                            <td
-                              className="mono"
-                              style={{
-                                textAlign: "right",
-                                fontSize: 10.5,
-                                fontVariantNumeric: "tabular-nums",
-                                color: overdueRow ? "var(--err)" : dueSoonRow ? "var(--warn)" : "var(--fg-4)",
-                                fontWeight: overdueRow ? 600 : 400,
-                              }}
-                            >
-                              {d.due_date ? d.due_date.slice(0, 10) : "—"}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
-              </section>
-
-              <section className="section-card">
-                <div className="section-card-head">
-                  <span className="section-card-title">Activity</span>
-                  <Link href="/activity" className="block-more">View all →</Link>
-                </div>
-                {(activity ?? []).length === 0 ? (
-                  <div className="p-6 text-center text-sm" style={{ color: "var(--fg-4)" }}>
-                    No activity yet.
-                  </div>
-                ) : (
-                  <ul className="feed">
-                    {(activity ?? []).map((a, i) => (
-                      <li key={i} className="feed-row">
-                        <span className="feed-t">
-                          {new Date(a.created_at).toISOString().replace("T", " ").slice(5, 16)}
-                        </span>
-                        <span className="feed-what">
-                          <b>{a.action}</b> {a.entity_type}
-                          {a.metadata?.filename ? `: ${a.metadata.filename}` : ""}
-                          {a.metadata?.name ? `: ${a.metadata.name}` : ""}
-                        </span>
-                      </li>
+                  <ul className="queue">
+                    {sortedInbox.map((item, i) => (
+                      <Link key={i} href={item.href} className="queue-row no-sig">
+                        <span className="queue-say">{item.label}</span>
+                        <span className={`stage ${item.tone}`}>{QUEUE_REF[item.icon]}</span>
+                        <span className={i === 0 ? "queue-act-primary" : "queue-act"}>{QUEUE_ACT[item.icon]}</span>
+                      </Link>
                     ))}
                   </ul>
-                )}
-              </section>
-            </div>
-          </>
+                </section>
+              )}
+
+              <div className="grid grid-cols-3 gap-6">
+                <section className="section-card col-span-2">
+                  <div className="section-card-head">
+                    <span className="section-card-title">Deals by deadline</span>
+                    <Link href="/deals" className="block-more">View all deals →</Link>
+                  </div>
+                  {dealsByDeadline.length === 0 ? (
+                    <div className="p-8 text-center text-sm" style={{ color: "var(--fg-4)" }}>
+                      No active deals right now.
+                    </div>
+                  ) : (
+                    <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                      {dealsByDeadline.map((d) => {
+                        const t = dealCompletion.get(d.id) ?? { total: 0, approved: 0 };
+                        const pct = t.total > 0 ? Math.round((t.approved / t.total) * 100) : 0;
+                        const dueTs = d.due_date ? new Date(d.due_date).getTime() : null;
+                        const daysLeft = dueTs != null ? Math.ceil((dueTs - Date.now()) / 86_400_000) : null;
+                        const isOverdue = daysLeft != null && daysLeft < 0;
+                        const tone = daysLeft == null ? "" : isOverdue || daysLeft <= 3 ? "err" : daysLeft <= 7 ? "warn" : "";
+                        const barPct =
+                          daysLeft == null ? 100 : isOverdue ? 4 : Math.min(100, Math.max(4, Math.round((daysLeft / 30) * 100)));
+                        const daysLabel =
+                          daysLeft == null ? "No due date" : isOverdue ? `${Math.abs(daysLeft)}d over` : `${daysLeft}d left`;
+                        const stageLabel = d.status === "in_progress" ? "drafting" : d.status === "new" ? "triage" : "review";
+                        return (
+                          <li key={d.id} className="rw-row">
+                            <div className="rw-name">
+                              <Link href={`/deals/${d.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                                {d.name}
+                              </Link>
+                              <div className="rw-client">
+                                {d.client_name ? `${d.client_name} · ` : ""}
+                                {stageLabel}{t.total > 0 ? ` · ${pct}%` : ""}
+                              </div>
+                            </div>
+                            <div className="rw-bar">
+                              <span className={`fill${tone ? " " + tone : ""}`} style={{ width: `${barPct}%` }} />
+                            </div>
+                            <div className="rw-when">
+                              <div className={`rw-days${tone ? " " + tone : ""}`}>{daysLabel}</div>
+                              {d.due_date && <div className="rw-date">{d.due_date.slice(0, 10)}</div>}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+
+                <section className="section-card">
+                  <div className="section-card-head">
+                    <span className="section-card-title">This week's output</span>
+                  </div>
+                  <div className="trust-row">
+                    <span className="trust-k">Answers drafted</span>
+                    <span className="trust-v">{questionTotals.approved + questionTotals.inReview}</span>
+                  </div>
+                  <div className="trust-row">
+                    <span className="trust-k">Average confidence</span>
+                    <span className="trust-v">{avgConfidence != null ? avgConfidence.toFixed(2) : "—"}</span>
+                  </div>
+                  <div className="trust-row">
+                    <span className="trust-k">Citations attached</span>
+                    <span className="trust-v">{citationsCount}</span>
+                  </div>
+                  <div className="trust-row">
+                    <span className="trust-k">Mandatory unanswered</span>
+                    <span className="trust-v" style={{ color: mandatoryUnanswered > 0 ? "var(--err)" : "var(--fg)" }}>
+                      {mandatoryUnanswered}
+                    </span>
+                  </div>
+
+                  <div className="section-card-head section-card-head-divide">
+                    <span className="section-card-title">Recent activity</span>
+                    <Link href="/activity" className="block-more">View all →</Link>
+                  </div>
+                  {(activity ?? []).length === 0 ? (
+                    <div className="p-6 text-center text-sm" style={{ color: "var(--fg-4)" }}>
+                      No activity yet.
+                    </div>
+                  ) : (
+                    <ul className="feed">
+                      {(activity ?? []).map((a, i) => {
+                        const actor = memberByUserId.get(a.user_id);
+                        const actorName = actor?.name || actor?.email || "Someone";
+                        return (
+                          <li key={i} className="feed-row">
+                            <span className="feed-avatar">{initials(actorName)}</span>
+                            <span className="feed-body">
+                              <span className="feed-what">
+                                <b>{actorName}</b> {a.action} {a.entity_type}
+                                {a.metadata?.filename ? `: ${a.metadata.filename}` : ""}
+                                {a.metadata?.name ? `: ${a.metadata.name}` : ""}
+                              </span>
+                              <span className="feed-time">{formatRelativeTime(a.created_at)}</span>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              </div>
+            </>
+          )
         )}
-      </div>
+      </Page>
     </>
   );
 }
 
 const QUEUE_REF: Record<string, string> = {
-  review: "IN REVIEW",
-  clock: "DUE DATE",
-  alert: "PIPELINE",
+  review: "In review",
+  clock: "Due date",
+  alert: "Pipeline",
 };
 const QUEUE_ACT: Record<string, string> = {
   review: "Review",
   clock: "Open",
   alert: "Retry",
 };
+
+function initials(nameOrEmail: string): string {
+  const parts = nameOrEmail.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return nameOrEmail.slice(0, 2).toUpperCase();
+}
+
+function formatRelativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  return new Date(iso).toISOString().slice(0, 10);
+}
 
 function OnboardingCard({ kbReady }: { kbReady: number }) {
   return (
@@ -515,4 +588,3 @@ function Step({
     </div>
   );
 }
-

@@ -1,0 +1,33 @@
+REQUEST FOR PROPOSAL — MEETING ROOM BOOKING SYSTEM
+RFP Reference: FB-2026-018 | Issued: June 2026 | Issuing Entity: Regional Logistics Authority
+
+SECTION 1 — INTRODUCTION
+The Authority invites proposals from qualified vendors for a cloud-based meeting room and
+desk booking system to be deployed across three office locations (Doha, Dubai, Manama).
+Vendors must respond to every requirement below indicating full compliance, partial
+compliance, or non-compliance, with supporting evidence.
+
+SECTION 2 — FUNCTIONAL REQUIREMENTS
+2.1 The solution MUST allow employees to book meeting rooms via web and mobile app.
+2.2 The solution MUST show real-time room availability synced with Outlook/Microsoft 365
+    calendars.
+2.3 Describe how the system handles double-booking conflicts and cancellation policies.
+2.4 The solution MUST support desk booking (hot-desking) in addition to meeting rooms.
+2.5 Confirm whether the system supports QR-code check-in at room entrances.
+
+SECTION 3 — SECURITY AND DATA REQUIREMENTS
+3.1 Confirm whether the vendor holds ISO 27001 or equivalent security certification.
+3.2 Describe how customer data is encrypted at rest and in transit.
+3.3 Confirm the data hosting region and whether data can be kept within the GCC.
+
+SECTION 4 — INTEGRATION REQUIREMENTS
+4.1 The solution MUST integrate with Microsoft 365 and Azure Active Directory for SSO.
+4.2 Describe any available REST API for custom reporting integrations.
+
+SECTION 5 — COMMERCIAL REQUIREMENTS
+5.1 Provide your pricing model (per-user, per-room, or flat-fee) for approximately 300
+    users across 3 locations.
+5.2 Confirm implementation timeline and whether onsite installation support is included.
+5.3 Describe your standard support hours and response times for critical issues.
+
+END OF RFP

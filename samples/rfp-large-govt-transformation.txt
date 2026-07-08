@@ -1,0 +1,123 @@
+REQUEST FOR PROPOSAL — DIGITAL PROCUREMENT TRANSFORMATION PROGRAMME
+RFP Reference: MIN-2026-227 | Issued: June 2026 | Issuing Entity: Ministry of Public Works
+
+SECTION 1 — INTRODUCTION AND SCOPE
+The Ministry invites qualified vendors to propose an end-to-end digital transformation of
+its procurement and vendor management function, covering tender publication, bid
+evaluation, contract management, and vendor performance tracking across 18 directorates.
+This is a multi-year programme; vendors must respond fully to every requirement in Sections
+3 through 9. Partial or non-responsive submissions will be scored accordingly.
+
+SECTION 2 — BACKGROUND AND OBJECTIVES
+The Ministry currently manages over 900 active contracts and issues approximately 600
+tenders annually, ranging from small works orders to multi-year infrastructure contracts
+exceeding $50M. The objective of this programme is to reduce average tender-to-award cycle
+time by 40%, improve compliance auditability, and provide real-time visibility to
+Ministry leadership across all active procurements.
+
+SECTION 3 — SECURITY REQUIREMENTS
+3.1 The vendor MUST hold a current ISO/IEC 27001 certification; provide certificate number,
+    scope, and validity period.
+3.2 The vendor MUST provide evidence of an independent SOC 2 Type II audit completed within
+    the last 12 months, or an equivalent recognized attestation.
+3.3 Describe encryption standards applied at rest and in transit, including key management
+    and support for customer-managed encryption keys.
+3.4 The solution MUST support SSO via SAML 2.0 or OIDC integrated with the Ministry's
+    Active Directory environment.
+3.5 Describe the role-based access control model, including support for custom roles,
+    field-level permissions, and delegation of approval authority.
+3.6 Describe your penetration testing regime, frequency, and remediation SLAs by severity.
+3.7 Describe your vulnerability management program including scanning cadence and patch
+    timelines for critical/high findings.
+3.8 Confirm whether multi-factor authentication is enforced for all privileged accounts.
+3.9 Describe your security incident response plan and customer notification timelines.
+3.10 Confirm whether the platform has undergone independent code security review (SAST/DAST)
+     and describe the frequency.
+
+SECTION 4 — DATA GOVERNANCE REQUIREMENTS
+4.1 All Ministry data MUST reside within national borders or, where explicitly approved,
+    within the GCC. Specify all available hosting regions and residency guarantees.
+4.2 Confirm compliance with applicable national data protection law and describe your data
+    protection governance structure, including whether a Data Protection Officer is
+    appointed.
+4.3 Describe backup and disaster recovery capabilities, including RPO/RTO commitments and
+    testing frequency, with evidence of the most recent DR test.
+4.4 Confirm whether an on-premises or sovereign-cloud deployment option is available for
+    classified or sensitive procurement categories.
+4.5 Describe sub-processor disclosure practices and the notice period provided before any
+    sub-processor change.
+4.6 Confirm data retention, export, and deletion practices upon contract termination or
+    expiry.
+4.7 Describe your approach to data classification and handling of commercially sensitive
+    bid information during active tender evaluation periods.
+
+SECTION 5 — FUNCTIONAL REQUIREMENTS — TENDER MANAGEMENT
+5.1 The solution MUST support end-to-end tender lifecycle management from publication
+    through award.
+5.2 Describe support for structured bid submission templates and automated compliance
+    checklists.
+5.3 Describe how the platform supports multi-stage evaluation (technical, commercial,
+    financial) with weighted scoring.
+5.4 Confirm whether the solution supports sealed-bid electronic submission with
+    tamper-evident timestamps.
+5.5 Describe capabilities for AI-assisted extraction of requirements from uploaded tender
+    documents and automated compliance matrix generation.
+5.6 Describe how the platform supports collaborative evaluation across multiple evaluators
+    with conflict-of-interest tracking.
+
+SECTION 6 — FUNCTIONAL REQUIREMENTS — CONTRACT AND VENDOR MANAGEMENT
+6.1 The solution MUST provide a centralized contract repository with automated renewal and
+    milestone alerts.
+6.2 Describe vendor performance tracking capabilities, including scorecards and historical
+    performance analytics.
+6.3 Describe support for multi-currency and multi-entity contract structures.
+6.4 Confirm whether the solution supports e-signature integration for contract execution.
+
+SECTION 7 — TECHNICAL REQUIREMENTS
+7.1 The solution MUST provide a documented REST API for integration with the Ministry's
+    financial and ERP systems.
+7.2 Describe available native integrations, specifically with SAP Ariba, Oracle Fusion, and
+    Microsoft 365/SharePoint.
+7.3 The solution MUST support automated user provisioning and deprovisioning via SCIM.
+7.4 Describe the platform's uptime commitment and the service credit regime applicable to
+    SLA breaches.
+7.5 Confirm API rate limits and describe how the platform scales under peak concurrent load
+    (e.g. tender submission deadline surges).
+7.6 Describe the system architecture's approach to high availability, failover, and
+    horizontal scalability.
+7.7 Confirm whether the platform supports Arabic-language data entry, search, and reporting.
+7.8 Describe your approach to accessibility compliance (WCAG 2.1 AA or equivalent).
+
+SECTION 8 — IMPLEMENTATION AND SUPPORT REQUIREMENTS
+8.1 Describe your implementation methodology, typical timeline for a deployment of this
+    scale (18 directorates, ~1,200 users), and the project team you would assign.
+8.2 Describe the training approach, including Arabic-language materials, train-the-trainer
+    packages, and post-go-live adoption tracking.
+8.3 Describe your support tiers, response times for priority-1 incidents, and escalation
+    procedures including out-of-hours coverage.
+8.4 Provide details of at least three comparable public-sector reference implementations,
+    preferably within the GCC region, of similar scale.
+8.5 Describe your product roadmap process and how customer feedback from government clients
+    specifically is incorporated.
+8.6 Confirm the availability of a dedicated technical account manager and named support
+    escalation contacts for the duration of the contract.
+8.7 Describe your approach to knowledge transfer and reducing dependency on vendor personnel
+    over the contract term.
+8.8 Describe your change management and configuration governance process for a
+    multi-directorate rollout.
+
+SECTION 9 — COMMERCIAL REQUIREMENTS
+9.1 Provide your pricing model, including subscription tiers, implementation fees, and any
+    volume or multi-year discounts applicable to a ~1,200-user deployment across 18
+    directorates.
+9.2 Confirm the company's financial standing, years in operation, and total staff dedicated
+    to delivery and support.
+9.3 Confirm standard payment terms and whether contract governance under national law is
+    available.
+9.4 Confirm professional indemnity and cyber liability insurance coverage levels, and
+    whether coverage can be increased for this engagement.
+9.5 Describe your approach to price stability/escalation clauses over a multi-year term.
+9.6 Confirm whether performance bonds or bank guarantees can be provided as required by
+    public procurement regulations.
+
+END OF RFP

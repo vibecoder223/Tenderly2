@@ -29,12 +29,12 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const ANTHROPIC_KEY = env.ANTHROPIC_API_KEY;
+const LLM_KEY = env.LLM_API_KEY ?? env.MISTRAL_API_KEY;
 const JINA_KEY = env.JINA_API_KEY;
 
-if (!ANTHROPIC_KEY) {
+if (!LLM_KEY) {
   console.warn(
-    "⚠ ANTHROPIC_API_KEY not set — generation will be skipped and metrics will not be meaningful."
+    "⚠ LLM_API_KEY / MISTRAL_API_KEY not set — generation will be skipped and metrics will not be meaningful."
   );
 }
 if (!JINA_KEY) {
@@ -65,8 +65,9 @@ const cases = raw
 
 const JINA_EMBED_URL = "https://api.jina.ai/v1/embeddings";
 const JINA_RERANK_URL = "https://api.jina.ai/v1/rerank";
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const SONNET = env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
+const LLM_BASE_URL = (env.LLM_BASE_URL ?? "https://api.mistral.ai/v1").replace(/\/+$/, "");
+const LLM_CHAT_URL = `${LLM_BASE_URL}/chat/completions`;
+const LLM_MODEL = env.LLM_MODEL ?? "mistral-large-latest";
 
 const NO_SOURCE_THRESHOLD = 0.4;
 
@@ -91,7 +92,7 @@ for (const c of cases) {
 
   let answer = "";
   let cited = [];
-  if (isGap || !ANTHROPIC_KEY) {
+  if (isGap || !LLM_KEY) {
     answer = "NO_SOURCE: The knowledge base does not contain content sufficient to answer this requirement.";
   } else {
     const out = await generate(c.requirement, candidates);
@@ -329,27 +330,27 @@ ${candidates
 
 Write the answer now. Use [c:UUID] for every supported claim.`;
 
-  const res = await fetch(ANTHROPIC_URL, {
+  const res = await fetch(LLM_CHAT_URL, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": ANTHROPIC_KEY,
-      "anthropic-version": "2023-06-01",
+      authorization: `Bearer ${LLM_KEY}`,
     },
     body: JSON.stringify({
-      model: SONNET,
+      model: LLM_MODEL,
       max_tokens: 900,
-      system: sys,
-      messages: [{ role: "user", content: user }],
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user },
+      ],
     }),
   });
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`Anthropic call failed: ${res.status} ${t.slice(0, 300)}`);
+    throw new Error(`LLM call failed: ${res.status} ${t.slice(0, 300)}`);
   }
   const j = await res.json();
-  const block = (j.content ?? []).find((b) => b.type === "text");
-  const answer = (block?.text ?? "").trim();
+  const answer = (j.choices?.[0]?.message?.content ?? "").trim();
 
   const byId = new Map(candidates.map((c) => [c.chunk_id, c]));
   const seen = new Set();

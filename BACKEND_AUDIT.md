@@ -1,5 +1,9 @@
 # Tenderly — Backend Audit (Phase 0)
 
+> **Historical document.** The LLM provider has since moved from Anthropic to
+> Mistral (`lib/mistral.ts`); provider references below are point-in-time and
+> no longer current.
+
 **Date:** 2026-05-17
 **Auditor:** initial-build engineer
 **Status:** awaiting sign-off before any code is written or modified

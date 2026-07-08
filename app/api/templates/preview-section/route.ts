@@ -2,7 +2,7 @@ import { getClaimsUser } from "@/utils/auth";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
-import { callGroqText } from "@/lib/groq";
+import { callMistralText } from "@/lib/mistral";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
     : "Write 2-3 concise paragraphs.";
 
   try {
-    const { text } = await callGroqText({
+    const { text } = await callMistralText({
       system: `You are writing a section of a professional RFP proposal response.
 Write in formal business English. ${lengthRule} Be persuasive and outcome-focused.
 Never invent facts not in the context. Do not include the section heading in your output.

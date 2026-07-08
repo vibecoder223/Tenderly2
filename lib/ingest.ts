@@ -138,7 +138,7 @@ export async function ingestKnowledgeDocument(
       text_hash: textHash,
       error_message: hasEmbeddings()
         ? null
-        : "Stored without embeddings — set JINA_API_KEY in .env.local and re-ingest to enable retrieval.",
+        : "Stored without embeddings — set MISTRAL_API_KEY in .env.local and re-ingest to enable retrieval.",
     })
     .eq("id", doc.id);
 

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { tryCreateAdminClient } from "@/utils/supabase/admin";
 import { generateAndPersistAnswer } from "@/lib/rag";
-import { hasLlmKey } from "@/lib/groq";
+import { hasLlmKey } from "@/lib/mistral";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

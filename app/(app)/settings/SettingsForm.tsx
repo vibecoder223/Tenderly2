@@ -64,10 +64,10 @@ export default function SettingsForm({
         />
       </div>
       <div>
-        <label className="label">Claude model</label>
+        <label className="label">AI model</label>
         <input className="input mono" value={model} onChange={(e) => setModel(e.target.value)} />
         <div className="text-[11px] mt-1" style={{ color: "var(--fg-4)" }}>
-          Default: claude-sonnet-4-6. Server uses ANTHROPIC_MODEL env var if set, else this.
+          Server uses the LLM_MODEL env var if set, else this.
         </div>
       </div>
       <div>
