@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getClaimsUser } from "@/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 
-// The marketing site lives in its own project (Propello-LandingPage), deployed
+// The marketing site lives in its own project (Klovered-LandingPage), deployed
 // separately. This deployment is the product only, so the root just routes each
 // visitor to the right place: signed-in users into the app, everyone else to login.
 export default async function RootPage() {

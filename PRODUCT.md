@@ -10,7 +10,7 @@ Bid managers, proposal writers, and SMEs at B2B companies answering RFPs under d
 
 ## Product Purpose
 
-Propello ingests RFP documents, extracts every requirement with AI, drafts grounded answers from the company's knowledge base, and routes them through SME review to a final export. Success = a team answers a 300-question RFP in days instead of weeks, and trusts every citation. The UI's job is throughput and trust: fast scanning, clear status, zero ambiguity about what needs a human next.
+Klovered ingests RFP documents, extracts every requirement with AI, drafts grounded answers from the company's knowledge base, and routes them through SME review to a final export. Success = a team answers a 300-question RFP in days instead of weeks, and trusts every citation. The UI's job is throughput and trust: fast scanning, clear status, zero ambiguity about what needs a human next.
 
 ## Brand Personality
 

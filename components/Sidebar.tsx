@@ -184,7 +184,7 @@ export default function Sidebar({
             color: "var(--fg)",
           }}
         >
-          Propello
+          Klovered
         </span>
       </div>
 

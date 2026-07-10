@@ -67,7 +67,7 @@ export default function OnboardingChecklist({
                 letterSpacing: "-0.005em",
               }}
             >
-              Get started with Propello
+              Get started with Klovered
             </h2>
             <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>
               {done} of {total} complete

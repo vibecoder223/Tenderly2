@@ -252,7 +252,7 @@ export default async function DashboardPage() {
     {
       key: "rfp",
       label: "Upload an RFP to your deal",
-      desc: "Propello extracts questions and drafts answers from your knowledge base.",
+      desc: "Klovered extracts questions and drafts answers from your knowledge base.",
       href: rfpDealLink,
       done: realRfpCount > 0,
     },

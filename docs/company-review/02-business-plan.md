@@ -1,4 +1,4 @@
-# Propello — business plan
+# Klovered — business plan
 
 Prepared July 2026. Companion documents: the investor deck (`../propello-deck/propello-pitch.pptx`),
 the cloud cost plan (03), the technical audit (04), and the marketing strategy (05).
@@ -7,13 +7,13 @@ the cloud cost plan (03), the technical audit (04), and the marketing strategy (
 
 ## 1. Executive summary
 
-Propello is AI RFP response software. When a company or government wants to buy something
+Klovered is AI RFP response software. When a company or government wants to buy something
 expensive, it sends suppliers a long formal questionnaire (an RFP). Suppliers that answer
 well and fast win the contract; suppliers that answer slowly skip bids and lose revenue.
 Today that answering is done by hand: senior people spend two to three weeks per response
 digging through old proposals, chasing colleagues, and retyping answers in Word.
 
-Propello reads the RFP, extracts every question, drafts an answer for each one grounded in
+Klovered reads the RFP, extracts every question, drafts an answer for each one grounded in
 the customer's own documents with a citation to the source, flags anything it cannot support
 instead of guessing, routes drafts through human review, and exports a submission-ready
 Word or PDF document. In a live test on a real 65-page government tender it extracted 255
@@ -37,7 +37,7 @@ every gap flagged, every approved answer reused.
 
 ## 3. Vision
 
-Propello starts with RFPs because they are the most painful "big document" in B2B. The same
+Klovered starts with RFPs because they are the most painful "big document" in B2B. The same
 grounded engine answers every formal questionnaire a company faces: security reviews, vendor
 assessments, due diligence questionnaires, compliance audits. The long-term vision is the
 system of record for how a company answers questions about itself — a living, verified
@@ -107,7 +107,7 @@ both.
 | Consultants / bid-writing agencies | Outsourced writing | $10–50k per bid, doesn't scale, knowledge leaves with them |
 
 **Why can't customers just use ChatGPT?** Because in a bid, a confident wrong answer is a
-legal and commercial liability. One invented ISO certification can void a contract. Propello's
+legal and commercial liability. One invented ISO certification can void a contract. Klovered's
 core property — every answer cited to the customer's own documents, every gap flagged for a
 human — is a workflow and trust guarantee, not a prompt. Add requirement extraction at scale,
 assignment and approval tracking, template export, and a compounding answer library, and the
@@ -165,7 +165,7 @@ net revenue retention >110% via seat expansion and document-type expansion.
 
 ## 10. Marketing strategy (summary — full plan in 05)
 
-Positioning: **the grounded one.** Propello never guesses; it cites or it flags. All content
+Positioning: **the grounded one.** Klovered never guesses; it cites or it flags. All content
 flows from that claim plus the proof numbers. Founder-led LinkedIn (3 posts/week from the
 30-post bank in doc 05), case studies from every design partner, SEO/AI-SEO landing page
 (already structured with FAQ + JSON-LD), and later narrow paid search on high-intent

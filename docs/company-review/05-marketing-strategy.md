@@ -1,4 +1,4 @@
-# Propello — marketing and advertising strategy
+# Klovered — marketing and advertising strategy
 
 Everything here obeys BRAND.md: sentence case, short sentences, numbers carry proof, no
 exclamation marks, no em dashes, and none of the banned words (seamless, unlock, empower,
@@ -11,7 +11,7 @@ leverage, revolutionize, effortless, supercharge, magic, world-class, cutting-ed
 answer — it flags a human instead.
 
 Positioning statement: *For bid teams at consultancies, integrators, and contractors who
-lose weeks to every tender, Propello is AI RFP response software that drafts every answer
+lose weeks to every tender, Klovered is AI RFP response software that drafts every answer
 from your own documents with a citation, unlike generic AI that guesses and legacy tools
 that still make you write.*
 
@@ -31,9 +31,9 @@ Three pillars every asset draws from:
 
 Objection handling, pre-written:
 - "We use ChatGPT." → In a bid, answers are legally binding. ChatGPT writes confident
-  answers with no facts. Propello cites its source or flags a human. That is the difference
+  answers with no facts. Klovered cites its source or flags a human. That is the difference
   between a draft and a liability.
-- "We have Loopio/Responsive." → Those manage content. You still write. Propello drafts
+- "We have Loopio/Responsive." → Those manage content. You still write. Klovered drafts
   every answer from your documents and shows you where each sentence came from.
 - "Is our data training your model?" → No. Your documents stay in your workspace and are
   used only to answer your bids.
@@ -65,9 +65,9 @@ Teardowns and education
 10. The deadline math of tenders: why "we'll start Monday" already lost you the bid.
 
 Build-in-public
-11. We ran Propello on a real 65-page government tender. 255 requirements found. Here's the log.
-12. Why we made Propello refuse to answer when it has no source. Screenshot of the flag.
-13. Every answer in Propello carries a citation and a confidence score. Here's why both.
+11. We ran Klovered on a real 65-page government tender. 255 requirements found. Here's the log.
+12. Why we made Klovered refuse to answer when it has no source. Screenshot of the flag.
+13. Every answer in Klovered carries a citation and a confidence score. Here's why both.
 14. The answer library after 7 bids: watch reuse climb from 0% to 60%.
 15. What we got wrong about extraction (and the page-140 requirement that taught us).
 16. Our export had to match the buyer's template exactly. Harder than the AI part.
@@ -102,7 +102,7 @@ Opinion
   - "300 questions. 3 days, not 3 weeks."
   - "Stop retyping. Start winning."
   - "Every requirement, answered and cited."
-- **Body copy (single image):** "Propello reads the RFP, drafts every answer from your own
+- **Body copy (single image):** "Klovered reads the RFP, drafts every answer from your own
   documents, and flags what it can't support. Your team reviews and ships. Book a demo on
   your own RFP."
 - **Creative direction:** brand-exact. Warm-white canvas, one signal-green moment, Clash
@@ -118,7 +118,7 @@ Opinion
   automation.
 - **Negative keywords:** free, template, example, sample, jobs, course, meaning.
 - **Ad copy:** headline "AI RFP response software" / "Cited answers from your own docs" /
-  "3 days, not 3 weeks"; description "Upload the RFP. Propello drafts every answer with a
+  "3 days, not 3 weeks"; description "Upload the RFP. Klovered drafts every answer with a
   citation and flags the gaps. Book a demo on your own tender."
 - **Landing pages:** brand landing page for category terms; dedicated comparison pages for
   "alternative" terms (propello vs loopio, vs responsive); the FAQ + JSON-LD structure

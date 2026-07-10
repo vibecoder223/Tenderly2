@@ -1,4 +1,4 @@
-# Propello — authentication & Supabase production setup
+# Klovered — authentication & Supabase production setup
 
 This is the checklist to make the (now bypass-free) auth flow fully work in
 production. The code enforces email verification natively: a Supabase session is
@@ -35,9 +35,9 @@ The remaining work is Supabase dashboard configuration for **email delivery** an
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel + `.env.local` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Vercel + `.env.local` | Anon/publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Vercel (server only) | Onboarding org creation, invite lookup, password-reset link minting. **Never** expose to the client. |
-| `NEXT_PUBLIC_SITE_URL` | Vercel + `.env.local` | Canonical origin for every auth redirect (e.g. `https://app.propello.io`). Falls back to `http://localhost:3000`. **Set this in production** or confirmation/reset links point at localhost. |
+| `NEXT_PUBLIC_SITE_URL` | Vercel + `.env.local` | Canonical origin for every auth redirect (e.g. `https://app.klovered.io`). Falls back to `http://localhost:3000`. **Set this in production** or confirmation/reset links point at localhost. |
 | `RESEND_API_KEY` | Vercel | Sends invite + password-reset emails |
-| `RESEND_FROM` | Vercel | e.g. `Propello <noreply@propello.io>` on a verified domain |
+| `RESEND_FROM` | Vercel | e.g. `Klovered <noreply@klovered.io>` on a verified domain |
 | `CRON_SECRET` | Vercel | Protects `/api/jobs/drain` |
 | `NEXT_PUBLIC_ENABLE_GOOGLE` | Vercel (optional) | `true` to show the Google button once the provider is configured |
 
@@ -56,11 +56,11 @@ confirmation emails to real users **will not arrive** until you configure custom
 - [ ] Send a test signup to an external inbox (Gmail/Outlook) and confirm it lands in the inbox, not spam.
 
 ### 3. URL configuration (Authentication → URL Configuration)
-- [ ] **Site URL** = your production origin (e.g. `https://app.propello.io`).
+- [ ] **Site URL** = your production origin (e.g. `https://app.klovered.io`).
 - [ ] **Redirect allowlist** — add every URL the app redirects to after auth:
-  - `https://app.propello.io/auth/confirm`
-  - `https://app.propello.io/auth/reset-password`
-  - `https://app.propello.io/api/auth/callback`
+  - `https://app.klovered.io/auth/confirm`
+  - `https://app.klovered.io/auth/reset-password`
+  - `https://app.klovered.io/api/auth/callback`
   - `http://localhost:3000/auth/confirm`
   - `http://localhost:3000/auth/reset-password`
   - `http://localhost:3000/api/auth/callback`
@@ -74,7 +74,7 @@ with a `code`, which `/auth/confirm` handles). For robust **cross-device** confi
 template link to the token-hash format the confirm route also supports:
 - [ ] Set the confirmation link to:
   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/auth/onboarding`
-- [ ] Optionally brand the templates (logo, sender name) to match Propello.
+- [ ] Optionally brand the templates (logo, sender name) to match Klovered.
 
 ### 5. Google OAuth (optional)
 - [ ] Follow `docs/SUPABASE_GOOGLE_SETUP.md`, enable the Google provider, add the callback URLs above, then set `NEXT_PUBLIC_ENABLE_GOOGLE=true`.

@@ -1,6 +1,6 @@
-# Propello redesign brief (hand to Sonnet)
+# Klovered redesign brief (hand to Sonnet)
 
-You are redesigning Propello, an AI RFP-response tool (Next.js 16, React 19,
+You are redesigning Klovered, an AI RFP-response tool (Next.js 16, React 19,
 Tailwind 3). Two jobs: (A) turn the winning landing draft into a production
 marketing page, and (B) reconcile the product app so it fully matches the brand.
 
@@ -12,7 +12,7 @@ marketing page, and (B) reconcile the product app so it fully matches the brand.
 - `app/globals.css` — the implemented app tokens. Already migrated to green
   (OKLCH hue 152) and Geist. This is the working product truth; match it.
 
-The name is **Propello**. Any remaining "Tenderly" string is a bug to fix.
+The name is **Klovered**. Any remaining "Tenderly" string is a bug to fix.
 
 ## Hard rules (apply to everything)
 
@@ -67,7 +67,7 @@ folder (`landing-b-dark`, `preview-cobalt-light`, `preview-violet-light`,
 7. **CTA band = one drenched Signal-green section with dark/ink text** (BRAND.md
    §8). The draft uses dark pine; use Signal green with ink text instead.
 8. **Fix the "Tenderly" leftover** in the draft box copy (line ~262). Replace
-   with Propello and real product language.
+   with Klovered and real product language.
 9. **Logo mark:** prefer the forward/play chevron mark on a Signal-green tile for
    marketing (BRAND.md §4), rather than a muted pine "P" tile.
 
@@ -133,7 +133,7 @@ font setup); the app font must be Geist, not Inter.
 - Grep the whole app for hardcoded cobalt (`#3B47D6`, `#2E3AB8`, `#EEF0FF`,
   `#C7CDF7`) and any `#000`/`#fff`; replace with tokens.
 - Grep for "Tenderly" (including `package.json` "name", exports, doc strings,
-  page copy) and decide per case: user-facing strings become "Propello"; the
+  page copy) and decide per case: user-facing strings become "Klovered"; the
   internal package name is optional but note it.
 - Confirm status colors (warn/err/ok) and the `.st` / `.stage` / `.badge`
   vocabularies render consistently on the real pages: dashboard, deals board,

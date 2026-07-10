@@ -98,7 +98,7 @@
 
 
 /* ──────────────────────────────────────────────────────────────
- * Propello — design tokens · BRAND.md "Green" (locked direction)
+ * Klovered — design tokens · BRAND.md "Green" (locked direction)
  * Near-white canvas, one confident green brand color carrying every
  * action/identity moment. No second accent color. Geist sans everywhere
  * (numbers included); Geist Mono only in .kbd chips. OKLCH throughout.
@@ -1176,13 +1176,13 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
   font-variant-numeric: tabular-nums;
 }
 
-/* ──────────────── Deals board — pipeline kanban, Propello-specific.
+/* ──────────────── Deals board — pipeline kanban, Klovered-specific.
  * Columns sit on the plain canvas (no filled/tinted box per column — that
  * read as heavy and did no communicative work). A stage dot on the header
  * ties into the app's one status vocabulary (.stage/.st). Cards carry only
  * ONE risk signal (the due-date text), not a redundant color bar. Empty
  * fields (no client, no due date) are omitted rather than printed as filler.
- * The quick-advance arrow is the one deliberately-Propello touch: move a
+ * The quick-advance arrow is the one deliberately-Klovered touch: move a
  * deal to its next stage without a drag, useful when triaging many deals. */
 .deal-board { display: flex; gap: 0; overflow-x: auto; padding-bottom: 12px; align-items: flex-start; }
 .deal-col {

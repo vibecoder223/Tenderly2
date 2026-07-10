@@ -1,4 +1,4 @@
-# Propello — Brand Book
+# Klovered — Brand Book
 
 A complete brand identity, written to be handed to a designer (human or AI) and
 built from directly. Colors are given as hex. Fonts are named with CDN links.
@@ -8,7 +8,7 @@ Voice comes with real copy you can ship. This is the identity, not a token dump.
 
 ## 0. The idea in one line
 
-**Green means go. Propello is the go button for bids.**
+**Green means go. Klovered is the go button for bids.**
 
 The name is "propel." The product turns a 300-question RFP into a submitted
 response in days. The whole brand is about forward motion: the moment a
@@ -24,7 +24,7 @@ that feeling of momentum and relief.
 
 Bid managers, presales leads, and proposal writers at B2B companies. They are
 buried under RFPs with hundreds of questions and impossible deadlines. They are
-smart people doing soul-crushing copy-paste. Propello gives them their week
+smart people doing soul-crushing copy-paste. Klovered gives them their week
 back. Talk to them like a sharp colleague who just handed them a shortcut, not
 like enterprise software.
 
@@ -65,7 +65,7 @@ supercharge, magic, world-class, cutting-edge.
 - Every requirement, answered and cited.
 
 **Subheads (plain, outcome-first):**
-- Propello reads the RFP, drafts grounded answers from your knowledge base, and
+- Klovered reads the RFP, drafts grounded answers from your knowledge base, and
   routes them through review. Your team ships, it doesn't retype.
 
 **Buttons:** "Start free", "Book a demo", "See it work". Never "Get Started Now!"
@@ -177,7 +177,7 @@ same company.
 
 ## 7. Imagery and graphics
 
-Upwork and Fiverr lean on people and bold graphic shapes. Propello's version:
+Upwork and Fiverr lean on people and bold graphic shapes. Klovered's version:
 
 - **Product-real screenshots** framed in clean browser chrome are the hero image.
   Show the actual dashboard: readings band, requires-action queue, citations.
@@ -197,7 +197,7 @@ Upwork and Fiverr lean on people and bold graphic shapes. Propello's version:
 - **Hero:** centered. Mono eyebrow in a green-tint pill, Clash Display headline
   with one word in Signal green, plain subhead, two buttons (green primary +
   outline secondary), then the browser-framed dashboard.
-- **Logo wall:** "Teams answering RFPs with Propello," muted grayscale wordmarks.
+- **Logo wall:** "Teams answering RFPs with Klovered," muted grayscale wordmarks.
 - **Feature sections:** alternating left/right, verb-first title, one product
   vignette each (extraction pipeline, cited draft, review-to-export).
 - **Stats strip:** the app's readings-band vocabulary reused as social proof

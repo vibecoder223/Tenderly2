@@ -1,4 +1,4 @@
-# Propello — prioritized founder roadmap
+# Klovered — prioritized founder roadmap
 
 One page. Order matters; nothing in a later block before the block above it is done,
 except sales conversations, which start now and never stop.

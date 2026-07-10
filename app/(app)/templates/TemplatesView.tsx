@@ -1380,7 +1380,7 @@ function UploadDocxForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: 
       <div>
         <h2 className="text-base font-semibold" style={{ color: "var(--fg)" }}>Upload .docx template</h2>
         <p className="text-[12.5px] mt-1" style={{ color: "var(--fg-4)" }}>
-          Your Word file becomes the <strong>golden template</strong>. Propello fills placeholders only — never rewrites sections.
+          Your Word file becomes the <strong>golden template</strong>. Klovered fills placeholders only — never rewrites sections.
         </p>
       </div>
 

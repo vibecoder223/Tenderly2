@@ -26,7 +26,7 @@ export default function Icon() {
             fontFamily: "Arial, sans-serif",
           }}
         >
-          P
+          K
         </span>
       </div>
     ),

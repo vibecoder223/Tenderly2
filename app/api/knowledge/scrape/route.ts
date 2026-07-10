@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     // safeFetch blocks private/internal/metadata addresses (SSRF), re-validates
     // every redirect hop, and caps the response size.
     const { res, body } = await safeFetch(fetchUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 Propello/1.0" },
+      headers: { "User-Agent": "Mozilla/5.0 Klovered/1.0" },
       signal: AbortSignal.timeout(30_000),
     });
     if (!res.ok) throw new Error(`Fetch returned ${res.status}: ${res.statusText}`);

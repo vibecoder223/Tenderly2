@@ -1,4 +1,4 @@
-# Propello UI redesign plan
+# Klovered UI redesign plan
 
 Bring every page in line with the approved dashboard. The dashboard
 (`app/(app)/dashboard/page.tsx` + `public/design-drafts/brand/dashboard-refined.html`)
@@ -116,7 +116,7 @@ no 9px uppercase labels; cards match dashboard elevation; status uses the shared
 vocabulary; green only on action/state; reads as the same product as the dashboard.
 
 ### Suggested Sonnet prompt per page
-> Redesign `<path>` to match the Propello design system. Read `DESIGN.md` and
+> Redesign `<path>` to match the Klovered design system. Read `DESIGN.md` and
 > `REDESIGN_PLAN.md` first; the dashboard (`app/(app)/dashboard/page.tsx`) is the
 > reference. Follow the per-page recipe in REDESIGN_PLAN.md exactly. Use the
 > shared primitives in `components/ui.tsx`; do not hand-roll card/number/label

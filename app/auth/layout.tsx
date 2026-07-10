@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           >
             P
           </div>
-          <span className="text-base font-semibold" style={{ color: "var(--fg)" }}>Propello</span>
+          <span className="text-base font-semibold" style={{ color: "var(--fg)" }}>Klovered</span>
         </div>
         {children}
       </div>

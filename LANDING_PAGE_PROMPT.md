@@ -1,7 +1,7 @@
-# Propello landing page — executable build prompt
+# Klovered landing page — executable build prompt
 
 You are a senior brand designer and frontend engineer with 10 years of experience
-shipping high-converting, search-dominant SaaS landing pages. Build the Propello
+shipping high-converting, search-dominant SaaS landing pages. Build the Klovered
 landing page exactly to this spec. Every token, every line of copy, and every SEO
 requirement below is deliberate. Do not substitute your own brand choices.
 
@@ -27,7 +27,7 @@ Pick whichever applies to your environment:
   `<style>` block. Fonts from the CDN links in §3. JSON-LD in a `<script
   type="application/ld+json">` block. No build step, no external JS.
 - **Mode B — Next.js repo:** edit `app/page.tsx` + `app/landing.css` in the
-  Propello repo. Keep the existing auth redirect at the top of the component,
+  Klovered repo. Keep the existing auth redirect at the top of the component,
   the `metadata` export, and the JSON-LD injection pattern. `robots.ts`,
   `sitemap.ts`, and `public/llms.txt` already exist; leave them.
 
@@ -37,7 +37,7 @@ client-side JS, no accordion that hides FAQ text from crawlers (use
 
 ## 2. Product truth (do not invent beyond this)
 
-Propello is AI RFP response software. It ingests an RFP (PDF, Word, or text),
+Klovered is AI RFP response software. It ingests an RFP (PDF, Word, or text),
 extracts every requirement as a discrete question, drafts an answer for each one
 grounded in the customer's own uploaded knowledge base, attaches a citation to the
 exact source chunk, flags any question the knowledge base cannot answer as
@@ -128,7 +128,7 @@ asymmetric left/right, comparison and FAQ are left-aligned.
 ### 4.1 Nav (sticky)
 
 Canvas background with a hairline bottom rule, blur only if needed for overlap.
-Left: logo lockup. Right: "How it works", "Why Propello", "FAQ" (anchor links),
+Left: logo lockup. Right: "How it works", "Why Klovered", "FAQ" (anchor links),
 "Sign in" (text link), "Start free" (small primary button). Collapses to
 logo + "Start free" under 720px.
 
@@ -137,13 +137,13 @@ logo + "Start free" under 720px.
 - Eyebrow: green-tint pill, Geist Mono micro-label: `RFP RESPONSE, ON AUTOPILOT`
 - h1 (the only h1): `300 questions. 3 days, not 3 weeks.` with "3 days," wrapped
   in an accent span in Signal green (solid color, not gradient).
-- Subhead (Geist 19px, Ink-2): `Propello reads the RFP, drafts answers grounded
+- Subhead (Geist 19px, Ink-2): `Klovered reads the RFP, drafts answers grounded
   in your knowledge base, and routes them through review. Your team ships, it
   doesn't retype.`
 - Buttons: primary "Start free" (link to /auth/signup or #), secondary
   "See it work" (anchor to #how-it-works).
 - Below: the **product frame**. A white browser-chrome card (three dots + URL bar
-  reading `app.propello.io/deals/qg-2026-207`, hairline border, soft shadow,
+  reading `app.klovered.io/deals/qg-2026-207`, hairline border, soft shadow,
   radius 14px) containing a faithful recreation of the real product: a left
   column of requirement rows each with a mono badge (`CITED · 1.0`,
   `CITED · 0.7`, `NO SOURCE` in muted), a right column showing one drafted
@@ -158,7 +158,7 @@ Tight under the hero, generous side margins, 21–23px Geist, one paragraph, pla
 HTML `<p>` inside a `<section>`. This is the single most important AI-SEO element
 on the page. Verbatim:
 
-> **Propello is AI RFP response software** for bid managers, presales leads, and
+> **Klovered is AI RFP response software** for bid managers, presales leads, and
 > proposal writers at B2B companies. It extracts every requirement from an RFP,
 > drafts an answer for each one grounded in your own documents with a citation to
 > the source, flags anything it cannot support instead of guessing, and manages
@@ -176,9 +176,9 @@ Three steps in an asymmetric row (not identical cards: no borders, no icons).
 Each step is an oversized Geist Mono number in Signal green (`01` `02` `03`,
 ~64px), an h3, and 2 lines of body:
 
-1. **Upload the RFP.** PDF, Word, or plain text. Propello parses it page by
+1. **Upload the RFP.** PDF, Word, or plain text. Klovered parses it page by
    page, keeping section and page references intact.
-2. **Every requirement extracted.** Propello reads the full document and pulls
+2. **Every requirement extracted.** Klovered reads the full document and pulls
    out every distinct requirement as a discrete question. Nothing buried on
    page 140 gets missed.
 3. **Cited drafts, reviewed and exported.** Each question gets a grounded, cited
@@ -191,13 +191,13 @@ Each: mono eyebrow, verb-first h3, one short paragraph, and a product vignette
 (same visual language as the hero frame, smaller). Copy verbatim:
 
 - Eyebrow `EXTRACTION`, h3 `Extract every requirement, even on page 140`:
-  "Long RFPs bury requirements in dense sections and appendices. Propello reads
+  "Long RFPs bury requirements in dense sections and appendices. Klovered reads
   the whole document and turns every one into a discrete, assignable question.
   Nothing gets skimmed past." Vignette: section rows with question counts.
 - Eyebrow `GROUNDED DRAFTING`, h3 `Answers cite your documents, not a guess`:
   "Every draft is written from your uploaded knowledge base and cites the exact
   source chunk it came from. If the knowledge base doesn't cover a question,
-  Propello flags it instead of inventing an answer." Vignette: a quoted draft
+  Klovered flags it instead of inventing an answer." Vignette: a quoted draft
   answer with `Cited · confidence 1.0 · security-cert.txt` beneath.
 - Eyebrow `REVIEW`, h3 `Your SMEs review, they don't retype`:
   "Drafts route to the right reviewer with a confidence score attached. Nothing
@@ -213,7 +213,7 @@ these sections as a graphic accent. One, not three.
 No card. A shield or flag glyph in Deep green, h3:
 `It never guesses. It flags the gap instead.` Body: "Most AI drafting tools will
 write something confident-sounding even when they have no source for it.
-Propello checks every citation before it lets a draft through. If the knowledge
+Klovered checks every citation before it lets a draft through. If the knowledge
 base doesn't cover a requirement, it comes back as no source for a human to
 answer, not a plausible-sounding guess."
 
@@ -227,11 +227,11 @@ Hallucinated answers.
 
 ### 4.8 Comparison table (id="why-propello") — snippet bait
 
-Eyebrow `WHY PROPELLO`, h2: `The manual way vs the Propello way`. A real
+Eyebrow `WHY PROPELLO`, h2: `The manual way vs the Klovered way`. A real
 semantic `<table>` (with `<caption>`, `<thead>`, `th scope="col"`), hairline
 rules only, no zebra stripes. Rows:
 
-| | Manual RFP response | With Propello |
+| | Manual RFP response | With Klovered |
 |---|---|---|
 | Finding every requirement | Ctrl+F and hope, requirements missed in appendices | Every requirement extracted as a discrete question |
 | First draft | Copy-paste from old proposals, days of retyping | Grounded drafts from your knowledge base in minutes |
@@ -247,33 +247,33 @@ Eyebrow `FAQ`, h2 `Questions, answered`. Each question is an h3 (or a
 plain paragraphs, visible in the HTML. Use these 9 (they mirror the FAQPage
 schema exactly, word for word):
 
-1. **What is Propello?** Propello is AI RFP response software. It reads a
+1. **What is Klovered?** Klovered is AI RFP response software. It reads a
    request for proposal, extracts every requirement, drafts an answer for each
    one grounded in your own knowledge base, and routes drafts through your
    team's review before export.
-2. **How long does an RFP response take with Propello?** In testing, Propello
+2. **How long does an RFP response take with Klovered?** In testing, Klovered
    extracted 255 requirements from a 65-page RFP and drafted grounded answers
    for the questions its knowledge base covered in under 3 minutes. Review time
    depends on your team, but drafting stops being the bottleneck.
 3. **Where do the answers come from?** Every answer is drafted from documents
    you upload to your knowledge base: past proposals, security policies, pricing
    sheets. Each claim is cited back to the source chunk it came from.
-4. **What happens if the knowledge base doesn't cover a question?** Propello
+4. **What happens if the knowledge base doesn't cover a question?** Klovered
    flags it as no source instead of guessing. An uncovered requirement shows up
    for a human to answer, not a fabricated draft.
-5. **What file formats does Propello support?** Upload RFPs and knowledge base
+5. **What file formats does Klovered support?** Upload RFPs and knowledge base
    documents as PDF, Word (.docx), or plain text. Exports go out as Word or PDF,
    including filling directly into a template you provide.
 6. **Can my team review answers before they go out?** Yes. Every drafted answer
    carries a confidence score and routes to review before it's marked approved.
    Nothing ships to a client without a human sign-off.
-7. **Does Propello get smarter over time?** Approved answers are saved to a
+7. **Does Klovered get smarter over time?** Approved answers are saved to a
    reusable answer library. The next time a similar question comes up in another
-   RFP, Propello can reuse the vetted answer instead of drafting from scratch.
-8. **Who is Propello for?** Bid managers, presales leads, and proposal writers
+   RFP, Klovered can reuse the vetted answer instead of drafting from scratch.
+8. **Who is Klovered for?** Bid managers, presales leads, and proposal writers
    at B2B companies answering RFPs, RFIs, security questionnaires, and due
    diligence questionnaires under deadline.
-9. **How is Propello different from other AI RFP tools?** Propello never invents
+9. **How is Klovered different from other AI RFP tools?** Klovered never invents
    an answer. Every draft is either cited to a source document you uploaded or
    flagged as no source for a human. In a live test on a 65-page government RFP
    it produced zero hallucinated answers.
@@ -290,25 +290,25 @@ the only drenched section on the page.
 
 Canvas, hairline top rule. Logo lockup, one-line description ("AI RFP response
 software. Grounded, cited, reviewed."), columns: Product (How it works, Why
-Propello, FAQ), Company (Sign in, Start free), and a plain-text line
-`© 2026 Propello`. Small, quiet, Ink-3.
+Klovered, FAQ), Company (Sign in, Start free), and a plain-text line
+`© 2026 Klovered`. Small, quiet, Ink-3.
 
 ## 5. SEO spec (implement exactly)
 
 ### Metadata
 
-- `<title>`: `Propello — AI RFP Response Software | 300 Questions in 3 Days`
-- Meta description: `Propello reads the RFP, drafts answers cited from your own
+- `<title>`: `Klovered — AI RFP Response Software | 300 Questions in 3 Days`
+- Meta description: `Klovered reads the RFP, drafts answers cited from your own
   documents, and routes them through review. Answer every RFP in days, not
   weeks. Start free.`
-- Canonical: `https://propello.io`
-- Open Graph: type website, siteName Propello, same title/description.
+- Canonical: `https://klovered.io`
+- Open Graph: type website, siteName Klovered, same title/description.
   Twitter card: summary_large_image.
 - `<html lang="en">`, viewport meta, charset utf-8.
 
 ### Heading map (one h1, logical order, no skips)
 
-h1 hero → h2 per section (How it works, The manual way vs the Propello way,
+h1 hero → h2 per section (How it works, The manual way vs the Klovered way,
 Questions answered, CTA) → h3 for steps, features, differentiator, FAQ items.
 The phrase "AI RFP response software" must appear in: title tag, meta
 description, definition paragraph, FAQ answer 1, and footer line. Secondary
@@ -318,17 +318,17 @@ Never keyword-stuff; every use must read as natural copy.
 
 ### JSON-LD (one script tag, an array of these objects)
 
-1. `Organization`: name Propello, url, logo, description ("Propello is AI RFP
+1. `Organization`: name Klovered, url, logo, description ("Klovered is AI RFP
    response software that extracts requirements from RFPs and drafts cited
    answers from a company's own knowledge base.")
-2. `WebSite`: name Propello, url.
-3. `SoftwareApplication`: name Propello, applicationCategory
+2. `WebSite`: name Klovered, url.
+3. `SoftwareApplication`: name Klovered, applicationCategory
    BusinessApplication, operatingSystem Web, description, offers { price "0",
    priceCurrency "USD", description "Free to start" }. No aggregateRating (no
    real reviews exist; do not fabricate).
 4. `FAQPage`: mainEntity = the 9 FAQ questions/answers from §4.9, text matching
    the visible copy exactly.
-5. `HowTo`: name "How Propello answers an RFP", 3 steps matching §4.4.
+5. `HowTo`: name "How Klovered answers an RFP", 3 steps matching §4.4.
 6. `WebPage` with `speakable` (SpeakableSpecification, cssSelector pointing at
    the definition-block paragraph).
 
@@ -353,10 +353,10 @@ Never keyword-stuff; every use must read as natural copy.
 - Every factual claim is specific and numeric where possible, and test-run
   numbers are always labeled as a test run.
 - FAQ answers are 2–4 sentences, self-contained, no pronouns pointing outside
-  the answer ("Propello flags it", not "it flags it").
+  the answer ("Klovered flags it", not "it flags it").
 - The comparison table uses plain language pairs an engine can quote as
-  "manual vs Propello".
-- Consistent entity string everywhere: "Propello" + "AI RFP response software".
+  "manual vs Klovered".
+- Consistent entity string everywhere: "Klovered" + "AI RFP response software".
   Never rename the category between sections.
 - Mode B only: `public/llms.txt` already exists; verify its claims still match
   the page copy after your edits and update it if they drift.
@@ -395,7 +395,7 @@ Follow these in priority order. If build budget forces cuts, cut from the bottom
    type and 10px mono micro-labels; if both extremes aren't extreme, the page
    reads timid.
 3. **The chevron motif, exactly four uses.** Logo tile, the one section-bleed
-   accent, row markers in the comparison table's "With Propello" column, and a
+   accent, row markers in the comparison table's "With Klovered" column, and a
    2px forward nudge of the arrow inside the primary button on hover. No fifth
    use.
 4. **Pacing.** Alternate loud and quiet: hero loud, definition block a tight

@@ -419,7 +419,7 @@ export default async function AnalyticsPage({
           />
         )}
 
-        {/* AI & knowledge health — secondary, collapsed by default. Propello's
+        {/* AI & knowledge health — secondary, collapsed by default. Klovered's
             trust signal, but this page leads with win/loss per the chosen
             emphasis, so it sits at the bottom rather than up top. */}
         <AiQualitySection

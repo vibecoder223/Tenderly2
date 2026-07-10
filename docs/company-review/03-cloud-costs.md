@@ -1,6 +1,6 @@
-# Propello — cloud hosting and cost plan
+# Klovered — cloud hosting and cost plan
 
-Principle up front: **a founder should not over-engineer before customers.** Propello's
+Principle up front: **a founder should not over-engineer before customers.** Klovered's
 stack is already serverless (Next.js + Supabase + LLM APIs). The correct move at 0–20 users
 is to keep it, pay ~$50/month, and spend zero hours on infrastructure. Kubernetes, AWS
 accounts, and multi-region come when revenue demands them.

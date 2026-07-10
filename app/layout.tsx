@@ -3,7 +3,7 @@ import "./globals.css";
 import RecoveryRedirect from "@/components/RecoveryRedirect";
 
 export const metadata: Metadata = {
-  title: "Propello — RFP Response Platform",
+  title: "Klovered — RFP Response Platform",
   description: "AI-powered RFP automation",
 };
 

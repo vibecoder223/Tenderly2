@@ -1,4 +1,4 @@
-# Propello — technical audit, UAT plan, and security checklist
+# Klovered — technical audit, UAT plan, and security checklist
 
 CTO-level review of the codebase as of July 2026 (branch `redesign/instrument-ui`).
 Verdict up front: **the core is genuinely well engineered** — the AI pipeline has real
