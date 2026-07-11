@@ -13,60 +13,52 @@ export default async function QuestionsTab({
   const { doc: docParam, status, topic, q } = await searchParams;
   const { supabase, member, user } = await requireMembership();
 
-  const { data: deal } = await supabase
-    .from("deals")
-    .select("id")
-    .eq("id", id)
-    .eq("org_id", member.org_id)
-    .maybeSingle();
+  // Stage 1 — everything that only needs the deal id, in parallel. The deal
+  // check, document list, and member list are independent round-trips.
+  const [{ data: deal }, { data: documents }, { data: members }] = await Promise.all([
+    supabase
+      .from("deals")
+      .select("id")
+      .eq("id", id)
+      .eq("org_id", member.org_id)
+      .maybeSingle(),
+    supabase
+      .from("documents")
+      .select("id, filename")
+      .eq("deal_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("team_members")
+      .select("user_id, name, email")
+      .eq("org_id", member.org_id),
+  ]);
   if (!deal) notFound();
 
-  let docId = docParam;
-  if (!docId) {
-    const { data: latest } = await supabase
-      .from("documents")
-      .select("id")
-      .eq("deal_id", id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    docId = latest?.id;
-  }
+  // Latest document = first of the already-ordered list; no extra query.
+  const docId = docParam ?? (documents ?? [])[0]?.id;
 
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("id, filename")
-    .eq("deal_id", id)
-    .order("created_at", { ascending: false });
+  // Stage 2 — questions + requirements for the selected doc, in parallel.
+  const [{ data: questionsRaw }, { data: requirements }] = docId
+    ? await Promise.all([
+        supabase
+          .from("questions")
+          .select(
+            "id, requirement_id, question_text, status, priority, category, assigned_to, due_date, last_activity_at, " +
+              "responses(id, draft_text, final_text, status, confidence, gap_flag, citations(id))"
+          )
+          .eq("document_id", docId)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("extracted_requirements")
+          .select("requirement_id, classification, topic, source_page, section")
+          .eq("document_id", docId),
+      ])
+    : [{ data: [] as any[] }, { data: [] as any[] }];
 
-  let questions: any[] = [];
-  if (docId) {
-    const { data } = await supabase
-      .from("questions")
-      .select(
-        "id, requirement_id, question_text, status, priority, category, assigned_to, due_date, last_activity_at, " +
-          "responses(id, draft_text, final_text, status, confidence, gap_flag, citations(id))"
-      )
-      .eq("document_id", docId)
-      .order("created_at", { ascending: true });
-    questions = data ?? [];
-  }
-
-  const { data: requirements } = docId
-    ? await supabase
-        .from("extracted_requirements")
-        .select("requirement_id, classification, topic, source_page, section")
-        .eq("document_id", docId)
-    : { data: [] as any[] };
-
+  const questions: any[] = questionsRaw ?? [];
   const reqMap = new Map(
     (requirements ?? []).map((r: any) => [r.requirement_id, r])
   );
-
-  const { data: members } = await supabase
-    .from("team_members")
-    .select("user_id, name, email")
-    .eq("org_id", member.org_id);
 
   return (
     <div className="q-page" style={{ padding: "16px 0 0 0" }}>

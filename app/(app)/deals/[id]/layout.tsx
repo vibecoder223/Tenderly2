@@ -14,52 +14,35 @@ export default async function DealLayout({
   const { id } = await params;
   const { supabase, member } = await requireMembership();
 
-  const { data: deal } = await supabase
-    .from("deals")
-    .select("id, name, client_name, status, value, due_date")
-    .eq("id", id)
-    .eq("org_id", member.org_id)
-    .maybeSingle();
+  // One parallel batch — this layout runs on EVERY deal subpage navigation,
+  // so sequential awaits here tax every tab switch. Question counts come from
+  // a single status-only select (joined through documents) instead of three
+  // separate count round-trips.
+  const [{ data: deal }, { data: qStatusRows }, { count: kbReady }] = await Promise.all([
+    supabase
+      .from("deals")
+      .select("id, name, client_name, status, value, due_date")
+      .eq("id", id)
+      .eq("org_id", member.org_id)
+      .maybeSingle(),
+    supabase
+      .from("questions")
+      .select("status, documents!inner(deal_id)")
+      .eq("documents.deal_id", id),
+    // Detect empty knowledge base (org-scoped). Sample docs are excluded so
+    // users still see the nudge to upload real source material.
+    supabase
+      .from("knowledge_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", member.org_id)
+      .eq("ingestion_status", "ready"),
+  ]);
   if (!deal) notFound();
 
-  // Latest document to compute completion + question count
-  const { data: docs } = await supabase
-    .from("documents")
-    .select("id")
-    .eq("deal_id", id)
-    .order("created_at", { ascending: false });
-  const docIds = (docs ?? []).map((d) => d.id);
-
-  let totalQ = 0;
-  let approvedQ = 0;
-  let submittedQ = 0;
-  if (docIds.length > 0) {
-    const { count: t } = await supabase
-      .from("questions")
-      .select("id", { count: "exact", head: true })
-      .in("document_id", docIds);
-    const { count: a } = await supabase
-      .from("questions")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "approved")
-      .in("document_id", docIds);
-    const { count: s } = await supabase
-      .from("questions")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["review"])
-      .in("document_id", docIds);
-    totalQ = t ?? 0;
-    approvedQ = a ?? 0;
-    submittedQ = s ?? 0;
-  }
-
-  // Detect empty knowledge base (org-scoped). Sample docs are excluded so
-  // users still see the nudge to upload real source material.
-  const { count: kbReady } = await supabase
-    .from("knowledge_documents")
-    .select("id", { count: "exact", head: true })
-    .eq("org_id", member.org_id)
-    .eq("ingestion_status", "ready");
+  const qStatuses = (qStatusRows ?? []) as { status: string }[];
+  const totalQ = qStatuses.length;
+  const approvedQ = qStatuses.filter((q) => q.status === "approved").length;
+  const submittedQ = qStatuses.filter((q) => q.status === "review").length;
   const showKbBanner = (kbReady ?? 0) === 0;
 
   return (

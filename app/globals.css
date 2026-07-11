@@ -1235,6 +1235,18 @@ h3 { font-size: 13px; line-height: 1.35; font-weight: 600; letter-spacing: -0.00
 }
 .deal-card:hover .deal-card-advance { background: var(--accent); color: #fff; border-color: var(--accent); }
 
+/* ──────────────── Loading skeletons (loading.tsx / Suspense fallbacks) */
+
+.skel {
+  border-radius: 6px;
+  background: var(--bg-2);
+  animation: skel-pulse 1.4s ease-in-out infinite;
+}
+@keyframes skel-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 /* ──────────────── Reduced motion */
 
 @media (prefers-reduced-motion: reduce) {

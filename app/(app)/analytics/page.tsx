@@ -80,14 +80,21 @@ export default async function AnalyticsPage({
   const fromDate = parseDate(sp.from);
   const toDate = parseDate(sp.to);
 
-  /* ── Deals ─────────────────────────────────────────────────── */
-  const { data: allDeals } = await supabase
-    .from("deals")
-    .select("id, name, status, value, created_at, due_date")
-    .eq("org_id", orgId)
-    .order("created_at", { ascending: false });
+  /* ── Stage 1: org-scoped roots, in parallel ─────────────────── */
+  const [{ data: allDeals }, { data: membersRaw }] = await Promise.all([
+    supabase
+      .from("deals")
+      .select("id, name, status, value, created_at, due_date")
+      .eq("org_id", orgId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("team_members")
+      .select("user_id, name, email")
+      .eq("org_id", orgId),
+  ]);
 
   const deals: DealRow[] = allDeals ?? [];
+  const members: MemberRow[] = membersRaw ?? [];
 
   const closedDeals = deals.filter((d) => d.status === "won" || d.status === "lost");
   const closedInRange = closedDeals.filter((d) => {
@@ -109,11 +116,14 @@ export default async function AnalyticsPage({
   const activeDeals = deals.filter((d) => d.status !== "won" && d.status !== "lost");
   const pipelineValue = activeDeals.reduce((s, d) => s + (Number(d.value) || 0), 0);
 
-  /* ── Exports ────────────────────────────────────────────────── */
+  /* ── Stage 2: everything keyed on deal ids, in parallel ─────── */
   const dealIds = deals.map((d) => d.id);
-  const { data: exportsRaw } = dealIds.length
-    ? await supabase.from("exports").select("deal_id, created_at").in("deal_id", dealIds)
-    : { data: [] as ExportRow[] };
+  const [{ data: exportsRaw }, { data: docsRaw }] = dealIds.length
+    ? await Promise.all([
+        supabase.from("exports").select("deal_id, created_at").in("deal_id", dealIds),
+        supabase.from("documents").select("id, deal_id").in("deal_id", dealIds),
+      ])
+    : [{ data: [] as ExportRow[] }, { data: [] as { id: string; deal_id: string }[] }];
   const exports_: ExportRow[] = exportsRaw ?? [];
 
   const firstExport = new Map<string, Date>();
@@ -135,20 +145,27 @@ export default async function AnalyticsPage({
     ? completionDays.reduce((s, v) => s + v, 0) / completionDays.length
     : null;
 
-  /* ── Documents + Questions ──────────────────────────────────── */
-  const { data: docsRaw } = dealIds.length
-    ? await supabase.from("documents").select("id, deal_id").in("deal_id", dealIds)
-    : { data: [] as { id: string; deal_id: string }[] };
+  /* ── Stage 3: everything keyed on document ids, in parallel ──── */
+  // Responses join through questions!inner(document_id) instead of passing an
+  // unbounded question-id list back in a URL — one less waterfall stage and no
+  // giant .in() payloads.
   const docs = docsRaw ?? [];
   const docIds = docs.map((d) => d.id);
   const docToDeal = new Map(docs.map((d) => [d.id, d.deal_id]));
 
-  const { data: questionsRaw } = docIds.length
-    ? await supabase
-        .from("questions")
-        .select("id, document_id, status, assigned_to, last_activity_at, question_text, created_at, due_date")
-        .in("document_id", docIds)
-    : { data: [] as QuestionRow[] };
+  const [{ data: questionsRaw }, { data: responsesRaw }, { data: agentRunsRaw }] = docIds.length
+    ? await Promise.all([
+        supabase
+          .from("questions")
+          .select("id, document_id, status, assigned_to, last_activity_at, question_text, created_at, due_date")
+          .in("document_id", docIds),
+        supabase
+          .from("responses")
+          .select("id, question_id, submitted_at, confidence, gap_flag, questions!inner(document_id)")
+          .in("questions.document_id", docIds),
+        supabase.from("agent_runs").select("agent_type").in("document_id", docIds),
+      ])
+    : [{ data: [] as QuestionRow[] }, { data: [] as ResponseRow[] }, { data: [] as AgentRunRow[] }];
   const questions: QuestionRow[] = questionsRaw ?? [];
 
   const dealsInRange = new Set(
@@ -167,13 +184,7 @@ export default async function AnalyticsPage({
   });
 
   /* ── Responses ──────────────────────────────────────────────── */
-  const { data: responsesRaw } = docIds.length
-    ? await supabase
-        .from("responses")
-        .select("id, question_id, submitted_at, confidence, gap_flag")
-        .in("question_id", questions.map((q) => q.id))
-    : { data: [] as ResponseRow[] };
-  const responses: ResponseRow[] = responsesRaw ?? [];
+  const responses: ResponseRow[] = (responsesRaw ?? []) as unknown as ResponseRow[];
 
   const respByQuestion = new Map<string, ResponseRow[]>();
   for (const r of responses) {
@@ -183,8 +194,11 @@ export default async function AnalyticsPage({
   }
 
   /* ── AI Quality ─────────────────────────────────────────────── */
+  // Map lookup, not questions.find() inside a filter — that was O(n×m) and
+  // dominated render time on orgs with thousands of responses.
+  const questionById = new Map(questions.map((q) => [q.id, q]));
   const responsesInRange = responses.filter((r) => {
-    const q = questions.find((q) => q.id === r.question_id);
+    const q = questionById.get(r.question_id);
     if (!q) return false;
     const dealId = docToDeal.get(q.document_id);
     return dealId ? dealsInRange.has(dealId) : false;
@@ -201,9 +215,6 @@ export default async function AnalyticsPage({
     ? responsesInRange.filter((r) => r.gap_flag === "no_source").length / responsesInRange.length
     : null;
 
-  const { data: agentRunsRaw } = docIds.length
-    ? await supabase.from("agent_runs").select("agent_type").in("document_id", docIds)
-    : { data: [] as AgentRunRow[] };
   const agentRuns: AgentRunRow[] = agentRunsRaw ?? [];
   const regenCount = agentRuns.filter((a) => a.agent_type === "regeneration").length;
   const regenRate = responsesInRange.length > 0 ? regenCount / responsesInRange.length : null;
@@ -294,13 +305,7 @@ export default async function AnalyticsPage({
     ...(avgReview != null ? [{ label: "Review", days: avgReview }] : []),
   ];
 
-  /* ── Team table ─────────────────────────────────────────────── */
-  const { data: membersRaw } = await supabase
-    .from("team_members")
-    .select("user_id, name, email")
-    .eq("org_id", orgId);
-  const members: MemberRow[] = membersRaw ?? [];
-
+  /* ── Team table (members fetched in stage 1) ────────────────── */
   const teamRows = members.map((m) => {
     const assigned = questionsInRange.filter((q) => q.assigned_to === m.user_id);
     const completed = assigned.filter((q) => q.status === "approved");

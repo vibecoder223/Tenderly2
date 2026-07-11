@@ -18,44 +18,23 @@ export default async function DealsPage({
     .eq("org_id", member.org_id)
     .order("updated_at", { ascending: false });
 
-  // Per-deal completion: count approved questions vs total via two RPC-like joins.
+  // Per-deal completion: one query joining questions → documents(deal_id),
+  // instead of the old two-hop waterfall (fetch all doc ids, then fetch
+  // questions by doc id) — one round-trip fewer and no giant .in() list.
   const dealIds = (deals ?? []).map((d) => d.id);
-  let totals: Record<string, { total: number; approved: number }> = {};
+  const totals: Record<string, { total: number; approved: number }> = {};
   if (dealIds.length > 0) {
-    const { data: docRows } = await supabase
-      .from("documents")
-      .select("id, deal_id")
-      .in("deal_id", dealIds);
-    const docByDeal = new Map<string, string[]>();
-    for (const r of docRows ?? []) {
-      const arr = docByDeal.get(r.deal_id) ?? [];
-      arr.push(r.id);
-      docByDeal.set(r.deal_id, arr);
-    }
-    const allDocIds = (docRows ?? []).map((r) => r.id);
-    if (allDocIds.length > 0) {
-      const { data: qs } = await supabase
-        .from("questions")
-        .select("document_id, status")
-        .in("document_id", allDocIds);
-      const totalsByDoc = new Map<string, { total: number; approved: number }>();
-      for (const q of qs ?? []) {
-        const e = totalsByDoc.get(q.document_id) ?? { total: 0, approved: 0 };
-        e.total += 1;
-        if (q.status === "approved") e.approved += 1;
-        totalsByDoc.set(q.document_id, e);
-      }
-      for (const [dealId, docIds] of docByDeal) {
-        const agg = { total: 0, approved: 0 };
-        for (const d of docIds) {
-          const t = totalsByDoc.get(d);
-          if (t) {
-            agg.total += t.total;
-            agg.approved += t.approved;
-          }
-        }
-        totals[dealId] = agg;
-      }
+    const { data: qs } = await supabase
+      .from("questions")
+      .select("status, documents!inner(deal_id)")
+      .in("documents.deal_id", dealIds);
+    for (const q of (qs ?? []) as unknown as { status: string; documents: { deal_id: string } }[]) {
+      const dealId = q.documents?.deal_id;
+      if (!dealId) continue;
+      const e = totals[dealId] ?? { total: 0, approved: 0 };
+      e.total += 1;
+      if (q.status === "approved") e.approved += 1;
+      totals[dealId] = e;
     }
   }
 
