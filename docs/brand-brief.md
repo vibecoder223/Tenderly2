@@ -6,7 +6,7 @@ Paste the prompt below into a fresh session to execute. Written 2026-07-03.
 
 ## Prompt
 
-You are working in the repo at `Desktop/vibe coding/Klovered` (a Next.js app; the dev server config `propello-web` exists in `.claude/launch.json` and serves on port 3000). Work on the existing branch `redesign/instrument-ui`. Commit after each phase with a descriptive message; do NOT push.
+You are working in the repo at `Desktop/vibe coding/Klovered` (a Next.js app; the dev server config `klovered-web` exists in `.claude/launch.json` and serves on port 3000). Work on the existing branch `redesign/instrument-ui`. Commit after each phase with a descriptive message; do NOT push.
 
 **Task: build Klovered's brand identity and marketing pages.** Klovered is an AI-powered RFP response platform (extracts requirements from uploaded RFPs, drafts grounded answers with citations from a company knowledge base, routes them through SME review to export). Buyers: heads of bids/presales at B2B companies. The target feel: modern confident SaaS in the register of Upwork (owned green, approachable, light) and Cursor (typographic restraint, product-as-hero) — NOT generic B2B template.
 
@@ -16,7 +16,7 @@ You are working in the repo at `Desktop/vibe coding/Klovered` (a Next.js app; th
 
 1. Brand color is the existing sage green family, hue ~149: `--accent: oklch(0.50 0.135 149)` with the ramp already in `app/globals.css`. For marketing surfaces add a brighter stop `--leaf: oklch(0.72 0.17 149)` usable only on dark or drenched-green backgrounds, plus a deep anchor `--pine: oklch(0.30 0.09 155)` for drenched sections. Never introduce a second brand hue.
 2. Typography is Geist (UI/body/display) + Geist Mono (numbers, labels, eyebrows), loaded from Google Fonts. Marketing display sizes: 56–88px, weight 600–650, letter-spacing -0.03em to -0.045em. No serif, no second family.
-3. Wordmark: lowercase `propello` set in Geist 650, tight tracking. Mark: rounded-square tile (radius ~22% of size), sage green fill, white Geist Mono "P". These become favicon and OG image later.
+3. Wordmark: lowercase `klovered` set in Geist 650, tight tracking. Mark: rounded-square tile (radius ~22% of size), sage green fill, white Geist Mono "P". These become favicon and OG image later.
 4. Voice: outcome-first, plain sentences, contractions fine, no exclamation marks, no filler ("seamless", "unlock", "empower", "leverage" are banned). Mono numerals carry proof: e.g. "300 questions. 3 days." Draft 3 hero headline candidates and pick the strongest; the claim must be concrete, not vibes.
 5. Light-first. The landing page is light canvas like the app; exactly one drenched green CTA band near the footer. A dark Cursor-style hero exists only as variant B for comparison.
 

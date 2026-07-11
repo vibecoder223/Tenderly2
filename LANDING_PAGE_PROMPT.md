@@ -106,7 +106,7 @@ Scale (fluid, use `clamp()`):
   buttons, mock: 60ms apart, translateY 8px + fade). Honor
   `prefers-reduced-motion` by disabling all of it.
 - Logo: a rounded-square Signal-green tile with a white bold "P" (or a white
-  right-pointing chevron), then lowercase `propello` in Clash Display 700,
+  right-pointing chevron), then lowercase `klovered` in Clash Display 700,
   tracking -0.02em. Always lowercase.
 
 ### Voice
@@ -225,9 +225,9 @@ with sentence-case labels: `255` Requirements extracted · `<3 min` Extraction
 through drafting · `100%` Drafts cited or flagged, none invented · `0`
 Hallucinated answers.
 
-### 4.8 Comparison table (id="why-propello") — snippet bait
+### 4.8 Comparison table (id="why-klovered") — snippet bait
 
-Eyebrow `WHY PROPELLO`, h2: `The manual way vs the Klovered way`. A real
+Eyebrow `WHY KLOVERED`, h2: `The manual way vs the Klovered way`. A real
 semantic `<table>` (with `<caption>`, `<thead>`, `th scope="col"`), hairline
 rules only, no zebra stripes. Rows:
 

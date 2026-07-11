@@ -94,7 +94,7 @@ mark inside. Two acceptable marks:
 - **"P" mark:** lowercase-energy "P" in the brand green tile, white, bold. Simple, safe, works at 16px.
 - **Play/forward mark (preferred for marketing):** a right-pointing triangle or chevron reading as "go / forward / propel," white on the green tile.
 
-**Wordmark:** lowercase `propello`, set in the display face (Clash Display) at
+**Wordmark:** lowercase `klovered`, set in the display face (Clash Display) at
 600-700 weight, tight tracking (-0.02em). Lowercase is deliberate: approachable,
 modern, Fiverr/Upwork-adjacent.
 

@@ -1,6 +1,6 @@
 # Klovered — business plan
 
-Prepared July 2026. Companion documents: the investor deck (`../propello-deck/propello-pitch.pptx`),
+Prepared July 2026. Companion documents: the investor deck (`../klovered-deck/klovered-pitch.pptx`),
 the cloud cost plan (03), the technical audit (04), and the marketing strategy (05).
 
 ---

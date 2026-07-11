@@ -4,7 +4,7 @@ Built on [LINKEDIN_CAMPAIGN_GUIDELINES.md](LINKEDIN_CAMPAIGN_GUIDELINES.md).
 Cadence: 3–4 per week ≈ a 3-week runway. Order is deliberate: open with the
 demo story, alternate pillars, close with the founder arc. Every visual uses
 the pitch-deck system (Clash Display + Geist, one green hue, browser-framed
-product vignettes). Production: copy `propello-linkedin-monday/build-carousel.mjs`,
+product vignettes). Production: copy `klovered-linkedin-monday/build-carousel.mjs`,
 edit the slides array, run it.
 
 Legend for vignettes (all real UI patterns from the deck):
@@ -192,7 +192,7 @@ campaign. **CTA:** comment. **Hashtags:** #bidmanagement #revenue #proposals
 >
 > The problem is *how* teams copy: hunting old documents, pasting stale numbers, forgetting the version legal approved.
 >
-> Copying isn't the sin. Copying badly is.
+> Copying isn't the problem. Copying badly is.
 >
 > A proper answer library means every approved answer compounds: found instantly, current, consistent across the whole team.
 >
@@ -201,7 +201,7 @@ campaign. **CTA:** comment. **Hashtags:** #bidmanagement #revenue #proposals
 **Carousel (6):**
 1. Hook (ink): "The average proposal isn't written. It's copied."
 2. "That's not lazy. It's correct. You've answered this 50 times."
-3. "The sin isn't copying. It's copying badly: stale, inconsistent, unapproved."
+3. "Copying isn't the problem. Copying badly is: stale, inconsistent, unapproved."
 4. "An answer library compounds: approved once, reused everywhere." (LIBRARY ROWS)
 5. "Every bid gets faster than the last."
 6. CTA (green): "What answer has your team rewritten the most? Mine's the SLA."

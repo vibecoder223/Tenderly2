@@ -121,7 +121,7 @@ Opinion
   "3 days, not 3 weeks"; description "Upload the RFP. Klovered drafts every answer with a
   citation and flags the gaps. Book a demo on your own tender."
 - **Landing pages:** brand landing page for category terms; dedicated comparison pages for
-  "alternative" terms (propello vs loopio, vs responsive); the FAQ + JSON-LD structure
+  "alternative" terms (klovered vs loopio, vs responsive); the FAQ + JSON-LD structure
   already on the landing page feeds AI-overview citations too.
 - **Conversion strategy:** one conversion event only (demo booked). No newsletter goal, no
   whitepaper gate. Budget $1.5–3k/mo initially, kill any keyword without a demo in 60 clicks.

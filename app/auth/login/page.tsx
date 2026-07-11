@@ -8,7 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 // Stores the last email a user successfully signed in with, so returning
 // visitors don't retype it. Browser autofill is unreliable across sessions;
 // this is an explicit, predictable prefill.
-const LAST_EMAIL_KEY = "propello:last-email";
+const LAST_EMAIL_KEY = "klovered:last-email";
 
 // The Google provider is disabled in Supabase unless explicitly enabled, so the
 // button is hidden by default to avoid a dead-end "provider not enabled" error.

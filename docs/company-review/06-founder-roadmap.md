@@ -11,7 +11,7 @@ except sales conversations, which start now and never stop.
 2. **Pick one price list** ($79/$149/custom is now in the deck and business plan) and apply
    it to the landing page; rename the `tenderly` package remnant.
 3. **Fill the deck's team slide** (three `[ Role ]` placeholders) and the ask amount on
-   slide 20. The deck is otherwise send-ready: `../propello-deck/propello-pitch.pptx`.
+   slide 20. The deck is otherwise send-ready: `../klovered-deck/klovered-pitch.pptx`.
 
 ## Block 1 — weeks 2–4: pilot-ready
 

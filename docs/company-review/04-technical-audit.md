@@ -55,7 +55,7 @@ block charging money (P0 below).
 |---|---|---|---|
 | 1 | **No real email verification.** Signup creates the account pre-confirmed via service role (`email_confirm: true`), so anyone can register with an email they don't own. Documented as an SMTP workaround. | [app/api/auth/signup/route.ts:4-54](app/api/auth/signup/route.ts) | Verify a Resend domain, configure Supabase custom SMTP (Resend), and switch back to the standard confirm flow. ~half a day. |
 | 2 | **No rate limiting on auth endpoints.** Signup/forgot-password/login can be hammered: account enumeration (the 409 "already exists" reply makes this trivial), credential stuffing, and email-send abuse. | signup route returns distinct 409; no limiter anywhere | Add per-IP limits (Vercel firewall rules or Upstash ratelimit) on `/api/auth/*`; return a generic message for existing accounts. |
-| 3 | **Email deliverability is one env var from silent failure.** With `RESEND_FROM` unset, sender is `onboarding@resend.dev`, which only delivers to the account owner. Invites and resets then quietly go nowhere (callers treat it as best-effort). | [lib/email.ts:6-10,29](lib/email.ts) | Verify the propello domain in Resend, set `RESEND_FROM`, add SPF/DKIM/DMARC, and surface send failures in the UI beyond the copyable link. |
+| 3 | **Email deliverability is one env var from silent failure.** With `RESEND_FROM` unset, sender is `onboarding@resend.dev`, which only delivers to the account owner. Invites and resets then quietly go nowhere (callers treat it as best-effort). | [lib/email.ts:6-10,29](lib/email.ts) | Verify the klovered domain in Resend, set `RESEND_FROM`, add SPF/DKIM/DMARC, and surface send failures in the UI beyond the copyable link. |
 
 ### P1 — fix during the pilot program
 

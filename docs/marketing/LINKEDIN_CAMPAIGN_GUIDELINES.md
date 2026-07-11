@@ -9,7 +9,7 @@ Companion docs:
 - [MESSAGING_PLAYBOOK.md](MESSAGING_PLAYBOOK.md) — core promise, segment angles, word lists
 - [CONTENT_CALENDAR_10.md](CONTENT_CALENDAR_10.md) — the current campaign queue
 - `../../BRAND.md` — voice + visual identity source of truth
-- `../../../propello-deck/` — the pitch-deck design system (deck.css + fonts.css) all visuals inherit
+- `../../../klovered-deck/` — the pitch-deck design system (deck.css + fonts.css) all visuals inherit
 
 ---
 
@@ -98,7 +98,7 @@ slide asks for exactly one action.
 
 ## 6. Visual system (inherit the pitch deck — do not freelance)
 
-All visuals are built with the deck design system in `propello-deck/`:
+All visuals are built with the deck design system in `klovered-deck/`:
 - **Fonts:** Clash Display (headlines) + Geist (body) + mono micro-labels,
   embedded via `fonts.css` so renders are identical everywhere.
 - **Palette (deck.css):** signal `#12B24A`, brand `#00872F`, deep `#00681F`,
@@ -107,14 +107,14 @@ All visuals are built with the deck design system in `propello-deck/`:
 - **Slide grammar:** mono uppercase eyebrow + 56px green rule + Clash headline
   with one green accent phrase. Dark ink slides for statements, light canvas
   for story beats, full signal-green for the CTA. Footer: `NN / NN` counter
-  left, `propello` wordmark right. Content vertically centered.
+  left, `klovered` wordmark right. Content vertically centered.
 - **Product vignettes:** browser chrome frames with the real UI patterns —
   `cited · 1.0` green chips, `no source · needs a human` amber chips, the
   stats band (255 · <3 min · 100% · 0). These are the visual proof. Use them.
 - **Format: 1080×1350 (4:5 portrait) — the LinkedIn standard.** Portrait fills
   more of the mobile feed than square without getting cropped (LinkedIn caps
   previews at 4:5), which lifts dwell time. Never go taller than 4:5.
-- **Production:** `propello-linkedin-monday/build-c01.mjs` is the reference
+- **Production:** `klovered-linkedin-monday/build-c01.mjs` is the reference
   builder — renders 1080×1350 HTML slides via headless Edge and packs a .pptx
   at a 10×12.5 layout. Copy it per campaign; edit the `slides` array. PNGs land
   in `render-cNN/`.

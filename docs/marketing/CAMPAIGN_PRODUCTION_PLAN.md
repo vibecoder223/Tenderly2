@@ -7,7 +7,7 @@ How the remaining campaigns get built. Companion to
 
 Everything is code. No image assets. Each campaign is a `build-cNN.mjs` that
 renders 1080×1350 (4:5) HTML slides via headless Edge and packs a `.pptx`,
-inheriting `../propello-deck/deck.css` + `fonts.css`. Model each on the existing
+inheriting `../klovered-deck/deck.css` + `fonts.css`. Model each on the existing
 `build-c01.mjs` … `build-c04.mjs`.
 
 ---
@@ -46,7 +46,7 @@ square 1080×1080 / 8 slides. Rebuild to 4:5 / 7 slides.
 ### 06 — Copied, not written · 1 screen · 6 slides
 1. ink — "The average proposal isn't written. It's copied." — text
 2. canvas — "That's not lazy. You've answered this 50 times." — text
-3. ink — "The sin isn't copying. It's copying badly." — text
+3. ink — "Copying isn't the problem. Copying badly is." — text
 4. canvas — "Approved once, reused everywhere." — **vLibrary** *(new)*
 5. ink — "Every bid gets faster than the last." — text
 6. green — CTA: "What have you rewritten the most?" — text
