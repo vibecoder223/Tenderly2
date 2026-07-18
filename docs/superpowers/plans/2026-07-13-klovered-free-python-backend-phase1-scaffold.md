@@ -39,6 +39,10 @@
 - [ ] **Step 1: Write `pyproject.toml`**
 
 ```toml
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "klovered-free-backend"
 version = "0.1.0"
@@ -53,6 +57,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "respx>=0.21"]
+
+# Explicit package list so editable install doesn't try to discover `tests`
+# as a package (flat layout auto-discovery would error on multiple top dirs).
+[tool.setuptools]
+packages = ["app"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

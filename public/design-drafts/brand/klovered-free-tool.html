@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klovered Free: tool screens (design draft)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312B24A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<style>
+  /* Product tokens, verbatim from app/globals.css */
+  :root{
+    --bg: oklch(0.995 0.001 152);
+    --bg-2: oklch(0.968 0.004 152);
+    --surface: oklch(1 0 0);
+    --border: oklch(0.90 0.005 152);
+    --border-strong: oklch(0.80 0.007 152);
+    --divider: oklch(0.945 0.004 152);
+    --fg: oklch(0.20 0.015 152);
+    --fg-2: oklch(0.38 0.012 152);
+    --fg-3: oklch(0.52 0.010 152);
+    --fg-4: oklch(0.64 0.008 152);
+    --accent: oklch(0.53 0.18 152);
+    --accent-2: oklch(0.47 0.17 152);
+    --accent-3: oklch(0.44 0.16 152);
+    --accent-tint: oklch(0.955 0.045 152);
+    --accent-tint2: oklch(0.92 0.06 152);
+    --warn: oklch(0.62 0.14 62);
+    --warn-tint: oklch(0.97 0.035 70);
+    --err: oklch(0.55 0.19 27);
+    --shadow-2: 0 1px 2px oklch(0.2 0.015 152 / 0.05), 0 8px 24px -12px oklch(0.2 0.015 152 / 0.12);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:oklch(0.94 0.004 152);color:var(--fg);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+  /* ── draft chrome (not part of the design) ── */
+  .draft-label{max-width:1120px;margin:44px auto 12px;padding:0 24px;display:flex;align-items:baseline;gap:12px}
+  .draft-label .n{font-size:12px;font-weight:700;color:var(--fg-3);letter-spacing:.02em}
+  .draft-label .d{font-size:12px;color:var(--fg-4)}
+  .screen{max-width:1120px;margin:0 auto;border:1px solid var(--border-strong);border-radius:12px;overflow:hidden;background:var(--bg);box-shadow:0 24px 60px -30px oklch(0.2 0.015 152 / 0.28)}
+  .last{margin-bottom:64px}
+
+  /* ── public shell ── */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--border)}
+  .brandmark{display:flex;align-items:center;gap:9px}
+  .tile{width:24px;height:24px;border-radius:6px;background:oklch(0.66 0.2 152);display:grid;place-items:center}
+  .wordmark{font-weight:700;font-size:16px;letter-spacing:-.02em}
+  .free-pill{font-size:11px;font-weight:600;color:var(--accent-3);background:var(--accent-tint);padding:2px 8px;border-radius:999px}
+  .shell-right{display:flex;align-items:center;gap:14px}
+  .shell-right .quiet{font-size:12.5px;color:var(--fg-3);transition:color .14s var(--ease)}
+  .shell-right .quiet:hover{color:var(--fg)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--fg);transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease)}
+  .btn:hover{background:var(--bg-2)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  .btn-lg{padding:9px 16px;font-size:13.5px}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .g-ic{width:15px;height:15px;flex:none}
+
+  /* step indicator */
+  .stepper{display:flex;align-items:center;gap:10px}
+  .st{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg-4);font-weight:500;white-space:nowrap}
+  .st .k{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--bg-2);color:var(--fg-4);font-variant-numeric:tabular-nums}
+  .st.on{color:var(--accent-3);font-weight:600}
+  .st.on .k{background:var(--accent);color:#fff}
+  .st.done{color:var(--fg-2)}
+  .st.done .k{background:var(--accent-tint);color:var(--accent-3)}
+  .st-sep{width:26px;height:1px;background:var(--border)}
+  .st-sep.fill{background:var(--accent-line,oklch(0.78 0.12 152))}
+  @media(max-width:860px){.st span.lbl{display:none}.st.on span.lbl{display:inline}.st-sep{width:14px}}
+
+  /* page scaffold: focused single column */
+  .page{max-width:760px;margin:0 auto;padding:36px 24px 56px}
+  .page-head{margin-bottom:20px}
+  .page-head h1{font-size:21px;font-weight:650;letter-spacing:-.01em}
+  .page-head p{font-size:13.5px;color:var(--fg-3);margin-top:4px;max-width:58ch}
+
+  /* keep-it notice */
+  .keep{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:24px}
+  .keep .kt{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--fg-3)}
+  .keep .clock{width:26px;height:26px;border-radius:6px;background:var(--bg-2);display:grid;place-items:center;flex:none}
+  .keep b{color:var(--fg-2);font-weight:600}
+
+  /* dropzone */
+  .drop{border:1.5px dashed var(--border-strong);border-radius:8px;background:var(--surface);padding:38px 24px;text-align:center;transition:border-color .18s var(--ease),background .18s var(--ease)}
+  .drop:hover{border-color:var(--accent);background:var(--accent-tint)}
+  .drop .up{width:36px;height:36px;border-radius:8px;background:var(--accent-tint);display:grid;place-items:center;margin:0 auto 12px}
+  .drop .t{font-size:14px;font-weight:600}
+  .drop .s{font-size:12.5px;color:var(--fg-3);margin-top:3px}
+  .drop .s b{color:var(--accent-3);font-weight:600}
+  .drop .fmt{font-size:11.5px;color:var(--fg-4);margin-top:10px}
+
+  /* add-as segmented control */
+  .addas{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .addas .lbl{font-size:12px;color:var(--fg-3)}
+  .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;padding:2px}
+  .seg button{font-size:12px;font-weight:500;color:var(--fg-3);background:transparent;border:0;border-radius:4px;padding:4px 11px;transition:background .12s var(--ease),color .12s var(--ease)}
+  .seg button.on{background:var(--surface);color:var(--fg);font-weight:600;box-shadow:0 1px 2px oklch(0.2 0.015 152 / 0.08)}
+
+  /* section card */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-2);overflow:hidden}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--divider)}
+  .card-head .ttl{font-size:13.5px;font-weight:600;display:flex;align-items:baseline;gap:8px}
+  .card-head .cnt{font-size:12px;color:var(--fg-4);font-variant-numeric:tabular-nums}
+  .card-head .act{font-size:12.5px;color:var(--accent-3);font-weight:500}
+  .mt{margin-top:20px}
+
+  /* docs table rows */
+  .doc{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--divider)}
+  .doc:last-child{border-bottom:0}
+  .doc .fic{width:30px;height:30px;border-radius:6px;background:var(--bg-2);display:grid;place-items:center;flex:none}
+  .doc .fn{min-width:0;flex:1}
+  .doc .fn .nm{font-size:13px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .doc .fn .meta{font-size:11.5px;color:var(--fg-4);font-variant-numeric:tabular-nums;margin-top:1px}
+  .doc .x{color:var(--fg-4);background:none;border:0;padding:4px;border-radius:4px;line-height:0;transition:color .12s var(--ease),background .12s var(--ease)}
+  .doc .x:hover{color:var(--err);background:var(--err-tint,oklch(0.96 0.035 27))}
+
+  /* status badge: dot + label, never color alone */
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .badge .d{width:7px;height:7px;border-radius:50%}
+  .badge.ok{color:var(--accent-3)}.badge.ok .d{background:var(--accent)}
+  .badge.warn{color:var(--warn)}.badge.warn .d{background:var(--warn)}
+  .badge.err{color:var(--err)}.badge.err .d{background:var(--err)}
+  .badge.dim{color:var(--fg-4)}.badge.dim .d{background:var(--fg-4)}
+
+  /* pipeline progress tracker */
+  .pipe{padding:14px 16px;background:var(--bg);border-top:1px solid var(--divider)}
+  .pipe-steps{display:flex;align-items:center;gap:0}
+  .ps{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--fg-4);white-space:nowrap}
+  .ps .pd{width:15px;height:15px;border-radius:50%;display:grid;place-items:center;background:var(--bg-2);border:1px solid var(--border);flex:none}
+  .ps.done{color:var(--fg-3)}
+  .ps.done .pd{background:var(--accent-tint);border-color:transparent}
+  .ps.run{color:var(--accent-3);font-weight:600}
+  .ps.run .pd{background:var(--accent);border-color:var(--accent)}
+  .ps-line{flex:1;height:1px;background:var(--border);margin:0 8px;min-width:10px}
+  .ps-line.fill{background:var(--accent-line,oklch(0.78 0.12 152))}
+  .spin{width:7px;height:7px;border-radius:50%;border:1.5px solid #fff;border-top-color:transparent;animation:rot 0.8s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  @media(max-width:860px){.ps span.pl{display:none}.ps.run span.pl{display:inline}}
+
+  /* footer of a step */
+  .step-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:24px}
+  .step-foot .hint{font-size:12.5px;color:var(--fg-4)}
+
+  /* ── step 2 extraction progress ── */
+  .rfp-file{display:flex;align-items:center;gap:12px;padding:14px 16px}
+  .meter{height:5px;border-radius:999px;background:var(--bg-2);overflow:hidden;margin:0 16px 14px}
+  .meter .fill{height:100%;border-radius:999px;background:var(--accent);width:62%;transition:width .3s var(--ease)}
+  .phase-list{border-top:1px solid var(--divider)}
+  .phase{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--divider);font-size:13px;color:var(--fg-4)}
+  .phase:last-child{border-bottom:0}
+  .phase .ic{width:17px;height:17px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--bg-2);border:1px solid var(--border)}
+  .phase.done{color:var(--fg-2)}
+  .phase.done .ic{background:var(--accent-tint);border-color:transparent}
+  .phase.run{color:var(--fg);font-weight:550}
+  .phase.run .ic{background:var(--accent);border-color:var(--accent)}
+  .phase .sub{margin-left:auto;font-size:12px;color:var(--fg-4);font-variant-numeric:tabular-nums;font-weight:400}
+  .phase.run .sub{color:var(--accent-3);font-weight:550}
+
+  /* live tally */
+  .tally{display:flex;gap:0;border-top:1px solid var(--divider)}
+  .tally .cell{flex:1;padding:14px 16px;border-right:1px solid var(--divider)}
+  .tally .cell:last-child{border-right:0}
+  .tally .n{font-size:22px;font-weight:550;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .tally .l{font-size:11.5px;color:var(--fg-3);margin-top:1px}
+
+  /* ── step 3 answers ── */
+  .sum{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-2);overflow:hidden}
+  .sum .cell{flex:1;padding:14px 16px;border-right:1px solid var(--divider)}
+  .sum .cell:last-child{border-right:0}
+  .sum .n{font-size:24px;font-weight:550;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .sum .n.warn-n{color:var(--warn)}
+  .sum .l{font-size:11.5px;color:var(--fg-3);margin-top:1px}
+
+  .toolbar{display:flex;align-items:center;gap:10px;margin:20px 0 12px}
+  .search{display:flex;align-items:center;gap:8px;flex:1;max-width:280px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 11px;color:var(--fg-4);font-size:12.5px}
+  .chip{font-size:12px;font-weight:500;color:var(--fg-3);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 12px;transition:border-color .12s var(--ease),color .12s var(--ease)}
+  .chip.on{color:var(--accent-3);border-color:var(--accent-line,oklch(0.78 0.12 152));background:var(--accent-tint)}
+
+  .qrow{border-bottom:1px solid var(--divider)}
+  .qrow:last-child{border-bottom:0}
+  .qtop{display:flex;align-items:flex-start;gap:12px;padding:13px 16px}
+  .qn{font-size:12px;color:var(--fg-4);font-variant-numeric:tabular-nums;padding-top:1px;width:26px;flex:none}
+  .qbody{min-width:0;flex:1}
+  .qt{font-size:13.5px;font-weight:600;line-height:1.45}
+  .qa{font-size:13px;color:var(--fg-2);margin-top:7px;line-height:1.55;max-width:66ch}
+  .qmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .cite{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:500;color:var(--accent-3);background:var(--accent-tint);border-radius:5px;padding:3px 9px}
+  .cite .pg{color:var(--accent-2);font-variant-numeric:tabular-nums}
+  .conf{font-size:11.5px;color:var(--fg-4);font-variant-numeric:tabular-nums}
+  .qstat{flex:none;padding-top:2px}
+  .gap-note{display:flex;gap:9px;align-items:flex-start;background:var(--warn-tint);border:1px solid oklch(0.88 0.06 70);border-radius:6px;padding:9px 12px;margin-top:9px;font-size:12.5px;color:oklch(0.42 0.1 62)}
+  .qa.dim{color:var(--fg-4)}
+
+  .keep-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--accent-tint);border:1px solid var(--accent-tint2);border-radius:8px;padding:12px 16px;margin-top:20px}
+  .keep-strip .t{font-size:13px;color:var(--accent-3)}
+  .keep-strip .t b{font-weight:650}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SCREEN 1 · STEP 1: ADD KNOWLEDGE ══════════════════ -->
+<div class="draft-label"><span class="n">Screen 1 / Step 1: add knowledge</span><span class="d">dropzone + add-as control + docs table, one doc mid-pipeline</span></div>
+<div class="screen">
+  <header class="topbar">
+    <a class="brandmark" href="#" aria-label="Klovered free, back to marketing site">
+      <span class="wordmark">klovered</span>
+      <span class="free-pill">free</span>
+    </a>
+    <nav class="stepper" aria-label="Progress">
+      <span class="st on"><span class="k">1</span><span class="lbl">Add knowledge</span></span>
+      <span class="st-sep"></span>
+      <span class="st"><span class="k">2</span><span class="lbl">Upload RFP</span></span>
+      <span class="st-sep"></span>
+      <span class="st"><span class="k">3</span><span class="lbl">Answers</span></span>
+    </nav>
+    <div class="shell-right">
+      <a class="quiet" href="#">Full platform</a>
+      <button class="btn"><svg class="g-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>Sign in with Google</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <h1>Add your knowledge</h1>
+      <p>Upload past proposals, product docs, and security policies. Answers will be drafted from these files only, with citations.</p>
+    </div>
+
+    <div class="drop" role="button" tabindex="0" aria-label="Upload knowledge documents">
+      <div class="up"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="oklch(0.47 0.17 152)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" stroke="oklch(0.47 0.17 152)" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="t">Drop files to add knowledge</div>
+      <div class="s">or <b>browse</b> your computer</div>
+      <div class="fmt">pdf, docx and txt, up to 50 MB each, 5 files on the free tier</div>
+    </div>
+    <div class="addas">
+      <span class="lbl" id="addas-l">Add as</span>
+      <div class="seg" role="group" aria-labelledby="addas-l">
+        <button class="on" aria-pressed="true">Company doc</button>
+        <button aria-pressed="false">Past proposal</button>
+        <button aria-pressed="false">Policy</button>
+      </div>
+    </div>
+
+    <div class="card mt">
+      <div class="card-head">
+        <span class="ttl">Your documents <span class="cnt">3 of 5</span></span>
+        <span class="act">2 ready</span>
+      </div>
+      <div class="doc">
+        <span class="fic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3H7a1 1 0 00-1 1v16a1 1 0 001 1h10a1 1 0 001-1V8l-4-5z" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/><path d="M14 3v5h4" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/></svg></span>
+        <div class="fn"><div class="nm">Security-Policy-2026.pdf</div><div class="meta">2.4 MB, 38 pages, 214 chunks</div></div>
+        <span class="badge ok"><span class="d"></span>Ready</span>
+        <button class="x" aria-label="Remove Security-Policy-2026.pdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="doc">
+        <span class="fic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3H7a1 1 0 00-1 1v16a1 1 0 001 1h10a1 1 0 001-1V8l-4-5z" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/><path d="M14 3v5h4" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/></svg></span>
+        <div class="fn"><div class="nm">Winning-Proposal-Meridian.docx</div><div class="meta">1.1 MB, 52 pages, 306 chunks</div></div>
+        <span class="badge ok"><span class="d"></span>Ready</span>
+        <button class="x" aria-label="Remove Winning-Proposal-Meridian.docx"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="doc" style="border-bottom:0">
+        <span class="fic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3H7a1 1 0 00-1 1v16a1 1 0 001 1h10a1 1 0 001-1V8l-4-5z" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/><path d="M14 3v5h4" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/></svg></span>
+        <div class="fn"><div class="nm">Product-Overview-v4.pdf</div><div class="meta">6.8 MB, 121 pages</div></div>
+        <span class="badge warn"><span class="d"></span>Processing</span>
+        <button class="x" aria-label="Remove Product-Overview-v4.pdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="pipe" aria-label="Processing Product-Overview-v4.pdf: embedding, step 5 of 7">
+        <div class="pipe-steps">
+          <span class="ps done"><span class="pd"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="pl">Upload</span></span>
+          <span class="ps-line fill"></span>
+          <span class="ps done"><span class="pd"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="pl">Parse</span></span>
+          <span class="ps-line fill"></span>
+          <span class="ps done"><span class="pd"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="pl">Clean</span></span>
+          <span class="ps-line fill"></span>
+          <span class="ps done"><span class="pd"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="pl">Chunk</span></span>
+          <span class="ps-line fill"></span>
+          <span class="ps run"><span class="pd"><span class="spin"></span></span><span class="pl">Embed</span></span>
+          <span class="ps-line"></span>
+          <span class="ps"><span class="pd"></span><span class="pl">Index</span></span>
+          <span class="ps-line"></span>
+          <span class="ps"><span class="pd"></span><span class="pl">Ready</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-foot">
+      <span class="hint">You can add more later. Two ready documents is enough to start.</span>
+      <button class="btn btn-primary btn-lg">Continue to RFP <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+
+    <div class="keep">
+      <div class="kt">
+        <span class="clock"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="oklch(0.52 0.01 152)" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="oklch(0.52 0.01 152)" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+        <span>Everything you upload <b>auto-deletes in 48 hours</b>. Sign in with Google to keep it.</span>
+      </div>
+      <button class="btn">Sign in to keep</button>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ SCREEN 2 · STEP 2: UPLOAD RFP (EXTRACTING) ══════════════════ -->
+<div class="draft-label"><span class="n">Screen 2 / Step 2: upload RFP, extraction running</span><span class="d">RFP received, requirements being extracted with a live tally</span></div>
+<div class="screen">
+  <header class="topbar">
+    <a class="brandmark" href="#" aria-label="Klovered free, back to marketing site">
+      <span class="wordmark">klovered</span>
+      <span class="free-pill">free</span>
+    </a>
+    <nav class="stepper" aria-label="Progress">
+      <span class="st done"><span class="k"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">Add knowledge</span></span>
+      <span class="st-sep fill"></span>
+      <span class="st on"><span class="k">2</span><span class="lbl">Upload RFP</span></span>
+      <span class="st-sep"></span>
+      <span class="st"><span class="k">3</span><span class="lbl">Answers</span></span>
+    </nav>
+    <div class="shell-right">
+      <a class="quiet" href="#">Full platform</a>
+      <button class="btn"><svg class="g-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>Sign in with Google</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <h1>Reading your RFP</h1>
+      <p>Every requirement is being extracted and structured, including the ones buried in appendices. This usually takes a couple of minutes.</p>
+    </div>
+
+    <div class="card">
+      <div class="rfp-file">
+        <span class="fic" style="width:30px;height:30px;border-radius:6px;background:var(--accent-tint);display:grid;place-items:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3H7a1 1 0 00-1 1v16a1 1 0 001 1h10a1 1 0 001-1V8l-4-5z" stroke="oklch(0.44 0.16 152)" stroke-width="1.7"/><path d="M14 3v5h4" stroke="oklch(0.44 0.16 152)" stroke-width="1.7"/></svg></span>
+        <div class="fn" style="min-width:0;flex:1">
+          <div class="nm" style="font-size:13px;font-weight:550">RFP-CityOfAsheford-ITServices-2026.pdf</div>
+          <div class="meta" style="font-size:11.5px;color:var(--fg-4);font-variant-numeric:tabular-nums">14.2 MB, 186 pages</div>
+        </div>
+        <span class="badge warn"><span class="d"></span>Extracting</span>
+      </div>
+      <div class="meter" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="Extraction progress"><div class="fill"></div></div>
+      <div class="phase-list">
+        <div class="phase done"><span class="ic"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Parse document<span class="sub">186 pages read</span></div>
+        <div class="phase done"><span class="ic"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Detect sections<span class="sub">23 sections found</span></div>
+        <div class="phase run"><span class="ic"><span class="spin"></span></span>Extract requirements<span class="sub">137 found so far</span></div>
+        <div class="phase"><span class="ic"></span>Structure into questions<span class="sub">waiting</span></div>
+        <div class="phase"><span class="ic"></span>Match against your knowledge<span class="sub">waiting</span></div>
+      </div>
+      <div class="tally" aria-label="Live extraction tally">
+        <div class="cell"><div class="n">137</div><div class="l">requirements so far</div></div>
+        <div class="cell"><div class="n">23</div><div class="l">sections scanned</div></div>
+        <div class="cell"><div class="n">p. 118</div><div class="l">currently reading</div></div>
+      </div>
+    </div>
+
+    <div class="step-foot">
+      <span class="hint">Safe to leave this tab open in the background. We will keep going.</span>
+      <button class="btn btn-primary btn-lg" disabled>Continue to answers</button>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════ SCREEN 3 · STEP 3: ANSWERS ══════════════════ -->
+<div class="draft-label"><span class="n">Screen 3 / Step 3: answers</span><span class="d">summary strip + filters + cited answers, one gap flagged, export in shell</span></div>
+<div class="screen last">
+  <header class="topbar">
+    <a class="brandmark" href="#" aria-label="Klovered free, back to marketing site">
+      <span class="wordmark">klovered</span>
+      <span class="free-pill">free</span>
+    </a>
+    <nav class="stepper" aria-label="Progress">
+      <span class="st done"><span class="k"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">Add knowledge</span></span>
+      <span class="st-sep fill"></span>
+      <span class="st done"><span class="k"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12l4 4 10-10" stroke="oklch(0.44 0.16 152)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="lbl">Upload RFP</span></span>
+      <span class="st-sep fill"></span>
+      <span class="st on"><span class="k">3</span><span class="lbl">Answers</span></span>
+    </nav>
+    <div class="shell-right">
+      <button class="btn btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v10M12 14l-4-4M12 14l4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 17v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>Export .docx</button>
+    </div>
+  </header>
+
+  <main class="page" style="max-width:860px">
+    <div class="page-head">
+      <h1>Your drafted answers</h1>
+      <p>142 requirements from RFP-CityOfAsheford-ITServices-2026.pdf, answered from your 3 documents. Review the gaps, then export.</p>
+    </div>
+
+    <div class="sum" aria-label="Answer summary">
+      <div class="cell"><div class="n">142</div><div class="l">requirements</div></div>
+      <div class="cell"><div class="n">128</div><div class="l">answered with citations</div></div>
+      <div class="cell"><div class="n">9</div><div class="l">low confidence</div></div>
+      <div class="cell"><div class="n warn-n">5</div><div class="l">gaps need your input</div></div>
+    </div>
+
+    <div class="toolbar">
+      <span class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Search requirements</span>
+      <button class="chip on">All 142</button>
+      <button class="chip">Answered 128</button>
+      <button class="chip">Low confidence 9</button>
+      <button class="chip">Gaps 5</button>
+    </div>
+
+    <div class="card">
+      <div class="qrow">
+        <div class="qtop">
+          <span class="qn">14</span>
+          <div class="qbody">
+            <div class="qt">Describe your approach to data encryption at rest and in transit.</div>
+            <p class="qa">All customer data is encrypted at rest using AES-256 and in transit with TLS 1.3. Encryption keys are managed through a dedicated KMS with quarterly rotation, and access to key material is restricted to the platform security group under audit.</p>
+            <div class="qmeta">
+              <span class="cite">Security-Policy-2026.pdf <span class="pg">p. 12</span></span>
+              <span class="cite">Winning-Proposal-Meridian.docx <span class="pg">p. 34</span></span>
+              <span class="conf">confidence 0.92</span>
+            </div>
+          </div>
+          <span class="qstat badge ok"><span class="d"></span>Answered</span>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qtop">
+          <span class="qn">15</span>
+          <div class="qbody">
+            <div class="qt">Provide your standard service level agreement for system availability.</div>
+            <p class="qa">The platform carries a 99.95% monthly uptime commitment measured against the public status page, with service credits applied automatically when the target is missed in a billing period.</p>
+            <div class="qmeta">
+              <span class="cite">Winning-Proposal-Meridian.docx <span class="pg">p. 7</span></span>
+              <span class="conf">confidence 0.87</span>
+            </div>
+          </div>
+          <span class="qstat badge ok"><span class="d"></span>Answered</span>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qtop">
+          <span class="qn">16</span>
+          <div class="qbody">
+            <div class="qt">List all sub-processors and the location of data processing.</div>
+            <p class="qa dim">Your documents mention a sub-processor register but do not include the register itself or processing locations.</p>
+            <div class="gap-note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:1px" aria-hidden="true"><path d="M12 3L2.5 20h19L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1" fill="currentColor"/></svg>
+              <span>Gap: no source found. Add your sub-processor list to knowledge, or write this one yourself in the export.</span>
+            </div>
+          </div>
+          <span class="qstat badge warn"><span class="d"></span>Gap</span>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qtop">
+          <span class="qn">17</span>
+          <div class="qbody">
+            <div class="qt">Describe your penetration testing cadence and remediation process.</div>
+            <p class="qa">Independent penetration tests run annually with a CREST-accredited firm, supplemented by continuous automated scanning. Critical findings are remediated within 7 days and verified by retest.</p>
+            <div class="qmeta">
+              <span class="cite">Security-Policy-2026.pdf <span class="pg">p. 21</span></span>
+              <span class="conf">confidence 0.64</span>
+            </div>
+          </div>
+          <span class="qstat badge dim"><span class="d"></span>Low confidence</span>
+        </div>
+      </div>
+
+      <div class="qrow">
+        <div class="qtop">
+          <span class="qn">18</span>
+          <div class="qbody">
+            <div class="qt">Confirm conformance with WCAG 2.1 AA accessibility standards.</div>
+            <p class="qa">The product conforms to WCAG 2.1 AA, verified through quarterly audits with assistive-technology testing. The current VPAT is available on request.</p>
+            <div class="qmeta">
+              <span class="cite">Product-Overview-v4.pdf <span class="pg">p. 88</span></span>
+              <span class="conf">confidence 0.9</span>
+            </div>
+          </div>
+          <span class="qstat badge ok"><span class="d"></span>Answered</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="keep-strip">
+      <span class="t"><b>These answers auto-delete in 47 hours.</b> Sign in with Google to keep them and raise your limits.</span>
+      <button class="btn" style="background:var(--surface)"><svg class="g-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A11 11 0 0 0 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>Sign in and keep</button>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
