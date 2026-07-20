@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klovered Free — feedback popup</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312B24A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: oklch(0.995 0.001 152); --bg-2: oklch(0.968 0.004 152); --surface: oklch(1 0 0);
+    --border: oklch(0.90 0.005 152); --border-strong: oklch(0.80 0.007 152); --divider: oklch(0.945 0.004 152);
+    --fg: oklch(0.20 0.015 152); --fg-2: oklch(0.38 0.012 152); --fg-3: oklch(0.52 0.010 152); --fg-4: oklch(0.64 0.008 152); --fg-5: oklch(0.76 0.006 152);
+    --accent: oklch(0.53 0.18 152); --accent-2: oklch(0.47 0.17 152); --accent-3: oklch(0.44 0.16 152);
+    --accent-tint: oklch(0.955 0.045 152); --accent-tint2: oklch(0.92 0.06 152); --accent-line: oklch(0.78 0.12 152);
+    --accent-glow: oklch(0.53 0.18 152 / 0.16);
+    --warn: oklch(0.62 0.14 62); --warn-tint: oklch(0.97 0.035 70);
+    --shadow-2: 0 1px 2px oklch(0.2 0.015 152 / 0.05), 0 8px 24px -12px oklch(0.2 0.015 152 / 0.12);
+    --shadow-pop: 0 2px 6px oklch(0.20 0.015 152 / 0.06), 0 20px 48px -16px oklch(0.20 0.015 152 / 0.30);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:oklch(0.94 0.004 152);color:var(--fg);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button,textarea,input{font:inherit}
+  button{cursor:pointer}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+  .intro{max-width:1120px;margin:40px auto 0;padding:0 24px}
+  .intro h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+  .intro p{font-size:13.5px;color:var(--fg-3);margin-top:6px;max-width:74ch}
+  .lbl{max-width:1120px;margin:40px auto 12px;padding:0 24px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .lbl .tag{font-size:11px;font-weight:700;color:#fff;background:var(--fg-2);padding:3px 9px;border-radius:5px;letter-spacing:.03em}
+  .lbl .n{font-size:13px;font-weight:700;color:var(--fg-2)}
+  .lbl .d{font-size:12.5px;color:var(--fg-4)}
+  .screen{max-width:1120px;margin:0 auto;border:1px solid var(--border-strong);border-radius:12px;overflow:hidden;background:var(--bg);box-shadow:0 24px 60px -30px oklch(0.2 0.015 152 / 0.28);position:relative}
+
+  /* topbar */
+  .topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;height:52px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--border)}
+  .wordmark{font-weight:700;font-size:16px;letter-spacing:-.02em;justify-self:start;display:inline-flex;align-items:baseline;gap:8px}
+  .free-pill{font-size:11px;font-weight:600;color:var(--accent-3);background:var(--accent-tint);padding:2px 8px;border-radius:999px}
+  .stepper{display:flex;align-items:center;gap:8px;justify-self:center}
+  .st{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fg-4);font-weight:500;padding:4px 10px;border-radius:999px}
+  .st .k{width:17px;height:17px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--bg-2);color:var(--fg-4)}
+  .st.done{color:var(--fg-3)} .st.done .k{background:var(--accent-tint);color:var(--accent-3)}
+  .st.on{color:var(--accent-3);font-weight:600;background:var(--accent-tint)} .st.on .k{background:var(--accent);color:#fff}
+  .st-sep{width:20px;height:1px;background:var(--divider)}
+  .avatar{justify-self:end;width:30px;height:30px;border-radius:50%;background:var(--accent);color:oklch(0.99 0.006 152);display:grid;place-items:center;font-size:12.5px;font-weight:600}
+
+  /* answers behind (muted, non-focus) */
+  .page{max-width:820px;margin:0 auto;padding:24px 24px 120px}
+  .head h2{font-size:20px;font-weight:650;letter-spacing:-.01em}
+  .head p{font-size:13px;color:var(--fg-3);margin-top:3px}
+  .qrow{background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-2);padding:14px 16px;margin-top:12px}
+  .qrow .qtop{display:flex;align-items:flex-start;gap:12px}
+  .qn{font-size:12px;color:var(--fg-4);width:20px;flex:none;padding-top:2px;font-weight:600}
+  .qt{font-size:13.5px;font-weight:600;color:var(--fg);flex:1}
+  .badge{font-size:11.5px;font-weight:600;color:var(--accent-3);display:inline-flex;align-items:center;gap:6px;flex:none;padding-top:1px}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .awell{margin-top:8px;margin-left:32px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;color:var(--fg-2);line-height:1.6}
+
+  /* ── the feedback popup ── */
+  .fb{position:absolute;right:22px;bottom:22px;width:344px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-pop);padding:16px 16px 15px;animation:fb-rise .28s var(--ease)}
+  @keyframes fb-rise{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  .fb-close{position:absolute;top:9px;right:10px;width:26px;height:26px;border:0;background:transparent;border-radius:7px;color:var(--fg-4);font-size:19px;line-height:1;display:grid;place-items:center}
+  .fb-close:hover{background:var(--bg-2);color:var(--fg-2)}
+  .fb-eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-3);display:flex;align-items:center;gap:6px}
+  .fb-eyebrow .spark{width:13px;height:13px}
+  .fb-title{font-size:15px;font-weight:650;color:var(--fg);margin-top:7px;letter-spacing:-.01em}
+  .fb-sub{font-size:12.5px;color:var(--fg-3);margin-top:3px;line-height:1.45}
+  .fb-stars{display:flex;gap:6px;margin-top:14px}
+  .fb-star{width:34px;height:34px;border:1px solid var(--border);background:var(--surface);border-radius:9px;display:grid;place-items:center;transition:background .12s var(--ease),border-color .12s var(--ease),transform .12s var(--ease)}
+  .fb-star svg{width:18px;height:18px}
+  .fb-star:hover{border-color:var(--accent-line);background:var(--accent-tint);transform:translateY(-1px)}
+  .fb-star.on{border-color:var(--accent-line);background:var(--accent-tint)}
+  .fb-star.on svg path{fill:var(--accent);stroke:var(--accent)}
+  .fb-scale{display:flex;justify-content:space-between;margin-top:7px;font-size:10.5px;color:var(--fg-5)}
+
+  /* expanded */
+  .fb-note{width:100%;margin-top:13px;min-height:64px;resize:vertical;background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:12.5px;line-height:1.5;color:var(--fg)}
+  .fb-note::placeholder{color:var(--fg-4)}
+  .fb-note:focus{outline:none;border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-glow)}
+  .fb-email{width:100%;margin-top:8px;height:36px;background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:0 11px;font-size:12.5px;color:var(--fg)}
+  .fb-email::placeholder{color:var(--fg-4)}
+  .fb-email:focus{outline:none;border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-glow)}
+  .fb-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:13px}
+  .fb-btn{font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg-2)}
+  .fb-btn:hover{background:var(--bg-2);border-color:var(--border-strong);color:var(--fg)}
+  .fb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .fb-btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  .fb-ghost{font-size:12px;color:var(--fg-4);background:none;border:0;padding:7px 4px}
+  .fb-ghost:hover{color:var(--fg-2)}
+  .fb-rated{font-size:11.5px;color:var(--fg-4);margin-top:11px}
+  .fb-rated b{color:var(--accent-3);font-weight:600}
+
+  /* thanks */
+  .fb.thanks{text-align:center;padding:26px 18px 24px}
+  .fb-check{width:44px;height:44px;border-radius:50%;background:var(--accent-tint);display:grid;place-items:center;margin:0 auto 12px}
+  .fb-check svg{width:22px;height:22px}
+  .fb-thx-t{font-size:15px;font-weight:650;color:var(--fg)}
+  .fb-thx-s{font-size:12.5px;color:var(--fg-3);margin-top:4px;max-width:26ch;margin-inline:auto;line-height:1.45}
+
+  /* states strip */
+  .states{max-width:1120px;margin:0 auto 72px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+  .state{position:relative}
+  .state .cap{font-size:12px;font-weight:600;color:var(--fg-2);margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+  .state .cap span{font-size:11px;color:var(--fg-4);font-weight:500}
+  .state .fb{position:static;width:100%;animation:none}
+  @media(max-width:820px){.states{grid-template-columns:1fr;max-width:400px}}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Feedback popup — once per user, after the RFP is answered</h1>
+  <p>A calm, dismissible card that slides in at the bottom-right of the Answers screen once the visitor has seen their drafted answers, not on the processing screen (nothing to react to yet). Rating is one tap; the comment and email are optional. Dismiss or submit and it never shows again.</p>
+</div>
+
+<!-- IN CONTEXT -->
+<div class="lbl">
+  <span class="tag">In context</span>
+  <span class="n">On the Answers screen</span>
+  <span class="d">the card appears over the answers the visitor just generated, anchored bottom-right, non-blocking</span>
+</div>
+<div class="screen">
+  <header class="topbar">
+    <span class="wordmark">klovered<span class="free-pill">free</span></span>
+    <nav class="stepper">
+      <span class="st done"><span class="k">✓</span>Add knowledge</span>
+      <span class="st-sep"></span>
+      <span class="st done"><span class="k">✓</span>Upload RFP</span>
+      <span class="st-sep"></span>
+      <span class="st on"><span class="k">3</span>Answers</span>
+    </nav>
+    <span class="avatar">E</span>
+  </header>
+
+  <div class="page" aria-hidden="true">
+    <div class="head">
+      <h2>Your drafted answers</h2>
+      <p>142 requirements answered from your knowledge base. Review the gaps, then export.</p>
+    </div>
+    <div class="qrow">
+      <div class="qtop"><span class="qn">1</span><span class="qt">Describe your approach to data encryption at rest and in transit.</span><span class="badge"><span class="dot"></span>Answered</span></div>
+      <div class="awell">All customer data is encrypted at rest using AES-256 and in transit with TLS 1.3. Encryption keys are managed through a dedicated KMS with quarterly rotation.</div>
+    </div>
+    <div class="qrow">
+      <div class="qtop"><span class="qn">2</span><span class="qt">Provide your standard SLA for system availability.</span><span class="badge"><span class="dot"></span>Answered</span></div>
+      <div class="awell">Klovered guarantees 99.9% monthly uptime, measured at the load balancer, with service credits for any shortfall as set out in the master agreement.</div>
+    </div>
+  </div>
+
+  <!-- default state -->
+  <div class="fb" role="dialog" aria-label="Leave feedback">
+    <button class="fb-close" aria-label="Dismiss">×</button>
+    <div class="fb-eyebrow"><svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" fill="var(--accent)"/></svg>Quick question</div>
+    <div class="fb-title">How did Klovered do?</div>
+    <div class="fb-sub">You just turned an RFP into 142 drafted answers. How was the quality?</div>
+    <div class="fb-stars">
+      <button class="fb-star" aria-label="1 star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      <button class="fb-star" aria-label="2 stars"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      <button class="fb-star" aria-label="3 stars"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      <button class="fb-star" aria-label="4 stars"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      <button class="fb-star" aria-label="5 stars"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="fb-scale"><span>Not useful</span><span>Very useful</span></div>
+  </div>
+</div>
+
+<!-- STATES -->
+<div class="lbl">
+  <span class="tag">States</span>
+  <span class="n">One tap to rate, everything after is optional</span>
+  <span class="d">tapping a rating expands the card in place; submitting shows a brief thank-you, then it auto-dismisses</span>
+</div>
+<div class="states">
+  <!-- 1: ask -->
+  <div class="state">
+    <div class="cap">1 · Ask <span>the card slides in</span></div>
+    <div class="fb">
+      <button class="fb-close" aria-label="Dismiss">×</button>
+      <div class="fb-eyebrow"><svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" fill="var(--accent)"/></svg>Quick question</div>
+      <div class="fb-title">How did Klovered do?</div>
+      <div class="fb-sub">You just turned an RFP into 142 drafted answers. How was the quality?</div>
+      <div class="fb-stars">
+        <button class="fb-star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="fb-scale"><span>Not useful</span><span>Very useful</span></div>
+    </div>
+  </div>
+
+  <!-- 2: expanded -->
+  <div class="state">
+    <div class="cap">2 · Rated <span>optional comment + email</span></div>
+    <div class="fb">
+      <button class="fb-close" aria-label="Dismiss">×</button>
+      <div class="fb-eyebrow"><svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" fill="var(--accent)"/></svg>Quick question</div>
+      <div class="fb-title">How did Klovered do?</div>
+      <div class="fb-stars">
+        <button class="fb-star on"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star on"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star on"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star on"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+        <button class="fb-star"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.6 5.6 6 .7-4.5 4 1.3 6-5.4-3.1L6.6 19.8l1.3-6-4.5-4 6-.7L12 3.5z" fill="none" stroke="var(--fg-4)" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="fb-rated">Thanks. <b>Anything we could do better?</b></div>
+      <textarea class="fb-note" placeholder="The encryption answer was spot on. The SLA one missed our regional terms…"></textarea>
+      <input class="fb-email" placeholder="Email (optional, for a reply)">
+      <div class="fb-actions">
+        <button class="fb-ghost">Not now</button>
+        <button class="fb-btn primary">Send feedback</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3: thanks -->
+  <div class="state">
+    <div class="cap">3 · Thanks <span>auto-dismisses, never returns</span></div>
+    <div class="fb thanks">
+      <div class="fb-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.2 4.2L19 7" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="fb-thx-t">Thanks — this genuinely helps.</div>
+      <div class="fb-thx-s">We read every note as we shape what Klovered does next.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
